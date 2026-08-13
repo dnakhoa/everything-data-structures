@@ -4,6 +4,8 @@
 
 Five volumes · 31 chapters · 4 appendices · ~55,000 words · Python, C, C++, Java, and Go
 
+By **Ngoc Anh Khoa Doan**
+
 ---
 
 ## Start here
