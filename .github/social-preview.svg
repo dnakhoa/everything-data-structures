@@ -46,7 +46,7 @@
     <rect x="246" y="396" width="168" height="46" rx="23" fill="#10b981" fill-opacity=".16" stroke="#10b981" stroke-opacity=".5"/>
     <text x="330" y="426" fill="#6ee7b7" font-size="21" text-anchor="middle">31 chapters</text>
     <rect x="428" y="396" width="196" height="46" rx="23" fill="#f59e0b" fill-opacity=".16" stroke="#f59e0b" stroke-opacity=".5"/>
-    <text x="526" y="426" fill="#fcd34d" font-size="21" text-anchor="middle">40,000 words</text>
+    <text x="526" y="426" fill="#fcd34d" font-size="21" text-anchor="middle">55,000 words</text>
   </g>
   <text x="80" y="514" fill="#64748b" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="22">Arrays → B-trees → link-cut trees → FM-indexes → CRDTs → Spanner, Dynamo, Kafka</text>
   <text x="80" y="576" fill="#475569" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="21">github.com/dnakhoa/everything-data-structures</text>

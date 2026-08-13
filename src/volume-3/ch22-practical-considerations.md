@@ -189,3 +189,10 @@ def to_dot(node, out):
 | O(n²) in production, fast in tests | Test data was accidentally random; production data is sorted |
 
 That last row is worth internalizing. Sorted input is the worst case for a naive BST and for quicksort with a fixed pivot, and real-world data arrives sorted far more often than random test data does — by timestamp, by ID, by insertion order. Test with sorted, reverse-sorted, and all-identical inputs deliberately.
+
+---
+
+## Where this connects
+
+- [Chapter 16: External Memory and Cache-Oblivious Structures](ch16-external-memory-and-cache-oblivious-structures.md) — why the profiler says memory and not arithmetic
+- [Chapter 25: Complete Selection Guide and Complexity Reference](../volume-4/ch25-complete-selection-guide-and-complexity-reference.md) — the selection matrix in reference form

@@ -157,3 +157,10 @@ Leslie Lamport defined sequential consistency in 1979 and produced the first loc
 Herlihy's 1991 paper "Wait-Free Synchronization" is the theoretical foundation: it established the **consensus hierarchy**, proving that primitives have a consensus number — the maximum number of threads for which they can solve consensus — and that atomic read/write registers have consensus number 1, while compare-and-swap has consensus number ∞. That result is why CAS is *the* universal primitive and why hardware designers ship it: with CAS you can build a wait-free implementation of any object, and without something like it you provably cannot.
 
 Maged Michael and Michael Scott published their queue in 1996; it went into `java.util.concurrent` and has been the reference lock-free FIFO ever since. Michael followed with hazard pointers in 2004, addressing the reclamation problem. Paul McKenney's RCU work brought the read-mostly approach into the Linux kernel from 2002 onward, where it is now used in tens of thousands of places.
+
+---
+
+## Where this connects
+
+- [Chapter 17: Persistent Data Structures](ch17-persistent-data-structures.md) — immutability as the alternative to synchronisation
+- [Chapter 12: Hash Tables](../volume-2/ch12-hash-tables.md) — the hash table these techniques are usually applied to

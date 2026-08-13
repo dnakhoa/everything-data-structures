@@ -144,3 +144,10 @@ Driscoll, Sarnak, Sleator, and Tarjan's 1986 paper "Making Data Structures Persi
 Chris Okasaki's *Purely Functional Data Structures* (1998), which grew out of his 1996 CMU thesis, addressed the complementary question: which structures can be implemented efficiently *without any mutation at all*? His treatment of amortization under persistence is the subtle part — the usual banker's argument breaks when an expensive operation can be re-executed by replaying an old version, and Okasaki's solution using lazy evaluation and memoization is why the book remains standard reading.
 
 Phil Bagwell introduced the Hash Array Mapped Trie in 2001. Rich Hickey built Clojure's collections on it in 2007, which more than anything else moved persistent structures from a functional-programming specialty into general practice.
+
+---
+
+## Where this connects
+
+- [Chapter 18: Concurrent Data Structures](ch18-concurrent-data-structures.md) — the concurrency hazards immutability removes outright
+- [Chapter 7: Binary Search Trees](../volume-1/ch07-binary-search-trees.md) — the BST being made persistent here

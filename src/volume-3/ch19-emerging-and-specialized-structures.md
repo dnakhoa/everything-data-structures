@@ -128,3 +128,10 @@ A few honest heuristics for evaluating structures like these, since most novel s
 **Questions worth asking of any new structure:** What is the constant factor, measured? How does it behave on adversarial input? Does it support updates, or only bulk builds? What happens at the cache and page level? Is there a tested implementation, or only a paper?
 
 That last question filters out most of them.
+
+---
+
+## Where this connects
+
+- [Chapter 24: Research-Grade Data Structures](../volume-4/ch24-research-grade-data-structures.md) — the research-grade treatment of succinct structures
+- [Chapter 15: Spatial and Geometric Data Structures](ch15-spatial-and-geometric-data-structures.md) — the spatial structures vector search replaces

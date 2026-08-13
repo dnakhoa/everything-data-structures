@@ -2,7 +2,7 @@
 
 **A complete course on data structures — from asymptotic analysis to the storage engines behind Spanner and Kafka.**
 
-Five volumes · 31 chapters · 4 appendices · ~40,000 words · Python, C, C++, Java, and Go
+Five volumes · 31 chapters · 4 appendices · ~55,000 words · Python, C, C++, Java, and Go
 
 ---
 

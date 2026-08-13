@@ -173,3 +173,10 @@ The diagnostic question for each:
 | Adversarial input, or determinism too slow | Randomized | Depends — the randomness is the technique |
 
 And the thread running through all of them: **identify the question the algorithm asks over and over, then pick the structure that answers that question fastest.** Dijkstra asks "which is nearest." Kruskal asks "would this cycle." DP asks "have I computed this." Backtracking asks "can this branch still work." Get the question right and the structure is usually obvious; get it wrong and no amount of optimization will help.
+
+---
+
+## Where this connects
+
+- [Chapter 9: Heaps and Priority Queues](../volume-1/ch09-heaps-and-priority-queues.md) — the priority queue behind every greedy algorithm
+- [Chapter 11: Graphs—Modeling Relationships](../volume-2/ch11-graphs-modeling-relationships.md) — the graph algorithms these paradigms produce

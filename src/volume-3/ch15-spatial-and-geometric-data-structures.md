@@ -212,3 +212,10 @@ In shipped systems: PostGIS and Oracle Spatial index with R-trees (PostgreSQL's 
 Jon Bentley introduced KD-trees in 1975 while a graduate student at Stanford, as a multidimensional generalization of binary search. Raphael Finkel and Bentley described quadtrees the previous year, in 1974. Antonin Guttman published the R-tree in 1984 specifically to make spatial data indexable on disk, and the R*-tree refinement followed from Beckmann, Kriegel, Schneider, and Seeger in 1990.
 
 The space-filling curves are much older than the structures that use them: Giuseppe Peano constructed the first in 1890 and David Hilbert described his variant in 1891, as pure mathematics with no application in view. G. M. Morton put Z-order to work for geographic databases at IBM in 1966 — a rare case of a piece of nineteenth-century mathematics arriving in computing essentially unchanged.
+
+---
+
+## Where this connects
+
+- [Chapter 16: External Memory and Cache-Oblivious Structures](ch16-external-memory-and-cache-oblivious-structures.md) — why KD-trees degrade once the data leaves cache
+- [Chapter 19: Emerging and Specialized Structures](ch19-emerging-and-specialized-structures.md) — HNSW and the high-dimensional case these structures cannot handle

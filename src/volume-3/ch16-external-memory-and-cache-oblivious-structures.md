@@ -130,3 +130,10 @@ Alok Aggarwal and Jeffrey Vitter formalized the external memory model in their 1
 Cache-oblivious algorithms arrived much later. Harald Prokop's 1999 MIT master's thesis, supervised by Charles Leiserson, introduced the model and the van Emde Boas layout application, with the fuller treatment in Frigo, Leiserson, Prokop, and Ramachandran's FOCS 1999 paper. The layout itself is named for Peter van Emde Boas, who used the recursive halving idea in his 1975 priority queue — a structure solving an entirely different problem.
 
 The LSM tree came from Patrick O'Neil and colleagues in 1996, and sat relatively unused until Google's Bigtable (2006) made it the default architecture for write-heavy distributed storage.
+
+---
+
+## Where this connects
+
+- [Chapter 10: Multiway Search Trees and B-Trees](../volume-1/ch10-multiway-search-trees-and-b-trees.md) — the B-trees this model exists to explain
+- [Chapter 22: Practical Considerations](ch22-practical-considerations.md) — turning these findings into profiling decisions

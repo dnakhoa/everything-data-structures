@@ -229,3 +229,10 @@ Also: a deque adapted to a stack or a queue, and a `Set` adapted from a `Map` wi
 **The pattern that applies to all of them:** an abstraction over a data structure hides the layout but does not hide the *cost*. A `List` interface backed by a linked list and one backed by an array have identical signatures and completely different performance, and code written against the interface will silently get whichever it is handed. This is the practical reason C++ names `std::vector` and `std::list` distinctly instead of offering one `List`, and the reason Java's `List` interface has been a recurring source of accidental O(n²) loops — `get(i)` in a loop over a `LinkedList` is quadratic and looks exactly like the linear version.
 
 Abstract the interface. Document the cost.
+
+---
+
+## Where this connects
+
+- [Chapter 22: Practical Considerations](ch22-practical-considerations.md) — the practical judgment these patterns support
+- [Chapter 6: Tree Fundamentals and Binary Trees](../volume-1/ch06-tree-fundamentals-and-binary-trees.md) — the composite and iterator patterns in their original setting
