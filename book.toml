@@ -1,0 +1,30 @@
+[book]
+title = "Everything Data Structures"
+description = "A complete course on data structures — from asymptotic analysis to distributed systems, in five volumes and 32 chapters."
+authors = ["Khoa Doan"]
+language = "en"
+src = "src"
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+default-theme = "rust"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/dnakhoa/everything-data-structures"
+edit-url-template = "https://github.com/dnakhoa/everything-data-structures/edit/main/{path}"
+site-url = "/everything-data-structures/"
+no-section-label = true
+
+[output.html.fold]
+enable = true
+level = 1
+
+[output.html.search]
+enable = true
+limit-results = 30
+use-boolean-and = true
+
+[output.html.print]
+enable = true
