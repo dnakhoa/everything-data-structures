@@ -283,3 +283,10 @@ class Stack:
 ```
 
 Any object with append() and pop() works with this Stack. This flexibility comes at the cost of runtime type checking.
+
+---
+
+## Where this connects
+
+- [Chapter 3: Arrays—The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md) — the first structure built directly on this memory model
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — what the memory hierarchy does to these assumptions

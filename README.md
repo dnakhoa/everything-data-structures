@@ -1,10 +1,17 @@
 # Everything Data Structures
 
+[![Deploy](https://github.com/dnakhoa/everything-data-structures/actions/workflows/deploy.yml/badge.svg)](https://github.com/dnakhoa/everything-data-structures/actions/workflows/deploy.yml)
+[![Prose: CC BY 4.0](https://img.shields.io/badge/prose-CC%20BY%204.0-blue.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![Code: MIT](https://img.shields.io/badge/code-MIT-green.svg)](LICENSE)
+[![Chapters](https://img.shields.io/badge/chapters-31-orange.svg)](https://dnakhoa.github.io/everything-data-structures/)
+
 A complete, free course on data structures — from asymptotic analysis and pointer arithmetic all the way to CRDTs, learned indexes, and the storage engines behind Spanner and Kafka.
 
 **📖 Read it online: [dnakhoa.github.io/everything-data-structures](https://dnakhoa.github.io/everything-data-structures/)**
 
-Five volumes · 32 chapters · 4 appendices · ~27,000 words · Python, C, C++, Java and Go examples.
+Five volumes · 31 chapters · 4 appendices · ~40,000 words · Python, C, C++, Java and Go examples.
+
+Written by [Ngoc Anh Khoa Doan](https://github.com/dnakhoa).
 
 ---
 
@@ -122,7 +129,6 @@ For backend, infra, and system-design work.
 23. [Advanced Competitive Programming Data Structures](src/volume-4/ch23-advanced-competitive-programming-data-structures.md)
 24. [Research-Grade Data Structures](src/volume-4/ch24-research-grade-data-structures.md)
 25. [Complete Selection Guide and Complexity Reference](src/volume-4/ch25-complete-selection-guide-and-complexity-reference.md)
-26. [References and Extended Bibliography](src/volume-4/ch26-references-and-extended-bibliography.md)
 
 ### [Volume V — Network and System Design Data Structures](src/volume-5/index.md)
 

@@ -39,6 +39,11 @@ B-tree of order 5 (max 4 keys, 5 children):
 
 ## 10.3 B-Tree Operations
 
+<figure>
+{{#include ../images/btree-split.svg}}
+<figcaption>A node split. The median rises to the parent, keeping every leaf at equal depth.</figcaption>
+</figure>
+
 ### Search
 
 Similar to BST but with linear search within nodes:
@@ -210,3 +215,10 @@ B-trees were introduced by Rudolf Bayer and Edward McCreight in 1970 at Boeing. 
 The B+ tree variant was introduced shortly after, optimized for databases.
 
 Donald Comer provided the comprehensive analysis in his 1979 paper "The Ubiquitous B-Tree," showing how B-trees dominated database indexing.
+
+---
+
+## Where this connects
+
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — the external-memory model that explains why B-trees exist
+- [Chapter 14: Probabilistic Data Structures](../volume-3/ch14-probabilistic-data-structures.md) — the Bloom filters that make LSM-tree reads viable

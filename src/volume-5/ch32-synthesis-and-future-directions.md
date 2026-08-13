@@ -60,3 +60,9 @@ Quantum computing offers new primitives:
 5. **Embrace approximation**: Probabilistic structures often suffice
 6. **Consider distribution**: At scale,单机 solutions fail
 7. **Document assumptions**: Workload characteristics drive structure choice
+
+---
+
+## Where this connects
+
+- [Chapter 25: Complete Selection Guide and Complexity Reference](../volume-4/ch25-complete-selection-guide-and-complexity-reference.md) — the selection guide, for putting this into practice

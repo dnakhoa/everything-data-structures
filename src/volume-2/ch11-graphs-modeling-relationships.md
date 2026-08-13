@@ -332,3 +332,10 @@ Time: O(α(n)) amortized (inverse Ackermann, effectively constant)
 **Biology**: Protein interaction networks, evolutionary trees
 **Finance**: Transaction graphs, fraud detection
 **Recommendation Systems**: Collaborative filtering
+
+---
+
+## Where this connects
+
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the greedy and DP paradigms behind these algorithms
+- [Chapter 28: Network Topology and Routing Data Structures](../volume-5/ch28-network-topology-and-routing-data-structures.md) — the same graph structures applied to network routing

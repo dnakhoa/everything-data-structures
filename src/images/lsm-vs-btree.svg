@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" role="img" aria-label="B-tree in-place writes versus LSM tree sequential writes" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .box  { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .mem  { fill: #3b82f6; fill-opacity: .14; stroke: #3b82f6; stroke-width: 1.8; }
+    .disk { fill: #10b981; fill-opacity: .12; stroke: #10b981; stroke-width: 1.8; }
+    .rand { fill: #ef4444; fill-opacity: .12; stroke: #ef4444; stroke-width: 1.8; }
+    .t    { fill: currentColor; font: 12px system-ui, sans-serif; text-anchor: middle; }
+    .sm   { fill: currentColor; font: 10.5px ui-monospace, monospace; text-anchor: middle; opacity: .85; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .aR   { stroke: #ef4444; stroke-width: 1.8; fill: none; }
+    .aG   { stroke: #10b981; stroke-width: 2; fill: none; }
+  </style>
+  <!-- B-TREE -->
+  <text class="cap" x="16" y="24">B-tree — update in place</text>
+  <rect class="mem" x="20" y="42" width="90" height="30"/><text class="t" x="65" y="62">write</text>
+  <path class="aR" d="M110,57 L150,57"/><path class="aR" d="M142,52 L150,57 L142,62"/>
+  <rect class="box" x="150" y="42" width="150" height="30"/><text class="t" x="225" y="62">find the right page</text>
+  <path class="aR" d="M225,72 L225,96"/><path class="aR" d="M220,88 L225,96 L230,88"/>
+  <g>
+    <rect class="rand" x="60"  y="100" width="46" height="34"/><text class="sm" x="83"  y="121">page</text>
+    <rect class="box"  x="112" y="100" width="46" height="34"/>
+    <rect class="rand" x="164" y="100" width="46" height="34"/><text class="sm" x="187" y="121">page</text>
+    <rect class="box"  x="216" y="100" width="46" height="34"/>
+    <rect class="rand" x="268" y="100" width="46" height="34"/><text class="sm" x="291" y="121">page</text>
+    <rect class="box"  x="320" y="100" width="46" height="34"/>
+  </g>
+  <text class="note" x="60" y="152" fill="#ef4444">Each write seeks to a different page — random I/O.</text>
+  <text class="note" x="60" y="168">Reads are fast: one path, O(log_B n) transfers.</text>
+  <!-- divider -->
+  <line x1="16" y1="186" x2="664" y2="186" stroke="currentColor" stroke-width="1" opacity=".18"/>
+  <!-- LSM -->
+  <text class="cap" x="16" y="212">LSM tree — buffer, then flush sequentially</text>
+  <rect class="mem" x="20" y="230" width="90" height="30"/><text class="t" x="65" y="250">write</text>
+  <path class="aG" d="M110,245 L150,245"/><path class="aG" d="M142,240 L150,245 L142,250"/>
+  <rect class="mem" x="150" y="228" width="112" height="34"/>
+  <text class="sm" x="206" y="243">memtable</text><text class="sm" x="206" y="256">(sorted, in RAM)</text>
+  <path class="aG" d="M262,245 L302,245"/><path class="aG" d="M294,240 L302,245 L294,250"/>
+  <text class="note" x="266" y="228">flush when full</text>
+  <g>
+    <rect class="disk" x="302" y="228" width="70" height="34"/><text class="sm" x="337" y="249">SST L0</text>
+    <rect class="disk" x="376" y="228" width="70" height="34"/><text class="sm" x="411" y="249">SST L0</text>
+  </g>
+  <path class="aG" d="M374,262 L374,286"/><path class="aG" d="M369,278 L374,286 L379,278"/>
+  <text class="note" x="384" y="280">background compaction</text>
+  <rect class="disk" x="302" y="290" width="144" height="30"/><text class="sm" x="374" y="310">SST L1  (merged, larger)</text>
+  <text class="note" x="20" y="288" fill="#10b981">Every disk write is sequential.</text>
+  <text class="note" x="20" y="304">Write throughput ~10× a B-tree.</text>
+  <text class="note" x="20" y="320">Reads may check several SSTs —</text>
+  <text class="note" x="20" y="336">a Bloom filter per SST skips most.</text>
+  <text class="note" x="470" y="304">B-tree: fast reads, random writes.</text>
+  <text class="note" x="470" y="320">LSM: fast writes, more read work</text>
+  <text class="note" x="470" y="336">and space amplification.</text>
+</svg>

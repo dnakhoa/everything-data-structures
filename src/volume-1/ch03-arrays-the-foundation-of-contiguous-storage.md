@@ -251,3 +251,10 @@ Only non-default values stored, with index for position.
 The array concept predates electronic computers. In mathematics, matrices and vectors have been studied for centuries. The FORTRAN language (1957) introduced multi-dimensional arrays as a first-class concept, heavily influencing scientific computing.
 
 The dynamic array (vector) concept emerged with languages supporting heap allocation. The Ada language (1983) provided array slicing; modern languages provide richer array operations. The Ruby language introduced the "push" and "pop" terminology that spread to Python and JavaScript.
+
+---
+
+## Where this connects
+
+- [Chapter 4: Linked Lists—The Art of Distributed Storage](ch04-linked-lists-the-art-of-distributed-storage.md) — the same sequence problem solved with pointers instead of contiguity
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — why contiguous layout beats pointer-chasing by more than the asymptotics suggest

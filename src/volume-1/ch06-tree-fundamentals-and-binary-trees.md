@@ -280,3 +280,10 @@ The binary tree became central to computer science through:
 - Binary search trees (1960s)
 - Balanced tree variants (1970s)
 - B-trees for databases (1970s)
+
+---
+
+## Where this connects
+
+- [Chapter 7: Binary Search Trees](ch07-binary-search-trees.md) — adding an ordering invariant to the tree
+- [Chapter 20: Data Structure Design Patterns](../volume-3/ch20-data-structure-design-patterns.md) — the composite and iterator patterns these traversals exemplify

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 660 300" role="img" aria-label="AVL right rotation, before and after" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .n    { fill: none; stroke: currentColor; stroke-width: 2; }
+    .piv  { fill: none; stroke: #f59e0b; stroke-width: 2.5; }
+    .root { fill: none; stroke: #3b82f6; stroke-width: 2.5; }
+    .e    { stroke: currentColor; stroke-width: 1.8; opacity: .7; }
+    .t    { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
+    .sub  { fill: currentColor; font: 12px system-ui, sans-serif; text-anchor: middle; opacity: .75; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .7; text-anchor: middle; }
+    .arw  { stroke: #10b981; stroke-width: 2.5; fill: none; }
+  </style>
+  <!-- ── BEFORE ── -->
+  <text class="cap" x="150" y="26">Before — left-heavy at z</text>
+  <text class="note" x="150" y="44">balance(z) = +2</text>
+  <line class="e" x1="150" y1="80" x2="105" y2="130"/>
+  <line class="e" x1="105" y1="140" x2="65"  y2="190"/>
+  <line class="e" x1="105" y1="140" x2="145" y2="190"/>
+  <line class="e" x1="150" y1="80" x2="195" y2="130"/>
+  <circle class="root" cx="150" cy="68" r="19"/><text class="t" x="150" y="73">z</text>
+  <circle class="piv"  cx="100" cy="130" r="19"/><text class="t" x="100" y="135">y</text>
+  <circle class="n"    cx="60"  cy="200" r="19"/><text class="t" x="60"  y="205">x</text>
+  <path class="e" d="M130,190 l20,34 l-40,0 Z" fill="none"/>
+  <text class="sub" x="130" y="218">T3</text>
+  <path class="e" d="M200,130 l20,34 l-40,0 Z" fill="none"/>
+  <text class="sub" x="200" y="158">T4</text>
+  <!-- arrow -->
+  <path class="arw" d="M290,150 L370,150"/>
+  <path class="arw" d="M358,141 L370,150 L358,159"/>
+  <text class="note" x="330" y="138" fill="#10b981">rotate right</text>
+  <!-- ── AFTER ── -->
+  <text class="cap" x="500" y="26">After — balanced</text>
+  <text class="note" x="500" y="44">balance(y) = 0</text>
+  <line class="e" x1="500" y1="80" x2="450" y2="130"/>
+  <line class="e" x1="500" y1="80" x2="550" y2="130"/>
+  <line class="e" x1="550" y1="142" x2="590" y2="190"/>
+  <circle class="piv"  cx="500" cy="68"  r="19"/><text class="t" x="500" y="73">y</text>
+  <circle class="n"    cx="445" cy="130" r="19"/><text class="t" x="445" y="135">x</text>
+  <circle class="root" cx="555" cy="130" r="19"/><text class="t" x="555" y="135">z</text>
+  <path class="e" d="M530,192 l20,34 l-40,0 Z" fill="none"/>
+  <text class="sub" x="530" y="220">T3</text>
+  <path class="e" d="M605,192 l20,34 l-40,0 Z" fill="none"/>
+  <text class="sub" x="605" y="220">T4</text>
+  <text class="note" x="330" y="272">T3 changes parent from y to z — the only pointer rewrite besides the two rotated nodes.</text>
+  <text class="note" x="330" y="290">In-order sequence is identical before and after: x, T3, y, T4, z → the BST property is preserved.</text>
+</svg>

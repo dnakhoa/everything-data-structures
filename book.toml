@@ -1,7 +1,7 @@
 [book]
 title = "Everything Data Structures"
 description = "A complete course on data structures — from asymptotic analysis to distributed systems, in five volumes and 32 chapters."
-authors = ["Khoa Doan"]
+authors = ["Ngoc Anh Khoa Doan"]
 language = "en"
 src = "src"
 
@@ -10,6 +10,7 @@ build-dir = "book"
 create-missing = false
 
 [output.html]
+additional-css = ["theme/custom.css"]
 default-theme = "rust"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/dnakhoa/everything-data-structures"

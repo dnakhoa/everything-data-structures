@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 330" role="img" aria-label="Bloom filter insertion and the origin of false positives" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .bit  { fill: none; stroke: currentColor; stroke-width: 1.4; }
+    .set  { fill: #3b82f6; fill-opacity: .25; stroke: #3b82f6; stroke-width: 1.8; }
+    .hit  { fill: #ef4444; fill-opacity: .2; stroke: #ef4444; stroke-width: 1.8; }
+    .t    { fill: currentColor; font: 11px ui-monospace, monospace; text-anchor: middle; }
+    .lbl  { fill: currentColor; font: 600 12px system-ui, sans-serif; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .h1   { stroke: #10b981; stroke-width: 1.6; fill: none; }
+    .h2   { stroke: #f59e0b; stroke-width: 1.6; fill: none; }
+    .h3   { stroke: #ef4444; stroke-width: 1.6; fill: none; stroke-dasharray: 4 3; }
+  </style>
+  <text class="cap" x="16" y="24">Inserting two elements with k = 3 hash functions</text>
+  <!-- inserted elements -->
+  <text class="lbl" x="30" y="70" fill="#10b981">"cat"</text>
+  <text class="lbl" x="30" y="112" fill="#f59e0b">"dog"</text>
+  <!-- hash arcs from cat -->
+  <path class="h1" d="M70,64 C130,64 130,150 158,168"/>
+  <path class="h1" d="M70,64 C220,50 300,140 322,168"/>
+  <path class="h1" d="M70,64 C330,44 470,140 518,168"/>
+  <!-- hash arcs from dog -->
+  <path class="h2" d="M70,108 C150,108 180,150 222,168"/>
+  <path class="h2" d="M70,108 C260,110 360,150 386,168"/>
+  <path class="h2" d="M70,108 C400,120 520,150 582,168"/>
+  <!-- bit array -->
+  <g transform="translate(126,180)">
+    <rect class="bit" x="0"   y="0" width="32" height="32"/><text class="t" x="16"  y="21">0</text>
+    <rect class="set" x="32"  y="0" width="32" height="32"/><text class="t" x="48"  y="21">1</text>
+    <rect class="bit" x="64"  y="0" width="32" height="32"/><text class="t" x="80"  y="21">0</text>
+    <rect class="set" x="96"  y="0" width="32" height="32"/><text class="t" x="112" y="21">1</text>
+    <rect class="bit" x="128" y="0" width="32" height="32"/><text class="t" x="144" y="21">0</text>
+    <rect class="set" x="160" y="0" width="32" height="32"/><text class="t" x="176" y="21">1</text>
+    <rect class="bit" x="192" y="0" width="32" height="32"/><text class="t" x="208" y="21">0</text>
+    <rect class="set" x="224" y="0" width="32" height="32"/><text class="t" x="240" y="21">1</text>
+    <rect class="bit" x="256" y="0" width="32" height="32"/><text class="t" x="272" y="21">0</text>
+    <rect class="bit" x="288" y="0" width="32" height="32"/><text class="t" x="304" y="21">0</text>
+    <rect class="set" x="320" y="0" width="32" height="32"/><text class="t" x="336" y="21">1</text>
+    <rect class="bit" x="352" y="0" width="32" height="32"/><text class="t" x="368" y="21">0</text>
+    <rect class="set" x="384" y="0" width="32" height="32"/><text class="t" x="400" y="21">1</text>
+    <rect class="bit" x="416" y="0" width="32" height="32"/><text class="t" x="432" y="21">0</text>
+  </g>
+  <!-- false positive probe -->
+  <text class="lbl" x="30" y="262" fill="#ef4444">"emu"</text>
+  <text class="note" x="30" y="278">(never inserted)</text>
+  <path class="h3" d="M74,256 C130,250 140,230 158,214"/>
+  <path class="h3" d="M74,256 C240,262 300,240 322,214"/>
+  <path class="h3" d="M74,256 C380,268 500,240 518,214"/>
+  <text class="note" x="300" y="262" fill="#ef4444">All three bits are already 1 — set by "cat" and "dog".</text>
+  <text class="note" x="300" y="278" fill="#ef4444">The filter reports "possibly present". This is a false positive.</text>
+  <text class="note" x="16" y="308">No false negatives are possible: an inserted element's bits are never unset, so "definitely not present" is always trustworthy.</text>
+  <text class="note" x="16" y="324">Deletion is impossible for the same reason — clearing a bit could erase another element's evidence. That is what counting Bloom filters fix.</text>
+</svg>

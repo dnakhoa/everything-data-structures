@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360" role="img" aria-label="Growth curves for common complexity classes" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .axis { stroke: currentColor; stroke-width: 1.5; opacity: .55; }
+    .grid { stroke: currentColor; stroke-width: .5; opacity: .13; }
+    .lbl  { fill: currentColor; font: 13px system-ui, sans-serif; }
+    .ttl  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .cap  { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .65; }
+    .c    { fill: none; stroke-width: 2.5; stroke-linecap: round; }
+  </style>
+  <!-- grid -->
+  <g class="grid">
+    <line x1="60" y1="60"  x2="470" y2="60"/>
+    <line x1="60" y1="125" x2="470" y2="125"/>
+    <line x1="60" y1="190" x2="470" y2="190"/>
+    <line x1="60" y1="255" x2="470" y2="255"/>
+  </g>
+  <!-- axes -->
+  <line class="axis" x1="60" y1="300" x2="480" y2="300"/>
+  <line class="axis" x1="60" y1="40"  x2="60"  y2="300"/>
+  <text class="lbl" x="270" y="333" text-anchor="middle">input size n →</text>
+  <text class="lbl" x="20" y="175" transform="rotate(-90 20 175)" text-anchor="middle">operations →</text>
+  <!-- curves: x from 60..470 -->
+  <path class="c" stroke="#10b981" d="M60,292 L470,288"/>
+  <path class="c" stroke="#3b82f6" d="M60,292 Q160,250 260,232 T470,212"/>
+  <path class="c" stroke="#f59e0b" d="M60,292 L470,120"/>
+  <path class="c" stroke="#a855f7" d="M60,292 Q240,215 350,150 T470,60"/>
+  <path class="c" stroke="#ef4444" d="M60,292 Q290,285 380,190 T440,40"/>
+  <!-- labels -->
+  <text class="ttl" x="486" y="292" fill="#10b981">O(1)</text>
+  <text class="ttl" x="486" y="216" fill="#3b82f6">O(log n)</text>
+  <text class="ttl" x="486" y="124" fill="#f59e0b">O(n)</text>
+  <text class="ttl" x="486" y="64"  fill="#a855f7">O(n log n)</text>
+  <text class="ttl" x="400" y="34"  fill="#ef4444">O(n²)</text>
+  <text class="cap" x="60" y="352">Feasible at n = 10⁶: O(1), O(log n), O(n), O(n log n).  Not feasible: O(n²) and worse.</text>
+</svg>

@@ -335,3 +335,10 @@ The heap was introduced by J.W.J. Williams in 1964 as part of heap sort. The bin
 Fibonacci heaps were introduced by Fredman and Tarjan in 1987, revolutionizing graph algorithms by enabling faster shortest paths.
 
 Binomial heaps were introduced by Vuillemin in 1978, providing efficient meld operations.
+
+---
+
+## Where this connects
+
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — why Fibonacci heaps win on paper and lose in practice
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the greedy algorithms that are built on this structure

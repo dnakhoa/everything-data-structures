@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" role="img" aria-label="Consistent hashing ring with virtual nodes, before and after a node leaves" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .ring { fill: none; stroke: currentColor; stroke-width: 1.6; opacity: .45; }
+    .a    { fill: #3b82f6; }
+    .b    { fill: #10b981; }
+    .c    { fill: #f59e0b; }
+    .gone { fill: none; stroke: #ef4444; stroke-width: 2; stroke-dasharray: 3 3; }
+    .key  { fill: currentColor; opacity: .8; }
+    .t    { fill: currentColor; font: 11px system-ui, sans-serif; text-anchor: middle; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .arc  { fill: none; stroke-width: 7; opacity: .3; stroke-linecap: butt; }
+  </style>
+  <!-- LEFT RING -->
+  <text class="cap" x="170" y="26">Three nodes on the ring</text>
+  <circle class="ring" cx="170" cy="160" r="105"/>
+  <!-- ownership arcs: each node owns the arc counter-clockwise back to the previous node -->
+  <path class="arc" stroke="#3b82f6" d="M170,55 A105,105 0 0,1 261,212"/>
+  <path class="arc" stroke="#10b981" d="M261,212 A105,105 0 0,1 79,212"/>
+  <path class="arc" stroke="#f59e0b" d="M79,212 A105,105 0 0,1 170,55"/>
+  <circle class="a" cx="170" cy="55"  r="8"/><text class="t" x="170" y="42">A</text>
+  <circle class="b" cx="261" cy="212" r="8"/><text class="t" x="287" y="218">B</text>
+  <circle class="c" cx="79"  cy="212" r="8"/><text class="t" x="53"  y="218">C</text>
+  <circle class="key" cx="228" cy="98"  r="3.5"/>
+  <circle class="key" cx="256" cy="150" r="3.5"/>
+  <circle class="key" cx="200" cy="262" r="3.5"/>
+  <circle class="key" cx="120" cy="258" r="3.5"/>
+  <circle class="key" cx="70"  cy="130" r="3.5"/>
+  <circle class="key" cx="108" cy="76"  r="3.5"/>
+  <text class="t" x="170" y="300">A key is owned by the first node</text>
+  <text class="t" x="170" y="316">clockwise from its hash.</text>
+  <!-- RIGHT RING -->
+  <text class="cap" x="500" y="26">Node B fails</text>
+  <circle class="ring" cx="500" cy="160" r="105"/>
+  <path class="arc" stroke="#3b82f6" d="M500,55 A105,105 0 0,1 591,212"/>
+  <path class="arc" stroke="#10b981" d="M591,212 A105,105 0 0,1 409,212" opacity=".12"/>
+  <path class="arc" stroke="#f59e0b" d="M409,212 A105,105 0 0,1 500,55"/>
+  <!-- B's arc reassigned to C -->
+  <path class="arc" stroke="#f59e0b" d="M591,212 A105,105 0 0,1 409,212"/>
+  <circle class="a" cx="500" cy="55"  r="8"/><text class="t" x="500" y="42">A</text>
+  <circle class="gone" cx="591" cy="212" r="8"/><text class="t" x="617" y="218" fill="#ef4444">B</text>
+  <circle class="c" cx="409" cy="212" r="8"/><text class="t" x="383" y="218">C</text>
+  <circle class="key" cx="558" cy="98"  r="3.5"/>
+  <circle class="key" cx="586" cy="150" r="3.5"/>
+  <circle class="key" cx="530" cy="262" r="3.5" fill="#f59e0b"/>
+  <circle class="key" cx="450" cy="258" r="3.5" fill="#f59e0b"/>
+  <circle class="key" cx="400" cy="130" r="3.5"/>
+  <circle class="key" cx="438" cy="76"  r="3.5"/>
+  <text class="t" x="500" y="300">Only B's keys move — to C.</text>
+  <text class="t" x="500" y="316">A and C keep everything else.</text>
+  <text class="note" x="30" y="352">With ordinary modulo hashing, removing one of n servers remaps roughly (n−1)/n of all keys — a cache stampede. Consistent</text>
+  <text class="note" x="30" y="370">hashing remaps only the departing node's share, about 1/n.</text>
+  <text class="note" x="30" y="392">In production each node is placed at 100–200 points on the ring (virtual nodes), so load stays even and a departing node's keys spread across all survivors rather than one.</text>
+</svg>

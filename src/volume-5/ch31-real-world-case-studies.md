@@ -104,3 +104,10 @@ User → Edge PoP (L1 cache, ~100GB)
 - Normalize URL encoding
 - Include vary headers in key
 - TTL rules per content type
+
+---
+
+## Where this connects
+
+- [Chapter 29: System Design as Data Structure Composition](ch29-system-design-as-data-structure-composition.md) — the composition principle these systems demonstrate
+- [Chapter 27: Distributed Data Structures](ch27-distributed-data-structures.md) — the distributed primitives they are built from

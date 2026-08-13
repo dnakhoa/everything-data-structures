@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" role="img" aria-label="A B-tree node split promoting the median key to the parent" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .cell { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .over { fill: #ef4444; fill-opacity: .14; stroke: #ef4444; stroke-width: 1.8; }
+    .med  { fill: #f59e0b; fill-opacity: .22; stroke: #f59e0b; stroke-width: 2; }
+    .new  { fill: #10b981; fill-opacity: .14; stroke: #10b981; stroke-width: 1.8; }
+    .k    { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .e    { stroke: currentColor; stroke-width: 1.5; opacity: .65; fill: none; }
+    .arw  { stroke: #10b981; stroke-width: 2.5; fill: none; }
+  </style>
+  <!-- BEFORE -->
+  <text class="cap"  x="16" y="24">Before — inserting 26 overflows a node of order 5 (max 4 keys)</text>
+  <g>
+    <rect class="cell" x="240" y="46" width="46" height="30"/><text class="k" x="263" y="66">40</text>
+  </g>
+  <line class="e" x1="252" y1="76" x2="150" y2="112"/>
+  <line class="e" x1="276" y1="76" x2="380" y2="112"/>
+  <g>
+    <rect class="over" x="40"  y="112" width="46" height="30"/><text class="k" x="63"  y="132">10</text>
+    <rect class="over" x="86"  y="112" width="46" height="30"/><text class="k" x="109" y="132">18</text>
+    <rect class="over" x="132" y="112" width="46" height="30"/><text class="k" x="155" y="132">26</text>
+    <rect class="over" x="178" y="112" width="46" height="30"/><text class="k" x="201" y="132">31</text>
+    <rect class="over" x="224" y="112" width="46" height="30"/><text class="k" x="247" y="132">35</text>
+  </g>
+  <text class="note" x="40" y="162">5 keys — one too many. The median (26) is promoted.</text>
+  <g>
+    <rect class="cell" x="356" y="112" width="46" height="30"/><text class="k" x="379" y="132">55</text>
+    <rect class="cell" x="402" y="112" width="46" height="30"/><text class="k" x="425" y="132">70</text>
+  </g>
+  <!-- arrow -->
+  <path class="arw" d="M520,120 L590,120"/>
+  <path class="arw" d="M578,111 L590,120 L578,129"/>
+  <text class="note" x="516" y="106" fill="#10b981">split</text>
+  <!-- AFTER -->
+  <text class="cap"  x="16" y="208">After — median rises, node becomes two half-full nodes</text>
+  <g>
+    <rect class="med"  x="240" y="222" width="46" height="30"/><text class="k" x="263" y="242">26</text>
+    <rect class="cell" x="286" y="222" width="46" height="30"/><text class="k" x="309" y="242">40</text>
+  </g>
+  <line class="e" x1="248" y1="252" x2="130" y2="278"/>
+  <line class="e" x1="286" y1="252" x2="270" y2="278"/>
+  <line class="e" x1="322" y1="252" x2="420" y2="278"/>
+  <g>
+    <rect class="cell" x="80"  y="278" width="46" height="30"/><text class="k" x="103" y="298">10</text>
+    <rect class="cell" x="126" y="278" width="46" height="30"/><text class="k" x="149" y="298">18</text>
+  </g>
+  <g>
+    <rect class="new"  x="248" y="278" width="46" height="30"/><text class="k" x="271" y="298">31</text>
+    <rect class="new"  x="294" y="278" width="46" height="30"/><text class="k" x="317" y="298">35</text>
+  </g>
+  <g>
+    <rect class="cell" x="396" y="278" width="46" height="30"/><text class="k" x="419" y="298">55</text>
+    <rect class="cell" x="442" y="278" width="46" height="30"/><text class="k" x="465" y="298">70</text>
+  </g>
+  <text class="note" x="520" y="242">Splits propagate upward. The</text>
+  <text class="note" x="520" y="258">tree grows in height only when</text>
+  <text class="note" x="520" y="274">the root itself splits — which is</text>
+  <text class="note" x="520" y="290">why every leaf stays at the</text>
+  <text class="note" x="520" y="306">same depth.</text>
+</svg>

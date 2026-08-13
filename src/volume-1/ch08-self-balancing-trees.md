@@ -45,6 +45,11 @@ The difference becomes dramatic at scale:
 
 ## 8.2 AVL Trees
 
+<figure>
+{{#include ../images/avl-rotation.svg}}
+<figcaption>A right rotation. Three pointers change; the in-order sequence does not.</figcaption>
+</figure>
+
 AVL trees (Adelson-Velsky and Landis, 1962) were the first balanced BST, maintaining balance via height checks.
 
 ### The Balance Factor
@@ -388,6 +393,11 @@ def treap_insert(root, node):
 
 ## 8.7 Performance Comparison
 
+<figure>
+{{#include ../images/skip-list.svg}}
+<figcaption>A skip list reaching the same O(log n) with coin flips instead of rotations.</figcaption>
+</figure>
+
 | Tree Type | Search | Insert | Delete | Balance | Memory |
 |-----------|--------|--------|--------|---------|--------|
 | BST (unbalanced) | O(n) | O(n) | O(n) | None | Low |
@@ -407,3 +417,10 @@ def treap_insert(root, node):
 | AVL | Databases with frequent lookups, file systems |
 | Splay | Network routing (LRU caches), memory allocators |
 | Treap | Skip list alternative in some databases |
+
+---
+
+## Where this connects
+
+- [Chapter 7: Binary Search Trees](ch07-binary-search-trees.md) — the unbalanced baseline these structures fix
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — why skip lists trade rotations for randomness

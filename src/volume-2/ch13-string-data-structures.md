@@ -117,3 +117,10 @@ LCP between consecutive suffixes:
 **IP routing**: Longest prefix match
 **DNA sequencing**: Pattern matching
 **Search engines**: Inverted indexes
+
+---
+
+## Where this connects
+
+- [Chapter 24: Research-Grade Data Structures](../volume-4/ch24-research-grade-data-structures.md) — the compressed, succinct versions of these indexes
+- [Chapter 23: Advanced Competitive Programming Data Structures](../volume-4/ch23-advanced-competitive-programming-data-structures.md) — suffix automata and palindromic trees for contests

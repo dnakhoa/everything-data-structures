@@ -55,6 +55,11 @@ Cassandra uses consistent hashing with virtual nodes (vnodes). Each node owns mu
 
 ## 27.3 Consistent Hashing
 
+<figure>
+{{#include ../images/consistent-hashing.svg}}
+<figcaption>Why removing a node remaps 1/n of the keys instead of nearly all of them.</figcaption>
+</figure>
+
 Traditional hashing maps N items to K servers with N/K average load. But adding or removing servers requires rehashing almost all items. Consistent hashing minimizes disruption.
 
 ### Basic Algorithm
@@ -257,3 +262,10 @@ class VersionVector:
             for k, v in other.versions.items()
         )
 ```
+
+---
+
+## Where this connects
+
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — CRDTs in the broader context of emerging structures
+- [Chapter 17: Persistent Data Structures](../volume-3/ch17-persistent-data-structures.md) — the persistence ideas that underpin versioned replicas

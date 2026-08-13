@@ -57,6 +57,11 @@ int hash_string(char *s, int m) {
 
 ## 12.3 Collision Resolution
 
+<figure>
+{{#include ../images/hash-collision.svg}}
+<figcaption>The two collision strategies, and the tradeoff between them.</figcaption>
+</figure>
+
 When two keys hash to the same index, we need a strategy.
 
 ### Chaining
@@ -174,3 +179,10 @@ If all keys are known in advance, we can construct a hash table with no collisio
 Hash tables were invented independently by multiple researchers in the 1950s-1960s. The term "hash" comes from the idea of "hashing" (mixing up) the keys.
 
 The division method was analyzed by Knuth. The multiplication method was popularized by Knuth in TAOCP.
+
+---
+
+## Where this connects
+
+- [Chapter 14: Probabilistic Data Structures](../volume-3/ch14-probabilistic-data-structures.md) — trading exactness for a 10-100x memory reduction
+- [Chapter 18: Concurrent Data Structures](../volume-3/ch18-concurrent-data-structures.md) — what it takes to make a hash table concurrent

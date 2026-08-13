@@ -1,5 +1,6 @@
 # Summary
 
+[Everything Data Structures](index.md)
 [Preface](introduction.md)
 
 # Volume I: Foundations and Fundamentals
@@ -45,7 +46,6 @@
 - [Chapter 23: Advanced Competitive Programming Data Structures](volume-4/ch23-advanced-competitive-programming-data-structures.md)
 - [Chapter 24: Research-Grade Data Structures](volume-4/ch24-research-grade-data-structures.md)
 - [Chapter 25: Complete Selection Guide and Complexity Reference](volume-4/ch25-complete-selection-guide-and-complexity-reference.md)
-- [Chapter 26: References and Extended Bibliography](volume-4/ch26-references-and-extended-bibliography.md)
 
 # Volume V: Network and System Design Data Structures
 

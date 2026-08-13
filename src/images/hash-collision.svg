@@ -1,0 +1,68 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 330" role="img" aria-label="Hash collision resolution: separate chaining versus open addressing" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .box  { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .full { fill: #3b82f6; fill-opacity: .16; stroke: #3b82f6; stroke-width: 1.8; }
+    .coll { fill: #ef4444; fill-opacity: .16; stroke: #ef4444; stroke-width: 1.8; }
+    .t    { fill: currentColor; font: 12px ui-monospace, monospace; text-anchor: middle; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .7; }
+    .idx  { fill: currentColor; font: 10px system-ui, sans-serif; opacity: .55; text-anchor: middle; }
+    .e    { stroke: currentColor; stroke-width: 1.5; opacity: .6; fill: none; }
+    .probe{ stroke: #ef4444; stroke-width: 1.8; fill: none; stroke-dasharray: 4 3; }
+  </style>
+  <!-- ── CHAINING ── -->
+  <text class="cap" x="16" y="24">Separate chaining</text>
+  <text class="note" x="16" y="42">Collisions extend a list. Load factor may exceed 1.</text>
+  <g>
+    <rect class="box"  x="20" y="60"  width="44" height="26"/><text class="idx" x="42" y="103">0</text>
+    <rect class="full" x="20" y="90"  width="44" height="26"/>
+    <rect class="box"  x="20" y="120" width="44" height="26"/>
+    <rect class="full" x="20" y="150" width="44" height="26"/>
+    <rect class="box"  x="20" y="180" width="44" height="26"/>
+  </g>
+  <text class="idx" x="42" y="78">0</text>
+  <text class="idx" x="42" y="108">1</text>
+  <text class="idx" x="42" y="138">2</text>
+  <text class="idx" x="42" y="168">3</text>
+  <text class="idx" x="42" y="198">4</text>
+  <!-- chain on bucket 1 -->
+  <line class="e" x1="64" y1="103" x2="88" y2="103"/>
+  <rect class="full" x="88" y="90" width="52" height="26"/><text class="t" x="114" y="107">cat</text>
+  <line class="e" x1="140" y1="103" x2="164" y2="103"/>
+  <rect class="coll" x="164" y="90" width="52" height="26"/><text class="t" x="190" y="107">dog</text>
+  <line class="e" x1="216" y1="103" x2="240" y2="103"/>
+  <rect class="coll" x="240" y="90" width="52" height="26"/><text class="t" x="266" y="107">emu</text>
+  <!-- chain on bucket 3 -->
+  <line class="e" x1="64" y1="163" x2="88" y2="163"/>
+  <rect class="full" x="88" y="150" width="52" height="26"/><text class="t" x="114" y="167">ant</text>
+  <text class="note" x="20" y="232">Lookup cost = 1 + chain length.</text>
+  <text class="note" x="20" y="250">Extra pointer per entry; poor cache locality.</text>
+  <text class="note" x="20" y="268">Java HashMap converts a chain to a red-black</text>
+  <text class="note" x="20" y="286">tree past 8 entries, capping the worst case at O(log n).</text>
+  <!-- divider -->
+  <line x1="345" y1="50" x2="345" y2="300" stroke="currentColor" stroke-width="1" opacity=".2"/>
+  <!-- ── OPEN ADDRESSING ── -->
+  <text class="cap" x="375" y="24">Open addressing (linear probing)</text>
+  <text class="note" x="375" y="42">Collisions probe forward. Load factor must stay below 1.</text>
+  <g>
+    <rect class="box"  x="380" y="60"  width="150" height="26"/>
+    <rect class="full" x="380" y="90"  width="150" height="26"/><text class="t" x="455" y="107">cat</text>
+    <rect class="coll" x="380" y="120" width="150" height="26"/><text class="t" x="455" y="137">dog</text>
+    <rect class="coll" x="380" y="150" width="150" height="26"/><text class="t" x="455" y="167">emu</text>
+    <rect class="box"  x="380" y="180" width="150" height="26"/>
+  </g>
+  <text class="idx" x="366" y="78">0</text>
+  <text class="idx" x="366" y="108">1</text>
+  <text class="idx" x="366" y="138">2</text>
+  <text class="idx" x="366" y="168">3</text>
+  <text class="idx" x="366" y="198">4</text>
+  <!-- probe arrows -->
+  <path class="probe" d="M545,103 C575,103 575,133 548,133"/>
+  <path class="probe" d="M545,133 C575,133 575,163 548,163"/>
+  <text class="note" x="556" y="118" fill="#ef4444">h+1</text>
+  <text class="note" x="556" y="150" fill="#ef4444">h+2</text>
+  <text class="note" x="375" y="232">All entries live in the table — one cache line per probe.</text>
+  <text class="note" x="375" y="250">No pointers, better locality, less memory.</text>
+  <text class="note" x="375" y="268">Deletion needs tombstones. Performance collapses</text>
+  <text class="note" x="375" y="286">as load factor approaches 1 — resize by ~0.75.</text>
+</svg>

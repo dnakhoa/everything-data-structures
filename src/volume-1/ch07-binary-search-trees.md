@@ -71,7 +71,7 @@ def bst_delete(node, key):
         if node.right is None: return node.left
 
         # Node has two children
-        successor = min_value_node(node.right)
+        successor = min_value(node.right)
         node.key = successor.key
         node.right = bst_delete(node.right, successor.key)
 
@@ -216,3 +216,10 @@ Simplified red-black tree that only allows right children to be red:
 - Only point queries needed
 - Insert/delete heavy
 - Can tolerate hash collisions
+
+---
+
+## Where this connects
+
+- [Chapter 8: Self-Balancing Trees](ch08-self-balancing-trees.md) — what to do when this degrades to a linked list
+- [Chapter 17: Persistent Data Structures](../volume-3/ch17-persistent-data-structures.md) — making a BST persistent, so old versions survive updates

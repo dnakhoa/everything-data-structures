@@ -1,0 +1,43 @@
+/* Figures and diagram captions */
+figure {
+  margin: 2rem 0;
+  text-align: center;
+}
+
+figure svg {
+  max-width: 100%;
+  height: auto;
+}
+
+figcaption {
+  margin-top: 0.6rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  opacity: 0.72;
+  font-style: italic;
+  text-align: center;
+}
+
+/* "Where this connects" footers */
+h2#where-this-connects {
+  font-size: 1.1rem;
+  opacity: 0.85;
+}
+
+h2#where-this-connects + ul {
+  font-size: 0.925rem;
+}
+
+/* Wide reference tables should scroll rather than overflow the page */
+.content table {
+  display: block;
+  overflow-x: auto;
+  max-width: 100%;
+  width: max-content;
+  margin: 1.2rem 0;
+}
+
+/* Keep long code samples from forcing horizontal page scroll */
+.content pre > code {
+  overflow-x: auto;
+}

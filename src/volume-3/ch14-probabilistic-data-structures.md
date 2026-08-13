@@ -6,6 +6,11 @@ Sometimes we don't need exact answers—we need fast, space-efficient approximat
 
 ## 14.2 Bloom Filters
 
+<figure>
+{{#include ../images/bloom-filter.svg}}
+<figcaption>Why a Bloom filter can produce false positives but never false negatives.</figcaption>
+</figure>
+
 A Bloom filter tells you if an element is "probably in the set" or "definitely not."
 
 **Structure:**
@@ -105,3 +110,10 @@ Always overestimates (never underestimates)
 **Count-Min Sketch:**
 - Network traffic analysis
 - Database query optimization
+
+---
+
+## Where this connects
+
+- [Chapter 12: Hash Tables](../volume-2/ch12-hash-tables.md) — the exact structure these approximate
+- [Chapter 30: Advanced System Patterns and Case Studies](../volume-5/ch30-advanced-system-patterns-and-case-studies.md) — where sketches are deployed in production systems

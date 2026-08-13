@@ -64,24 +64,27 @@ k: latent dimension (typical 50-200)
 
 **Alternating Least Squares (ALS)**:
 ```python
-def als(R, k, iterations):
+def als(R, k, iterations, reg=0.1):
+    """`reg` is the L2 regularization weight — spelled `lambda` in the papers,
+    which is a reserved word in Python."""
     m, n = R.shape
     U = random(m, k)
     V = random(n, k)
+    I = identity(k)
 
     for _ in range(iterations):
         # Fix U, solve for V
         for j in range(n):
             users = R[:, j].nonzero()
             V[j] = solve(
-                U[users].T @ U[users] + lambda*I,
+                U[users].T @ U[users] + reg * I,
                 U[users].T @ R[users, j]
             )
         # Fix V, solve for U
         for i in range(m):
             items = R[i, :].nonzero()
             U[i] = solve(
-                V[items].T @ V[items] + lambda*I,
+                V[items].T @ V[items] + reg * I,
                 V[items].T @ R[i, items].T
             )
     return U, V
@@ -305,3 +308,10 @@ avg: 24.1, max: 45 (spike during incident), p99: 38
 ```
 
 **Cardinality management**: High-cardinality labels (user IDs, request IDs) must be aggregated before storage.
+
+---
+
+## Where this connects
+
+- [Chapter 29: System Design as Data Structure Composition](ch29-system-design-as-data-structure-composition.md) — the component structures these patterns compose
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — the vector-search structures behind modern recommendation

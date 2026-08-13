@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 740 400" role="img" aria-label="The memory hierarchy, with capacity and latency at each level" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .lvl  { stroke: currentColor; stroke-width: 1.5; }
+    .name { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
+    .meta { fill: currentColor; font: 12px ui-monospace, monospace; opacity: .8; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .7; }
+    .hdr  { fill: currentColor; font: 600 11px system-ui, sans-serif; opacity: .6; }
+    .scale{ stroke: currentColor; stroke-width: 1; opacity: .35; }
+  </style>
+  <text class="hdr" x="330" y="26" text-anchor="middle">capacity</text>
+  <text class="hdr" x="510" y="26">latency</text>
+  <text class="hdr" x="612" y="26">≈ human scale</text>
+  <!-- pyramid levels: narrow (fast) at top -->
+  <g>
+    <path class="lvl" d="M282,38 L378,38 L386,72 L274,72 Z" fill="#ef4444" fill-opacity=".22"/>
+    <text class="name" x="330" y="60">L1 cache</text>
+    <text class="meta" x="510" y="60">~1 ns</text>
+    <text class="note" x="612" y="60">1 second</text>
+    <text class="meta" x="180" y="60" text-anchor="end">32 KB</text>
+    <path class="lvl" d="M274,76 L386,76 L396,110 L264,110 Z" fill="#f59e0b" fill-opacity=".22"/>
+    <text class="name" x="330" y="98">L2 cache</text>
+    <text class="meta" x="510" y="98">~4 ns</text>
+    <text class="note" x="612" y="98">4 seconds</text>
+    <text class="meta" x="180" y="98" text-anchor="end">256 KB</text>
+    <path class="lvl" d="M264,114 L396,114 L408,148 L252,148 Z" fill="#eab308" fill-opacity=".22"/>
+    <text class="name" x="330" y="136">L3 cache</text>
+    <text class="meta" x="510" y="136">~15 ns</text>
+    <text class="note" x="612" y="136">15 seconds</text>
+    <text class="meta" x="180" y="136" text-anchor="end">8 MB</text>
+    <path class="lvl" d="M252,152 L408,152 L426,186 L234,186 Z" fill="#10b981" fill-opacity=".22"/>
+    <text class="name" x="330" y="174">Main memory (DRAM)</text>
+    <text class="meta" x="510" y="174">~100 ns</text>
+    <text class="note" x="612" y="174">1.5 minutes</text>
+    <text class="meta" x="180" y="174" text-anchor="end">64 GB</text>
+    <path class="lvl" d="M234,190 L426,190 L450,224 L210,224 Z" fill="#3b82f6" fill-opacity=".22"/>
+    <text class="name" x="330" y="212">NVMe SSD</text>
+    <text class="meta" x="510" y="212">~10 μs</text>
+    <text class="note" x="612" y="212">3 hours</text>
+    <text class="meta" x="180" y="212" text-anchor="end">1 TB</text>
+    <path class="lvl" d="M210,228 L450,228 L480,262 L180,262 Z" fill="#a855f7" fill-opacity=".22"/>
+    <text class="name" x="330" y="250">Hard disk (seek)</text>
+    <text class="meta" x="510" y="250">~10 ms</text>
+    <text class="note" x="612" y="250">4 months</text>
+    <text class="meta" x="172" y="250" text-anchor="end">10 TB</text>
+  </g>
+  <!-- scale arrow -->
+  <line class="scale" x1="120" y1="42" x2="120" y2="258"/>
+  <path class="scale" d="M114,250 L120,258 L126,250" fill="none"/>
+  <text class="note" x="112" y="150" text-anchor="middle" transform="rotate(-90 112 150)">slower, larger, cheaper →</text>
+  <text class="cap"  x="20" y="300">The right-hand column is the point.</text>
+  <text class="note" x="20" y="322">If an L1 hit took one second, a disk seek would take four months. The RAM model of Chapter 1 treats those</text>
+  <text class="note" x="20" y="340">two accesses as identical — which is why it mispredicts real performance by orders of magnitude.</text>
+  <text class="note" x="20" y="362">Memory moves in blocks: 64-byte cache lines, 4 KB pages. Reading one byte costs the same as reading its</text>
+  <text class="note" x="20" y="380">whole block, so a structure whose data sits together gets the rest of the block for free.</text>
+</svg>

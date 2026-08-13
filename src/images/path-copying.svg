@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 320" role="img" aria-label="Path copying in a persistent binary search tree" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .n     { fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .copy  { fill: #f59e0b; fill-opacity: .18; stroke: #f59e0b; stroke-width: 2.2; }
+    .fresh { fill: #10b981; fill-opacity: .18; stroke: #10b981; stroke-width: 2.2; }
+    .share { fill: #3b82f6; fill-opacity: .12; stroke: #3b82f6; stroke-width: 1.8; }
+    .e     { stroke: currentColor; stroke-width: 1.6; opacity: .6; }
+    .e2    { stroke: #f59e0b; stroke-width: 1.8; opacity: .9; }
+    .k     { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
+    .rt    { fill: currentColor; font: 600 11px system-ui, sans-serif; text-anchor: middle; }
+    .cap   { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note  { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .74; }
+    .lg    { fill: currentColor; font: 11px system-ui, sans-serif; }
+  </style>
+  <text class="cap" x="16" y="24">Inserting 25 into a persistent BST — version 1 stays valid</text>
+  <!-- version roots -->
+  <text class="rt" x="150" y="52">v1 root</text>
+  <text class="rt" x="330" y="52">v2 root</text>
+  <!-- v1 edges -->
+  <line class="e" x1="140" y1="82" x2="92"  y2="128"/>
+  <line class="e" x1="160" y1="82" x2="300" y2="140"/>
+  <line class="e" x1="82"  y1="158" x2="52" y2="204"/>
+  <!-- v2 edges -->
+  <line class="e2" x1="320" y1="82" x2="120" y2="128"/>
+  <line class="e2" x1="340" y1="82" x2="392" y2="128"/>
+  <line class="e2" x1="392" y1="158" x2="360" y2="204"/>
+  <line class="e2" x1="410" y1="158" x2="452" y2="204"/>
+  <!-- shared right subtree from v1 root -->
+  <line class="e" x1="168" y1="80" x2="286" y2="130"/>
+  <!-- nodes -->
+  <circle class="n"     cx="150" cy="68"  r="21"/><text class="k" x="150" y="73">50</text>
+  <circle class="copy"  cx="330" cy="68"  r="21"/><text class="k" x="330" y="73">50′</text>
+  <circle class="n"     cx="80"  cy="140" r="21"/><text class="k" x="80"  y="145">30</text>
+  <circle class="copy"  cx="400" cy="140" r="21"/><text class="k" x="400" y="145">30′</text>
+  <circle class="share" cx="296" cy="140" r="21"/><text class="k" x="296" y="145">70</text>
+  <circle class="share" cx="44"  cy="216" r="21"/><text class="k" x="44"  y="221">10</text>
+  <circle class="fresh" cx="460" cy="216" r="21"/><text class="k" x="460" y="221">25</text>
+  <!-- 30' left child points at shared 10 -->
+  <line class="e2" x1="382" y1="156" x2="66" y2="228" stroke-dasharray="5 4"/>
+  <!-- legend -->
+  <g transform="translate(40,258)">
+    <circle class="copy"  cx="10" cy="0" r="9"/>
+    <text class="lg" x="26" y="4">Copied — a child pointer changed (2 nodes)</text>
+    <circle class="fresh" cx="330" cy="0" r="9"/>
+    <text class="lg" x="346" y="4">New node</text>
+  </g>
+  <g transform="translate(40,286)">
+    <circle class="share" cx="10" cy="0" r="9"/>
+    <text class="lg" x="26" y="4">Shared with v1 — nothing about it changed</text>
+  </g>
+  <text class="note" x="400" y="290">Cost per update: O(log n) copied nodes, not O(n).</text>
+  <text class="note" x="400" y="306">Node 30 must be copied — its right pointer now points to 25.</text>
+</svg>

@@ -832,3 +832,10 @@ class DSU:
             self.size[x] = size_x
             self.parent[y] = parent_y
 ```
+
+---
+
+## Where this connects
+
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the paradigms these structures accelerate
+- [Chapter 25: Complete Selection Guide and Complexity Reference](ch25-complete-selection-guide-and-complexity-reference.md) — the selection matrix for picking among them

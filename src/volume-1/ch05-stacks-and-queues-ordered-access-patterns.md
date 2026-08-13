@@ -456,3 +456,10 @@ The stack and queue concepts emerged in the 1950s as programmers recognized comm
 The term "stack" became standard in the 1960s, replacing earlier terms like "pushdown list." The queue concept was formalized alongside it.
 
 Edsger Dijkstra's 1968 paper on " cooperating sequential processes" introduced semaphores and discussed bounded buffers (producer-consumer) as fundamental synchronization problems.
+
+---
+
+## Where this connects
+
+- [Chapter 9: Heaps and Priority Queues](ch09-heaps-and-priority-queues.md) — the priority queue, when FIFO and LIFO are both the wrong order
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the stack as the implicit structure behind all recursion

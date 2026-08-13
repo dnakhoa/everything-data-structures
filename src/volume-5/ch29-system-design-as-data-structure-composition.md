@@ -295,3 +295,10 @@ class SlidingWindowLog:
 ```
 
 **Fixed window vs Sliding window vs Sliding log**: Trade-offs between accuracy, memory, and implementation complexity.
+
+---
+
+## Where this connects
+
+- [Chapter 10: Multiway Search Trees and B-Trees](../volume-1/ch10-multiway-search-trees-and-b-trees.md) — the B-trees inside every storage engine described here
+- [Chapter 14: Probabilistic Data Structures](../volume-3/ch14-probabilistic-data-structures.md) — the probabilistic structures these systems rely on

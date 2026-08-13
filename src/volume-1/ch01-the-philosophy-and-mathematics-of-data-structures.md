@@ -83,6 +83,11 @@ lim(n→∞) g(n)/f(n) = ∞
 
 ## 1.4 Common Complexity Classes
 
+<figure>
+{{#include ../images/big-o-growth.svg}}
+<figcaption>How the common complexity classes diverge. The gaps are what decide feasibility.</figcaption>
+</figure>
+
 Understanding the practical implications of different complexity classes is essential:
 
 **Constant Time: O(1)**
@@ -202,3 +207,10 @@ The mathematical foundations of data structures draw from several disciplines:
 - **Algebra**: Group theory in symmetric structures, polynomial methods
 - **Probability**: Randomization in skip lists, hashing, and probabilistic data structures
 - **Algebraic Topology**: Recent connections to persistent homology and spatial data structures
+
+---
+
+## Where this connects
+
+- [Chapter 22: Practical Considerations](../volume-3/ch22-practical-considerations.md) — how these bounds translate into actual decisions
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — why the RAM model this chapter assumes is not how real hardware behaves

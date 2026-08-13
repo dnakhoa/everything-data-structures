@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 280" role="img" aria-label="Skip list express lanes and a search path" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .n    { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .on   { fill: #3b82f6; fill-opacity: .16; stroke: #3b82f6; stroke-width: 2; }
+    .e    { stroke: currentColor; stroke-width: 1.4; opacity: .5; }
+    .path { stroke: #ef4444; stroke-width: 2.4; fill: none; }
+    .k    { fill: currentColor; font: 600 12px ui-monospace, monospace; text-anchor: middle; }
+    .lv   { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .6; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+  </style>
+  <text class="cap" x="16" y="24">Searching for 47</text>
+  <!-- levels -->
+  <text class="lv" x="16" y="62">L3</text>
+  <text class="lv" x="16" y="106">L2</text>
+  <text class="lv" x="16" y="150">L1</text>
+  <text class="lv" x="16" y="194">L0</text>
+  <!-- L3: head -> 31 -> nil -->
+  <line class="e" x1="72" y1="56" x2="300" y2="56"/>
+  <line class="e" x1="336" y1="56" x2="620" y2="56"/>
+  <!-- L2: head -> 17 -> 31 -> 59 -->
+  <line class="e" x1="72" y1="100" x2="168" y2="100"/>
+  <line class="e" x1="204" y1="100" x2="300" y2="100"/>
+  <line class="e" x1="336" y1="100" x2="492" y2="100"/>
+  <line class="e" x1="528" y1="100" x2="620" y2="100"/>
+  <!-- L1 -->
+  <line class="e" x1="72" y1="144" x2="168" y2="144"/>
+  <line class="e" x1="204" y1="144" x2="300" y2="144"/>
+  <line class="e" x1="336" y1="144" x2="408" y2="144"/>
+  <line class="e" x1="444" y1="144" x2="492" y2="144"/>
+  <line class="e" x1="528" y1="144" x2="620" y2="144"/>
+  <!-- L0: all -->
+  <line class="e" x1="72" y1="188" x2="108" y2="188"/>
+  <line class="e" x1="144" y1="188" x2="168" y2="188"/>
+  <line class="e" x1="204" y1="188" x2="240" y2="188"/>
+  <line class="e" x1="276" y1="188" x2="300" y2="188"/>
+  <line class="e" x1="336" y1="188" x2="408" y2="188"/>
+  <line class="e" x1="444" y1="188" x2="492" y2="188"/>
+  <line class="e" x1="528" y1="188" x2="620" y2="188"/>
+  <!-- head tower -->
+  <rect class="n" x="44" y="42"  width="28" height="28"/>
+  <rect class="n" x="44" y="86"  width="28" height="28"/>
+  <rect class="n" x="44" y="130" width="28" height="28"/>
+  <rect class="n" x="44" y="174" width="28" height="28"/>
+  <text class="k" x="58" y="222">head</text>
+  <!-- node 9: L0 -->
+  <rect class="n" x="108" y="174" width="36" height="28"/><text class="k" x="126" y="193">9</text>
+  <!-- node 17: L0-L2 -->
+  <rect class="n" x="168" y="86"  width="36" height="28"/><text class="k" x="186" y="105">17</text>
+  <rect class="n" x="168" y="130" width="36" height="28"/><text class="k" x="186" y="149">17</text>
+  <rect class="n" x="168" y="174" width="36" height="28"/><text class="k" x="186" y="193">17</text>
+  <!-- node 25: L0 -->
+  <rect class="n" x="240" y="174" width="36" height="28"/><text class="k" x="258" y="193">25</text>
+  <!-- node 31: L0-L3 -->
+  <rect class="on" x="300" y="42"  width="36" height="28"/><text class="k" x="318" y="61">31</text>
+  <rect class="on" x="300" y="86"  width="36" height="28"/><text class="k" x="318" y="105">31</text>
+  <rect class="on" x="300" y="130" width="36" height="28"/><text class="k" x="318" y="149">31</text>
+  <rect class="n"  x="300" y="174" width="36" height="28"/><text class="k" x="318" y="193">31</text>
+  <!-- node 47: L0-L1 -->
+  <rect class="on" x="408" y="130" width="36" height="28"/><text class="k" x="426" y="149">47</text>
+  <rect class="on" x="408" y="174" width="36" height="28"/><text class="k" x="426" y="193">47</text>
+  <!-- node 59: L0-L2 -->
+  <rect class="n" x="492" y="86"  width="36" height="28"/><text class="k" x="510" y="105">59</text>
+  <rect class="n" x="492" y="130" width="36" height="28"/><text class="k" x="510" y="149">59</text>
+  <rect class="n" x="492" y="174" width="36" height="28"/><text class="k" x="510" y="193">59</text>
+  <!-- search path: head L3 -> 31 (L3) -> down to L2, 59 too big -> down L1 -> 47 -->
+  <path class="path" d="M72,56 L300,56"/>
+  <path class="path" d="M318,70 L318,86"/>
+  <path class="path" d="M318,114 L318,130"/>
+  <path class="path" d="M336,144 L408,144"/>
+  <circle cx="426" cy="144" r="5" fill="#ef4444"/>
+  <text class="note" x="16" y="248">Each node's height comes from a coin flip: ~½ the nodes reach L1, ~¼ reach L2, ~⅛ reach L3. Expected height is O(log n) and</text>
+  <text class="note" x="16" y="266">expected total space is O(n) — about 2n nodes, not n log n. Search drops a level whenever the next key overshoots.</text>
+</svg>
