@@ -117,8 +117,8 @@
 
 ## Online Resources
 
-- [Visualgo](https://visualgo.net) — step-through animations of most structures in this book
-- [Open Data Structures](https://opendatastructures.org) — Pat Morin's free textbook, with code in several languages
-- [Big-O Cheat Sheet](https://www.bigocheatsheet.com) — quick complexity reference
-- [GeeksforGeeks](https://www.geeksforgeeks.org) — implementation tutorials; verify against a primary source
-- [Papers We Love](https://paperswelove.org) — curated CS papers with discussion
+- [Visualgo](https://visualgo.net). Step-through animations of most structures in this book
+- [Open Data Structures](https://opendatastructures.org). Pat Morin's free textbook, with code in several languages
+- [Big-O Cheat Sheet](https://www.bigocheatsheet.com). Quick complexity reference
+- [GeeksforGeeks](https://www.geeksforgeeks.org). Implementation tutorials; verify against a primary source
+- [Papers We Love](https://paperswelove.org). Curated CS papers with discussion

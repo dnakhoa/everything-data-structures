@@ -1,10 +1,10 @@
 # Preface
 
-*Everything Data Structures* — by **Ngoc Anh Khoa Doan**
+*Everything Data Structures*: by **Ngoc Anh Khoa Doan**
 
-This book represents a monumental effort to document every significant data structure known to computer science, from the most elementary building blocks to the most sophisticated, specialized, and esoteric structures employed in cutting-edge research and industrial applications. The study of data structures is not merely an academic exercise—it is the foundation upon which all efficient software is built.
+This book represents a monumental effort to document every significant data structure known to computer science, from the most elementary building blocks to the most sophisticated, specialized, and esoteric structures employed in cutting-edge research and industrial applications. The study of data structures is not merely an academic exercise, it is the foundation upon which all efficient software is built.
 
-The history of data structures mirrors the evolution of computing itself. When John von Neumann conceived the stored-program computer in the 1940s, programmers worked directly with raw memory addresses. As programs grew more complex, the need for organization became apparent. The 1960s and 1970s saw the emergence of fundamental structures—arrays, linked lists, trees—alongside the theoretical frameworks to analyze them. The work of Donald Knuth in "The Art of Computer Programming" codified these structures and established the mathematical rigor that remains the standard today.
+The history of data structures mirrors the evolution of computing itself. When John von Neumann conceived the stored-program computer in the 1940s, programmers worked directly with raw memory addresses. As programs grew more complex, the need for organization became apparent. The 1960s and 1970s saw the emergence of fundamental structures, arrays, linked lists, trees, alongside the theoretical frameworks to analyze them. The work of Donald Knuth in "The Art of Computer Programming" codified these structures and established the mathematical rigor that remains the standard today.
 
 The subsequent decades brought new challenges: massive databases requiring disk-optimized structures, distributed systems demanding new approaches to consistency, and probabilistic methods that traded absolute correctness for space efficiency. Each chapter of this book tells the story of how data structures evolved to meet these challenges.
 

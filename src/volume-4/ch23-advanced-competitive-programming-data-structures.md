@@ -257,7 +257,7 @@ class HeavyLightDecomposition:
 
 ### Conceptual Foundation
 
-Link-cut trees, invented by Sleator and Tarjan in 1983, support dynamic forest operations: linking trees, cutting edges, and querying aggregates on paths—all in O(log n) amortized time.
+Link-cut trees, invented by Sleator and Tarjan in 1983, support dynamic forest operations: linking trees, cutting edges, and querying aggregates on paths, all in O(log n) amortized time.
 
 **Operations:**
 - **link(u, v)**: Connect u as child of v
@@ -837,5 +837,5 @@ class DSU:
 
 ## Where this connects
 
-- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the paradigms these structures accelerate
-- [Chapter 25: Complete Selection Guide and Complexity Reference](ch25-complete-selection-guide-and-complexity-reference.md) — the selection matrix for picking among them
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md). The paradigms these structures accelerate
+- [Chapter 25: Complete Selection Guide and Complexity Reference](ch25-complete-selection-guide-and-complexity-reference.md). The selection matrix for picking among them

@@ -12,7 +12,7 @@
 
 ## D.2 CAP and PACELC
 
-CAP says that **when a network partition occurs**, a distributed system must sacrifice either consistency or availability. Partitions are not optional — they are a fact of networks — so the real choice is only ever between CP and AP:
+CAP says that **when a network partition occurs**, a distributed system must sacrifice either consistency or availability. Partitions are not optional (they are a fact of networks)so the real choice is only ever between CP and AP:
 
 | Choice | During a partition | Example |
 |--------|-------------------|---------|
@@ -21,7 +21,7 @@ CAP says that **when a network partition occurs**, a distributed system must sac
 
 "CA" is often listed as a third option with a single-node RDBMS as the example. That is a category error: a non-distributed system has no partitions to tolerate, so CAP does not classify it. There is no CA distributed system.
 
-**PACELC** is the more useful formulation, because it also describes the normal case when nothing is broken — *if Partition, then A or C; Else, then L (latency) or C*:
+**PACELC** is the more useful formulation, because it also describes the normal case when nothing is broken: *if Partition, then A or C; Else, then L (latency) or C*:
 
 | System | Partition behavior | Normal behavior | Reads as |
 |--------|-------------------|-----------------|----------|
@@ -30,7 +30,7 @@ CAP says that **when a network partition occurs**, a distributed system must sac
 | Cassandra | AP | Latency over consistency (tunable) | PA/EL |
 | MongoDB | CP | Consistency over latency | PC/EC |
 
-The Else half is where most systems actually spend their time, and it is the half CAP says nothing about — which is why "we chose AP" explains far less about a system than people usually intend by it.
+The Else half is where most systems actually spend their time, and it is the half CAP says nothing about, which is why "we chose AP" explains far less about a system than people usually intend by it.
 
 ## D.3 Caching Patterns
 
@@ -68,4 +68,4 @@ The Else half is where most systems actually spend their time, and it is the hal
 
 Every system in Volume V reduces to the building blocks in Volumes I–IV. That is the argument the book makes, and this table is the short version of it.
 
-*Everything Data Structures* — by Ngoc Anh Khoa Doan. Prose is [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); code is MIT.
+*Everything Data Structures*: by Ngoc Anh Khoa Doan. Prose is [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); code is MIT.

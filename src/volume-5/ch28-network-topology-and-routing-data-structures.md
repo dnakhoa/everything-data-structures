@@ -264,5 +264,5 @@ Negative acknowledgments flow up for reliability
 
 ## Where this connects
 
-- [Chapter 11: Graphs—Modeling Relationships](../volume-2/ch11-graphs-modeling-relationships.md) — the graph fundamentals underneath routing
-- [Chapter 13: String Data Structures](../volume-2/ch13-string-data-structures.md) — the tries that routing tables actually are
+- [Chapter 11: Graphs—Modeling Relationships](../volume-2/ch11-graphs-modeling-relationships.md). The graph fundamentals underneath routing
+- [Chapter 13: String Data Structures](../volume-2/ch13-string-data-structures.md). The tries that routing tables actually are

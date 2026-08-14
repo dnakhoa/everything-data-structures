@@ -24,7 +24,7 @@
 
 **Cursor**: A position indicator within a data structure.
 
-**Degenerate Tree**: A tree that has degraded to essentially a linked list — the worst case for an unbalanced BST.
+**Degenerate Tree**: A tree that has degraded to essentially a linked list, the worst case for an unbalanced BST.
 
 **Fan-out**: The number of children a node can have. High fan-out is what makes B-trees shallow.
 
@@ -34,7 +34,7 @@
 
 **Leaf**: A node with no children.
 
-**Sentinel**: A dummy node that removes special cases — an empty-list check, a null-pointer test — by guaranteeing a node always exists.
+**Sentinel**: A dummy node that removes special cases (an empty-list check, a null-pointer test)by guaranteeing a node always exists.
 
 **Tombstone**: A marker left in place of a deleted entry so that probe sequences in an open-addressed hash table are not broken.
 
@@ -54,7 +54,7 @@
 
 **Cache Line**: The unit of transfer between memory and cache, typically 64 bytes. Reading one byte costs the same as reading its whole line.
 
-**Cache-Oblivious**: Achieving optimal I/O performance without knowing the block size — by being well-organized at every scale simultaneously.
+**Cache-Oblivious**: Achieving optimal I/O performance without knowing the block size. By being well-organized at every scale simultaneously.
 
 **External Memory Model**: A cost model counting block transfers rather than operations. Predicts real disk performance where the RAM model does not.
 
@@ -82,7 +82,7 @@
 
 **Persistent**: Preserving previous versions after modification. *Partial* persistence allows querying old versions; *full* allows updating them; *confluent* allows merging them. Unrelated to durable storage.
 
-**Path Copying**: Achieving persistence by duplicating only the nodes on the path from root to the modification point — O(log n) per update in a balanced tree.
+**Path Copying**: Achieving persistence by duplicating only the nodes on the path from root to the modification point, O(log n) per update in a balanced tree.
 
 **Structural Sharing**: Reusing unchanged subtrees between versions of an immutable structure. What makes persistence affordable.
 
@@ -98,7 +98,7 @@
 
 **Eventual Consistency**: A guarantee that replicas converge given no further updates, with no bound on when.
 
-**Merkle Tree**: A tree of hashes where each node hashes its children, allowing two large datasets to be compared — and their differences located — in logarithmic work.
+**Merkle Tree**: A tree of hashes where each node hashes its children, allowing two large datasets to be compared (and their differences located)in logarithmic work.
 
 **Quorum**: A subset of replicas that must acknowledge an operation. Overlapping read and write quorums (R + W > N) give strong consistency.
 
@@ -122,7 +122,7 @@
 
 **MBR (Minimum Bounding Rectangle)**: The smallest axis-aligned rectangle enclosing a set of objects. The key type in an R-tree, and overlap between sibling MBRs is what degrades R-tree queries.
 
-**Space-Filling Curve**: A mapping from multi-dimensional coordinates to one dimension that mostly preserves locality — Z-order and Hilbert being the common ones. The basis of geohashing.
+**Space-Filling Curve**: A mapping from multi-dimensional coordinates to one dimension that mostly preserves locality, Z-order and Hilbert being the common ones. The basis of geohashing.
 
 **Suffix Array**: The sorted list of a string's suffix starting positions. Suffix-tree power at about 4 bytes per character rather than 20.
 

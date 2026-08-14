@@ -11,7 +11,7 @@
     .arw  { stroke: #10b981; stroke-width: 2.5; fill: none; }
   </style>
   <!-- BEFORE -->
-  <text class="cap"  x="16" y="24">Before — inserting 26 overflows a node of order 5 (max 4 keys)</text>
+  <text class="cap"  x="16" y="24">Before: inserting 26 overflows a node of order 5 (max 4 keys)</text>
   <g>
     <rect class="cell" x="240" y="46" width="46" height="30"/><text class="k" x="263" y="66">40</text>
   </g>
@@ -24,7 +24,7 @@
     <rect class="over" x="178" y="112" width="46" height="30"/><text class="k" x="201" y="132">31</text>
     <rect class="over" x="224" y="112" width="46" height="30"/><text class="k" x="247" y="132">35</text>
   </g>
-  <text class="note" x="40" y="162">5 keys — one too many. The median (26) is promoted.</text>
+  <text class="note" x="40" y="162">5 keys, one too many. The median (26) is promoted.</text>
   <g>
     <rect class="cell" x="356" y="112" width="46" height="30"/><text class="k" x="379" y="132">55</text>
     <rect class="cell" x="402" y="112" width="46" height="30"/><text class="k" x="425" y="132">70</text>
@@ -34,7 +34,7 @@
   <path class="arw" d="M578,111 L590,120 L578,129"/>
   <text class="note" x="516" y="106" fill="#10b981">split</text>
   <!-- AFTER -->
-  <text class="cap"  x="16" y="208">After — median rises, node becomes two half-full nodes</text>
+  <text class="cap"  x="16" y="208">After: median rises, node becomes two half-full nodes</text>
   <g>
     <rect class="med"  x="240" y="222" width="46" height="30"/><text class="k" x="263" y="242">26</text>
     <rect class="cell" x="286" y="222" width="46" height="30"/><text class="k" x="309" y="242">40</text>
@@ -56,7 +56,7 @@
   </g>
   <text class="note" x="520" y="242">Splits propagate upward. The</text>
   <text class="note" x="520" y="258">tree grows in height only when</text>
-  <text class="note" x="520" y="274">the root itself splits — which is</text>
+  <text class="note" x="520" y="274">the root itself splits, which is</text>
   <text class="note" x="520" y="290">why every leaf stays at the</text>
   <text class="note" x="520" y="306">same depth.</text>
 </svg>

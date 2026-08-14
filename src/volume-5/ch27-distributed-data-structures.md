@@ -267,5 +267,5 @@ class VersionVector:
 
 ## Where this connects
 
-- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — CRDTs in the broader context of emerging structures
-- [Chapter 17: Persistent Data Structures](../volume-3/ch17-persistent-data-structures.md) — the persistence ideas that underpin versioned replicas
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md). CRDTs in the broader context of emerging structures
+- [Chapter 17: Persistent Data Structures](../volume-3/ch17-persistent-data-structures.md). The persistence ideas that underpin versioned replicas

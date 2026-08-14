@@ -46,8 +46,8 @@
   <path class="h3" d="M74,256 C130,250 140,230 158,214"/>
   <path class="h3" d="M74,256 C240,262 300,240 322,214"/>
   <path class="h3" d="M74,256 C380,268 500,240 518,214"/>
-  <text class="note" x="300" y="262" fill="#ef4444">All three bits are already 1 — set by "cat" and "dog".</text>
+  <text class="note" x="300" y="262" fill="#ef4444">All three bits are already 1, set by "cat" and "dog".</text>
   <text class="note" x="300" y="278" fill="#ef4444">The filter reports "possibly present". This is a false positive.</text>
   <text class="note" x="16" y="308">No false negatives are possible: an inserted element's bits are never unset, so "definitely not present" is always trustworthy.</text>
-  <text class="note" x="16" y="324">Deletion is impossible for the same reason — clearing a bit could erase another element's evidence. That is what counting Bloom filters fix.</text>
+  <text class="note" x="16" y="324">Deletion is impossible for the same reason: clearing a bit could erase another element's evidence. That is what counting Bloom filters fix.</text>
 </svg>

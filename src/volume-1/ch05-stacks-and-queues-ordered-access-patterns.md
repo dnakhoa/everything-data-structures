@@ -2,7 +2,7 @@
 
 ## 5.1 Stacks: The LIFO Principle
 
-A stack is an ADT supporting two primary operations: push (add to top) and pop (remove from top). The last element pushed is the first to be popped—Last In, First Out.
+A stack is an ADT supporting two primary operations: push (add to top) and pop (remove from top). The last element pushed is the first to be popped, Last In, First Out.
 
 **Mental Model**: A stack of plates in a cafeteria. You add plates to the top, and you take plates from the top. You never reach into the middle of the stack.
 
@@ -451,7 +451,7 @@ threading.Thread(target=consumer, args=(queue,)).start()
 
 ## 5.9 Historical Context
 
-The stack and queue concepts emerged in the 1950s as programmers recognized common access patterns. Alan Turing's 1949 work on subroutine linkage predated formal stack concepts—the call stack was an informal but essential mechanism.
+The stack and queue concepts emerged in the 1950s as programmers recognized common access patterns. Alan Turing's 1949 work on subroutine linkage predated formal stack concepts, the call stack was an informal but essential mechanism.
 
 The term "stack" became standard in the 1960s, replacing earlier terms like "pushdown list." The queue concept was formalized alongside it.
 
@@ -461,5 +461,5 @@ Edsger Dijkstra's 1968 paper on " cooperating sequential processes" introduced s
 
 ## Where this connects
 
-- [Chapter 9: Heaps and Priority Queues](ch09-heaps-and-priority-queues.md) — the priority queue, when FIFO and LIFO are both the wrong order
-- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the stack as the implicit structure behind all recursion
+- [Chapter 9: Heaps and Priority Queues](ch09-heaps-and-priority-queues.md). The priority queue, when FIFO and LIFO are both the wrong order
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md). The stack as the implicit structure behind all recursion

@@ -61,8 +61,8 @@
   <path class="probe" d="M545,133 C575,133 575,163 548,163"/>
   <text class="note" x="556" y="118" fill="#ef4444">h+1</text>
   <text class="note" x="556" y="150" fill="#ef4444">h+2</text>
-  <text class="note" x="375" y="232">All entries live in the table — one cache line per probe.</text>
+  <text class="note" x="375" y="232">All entries live in the table: one cache line per probe.</text>
   <text class="note" x="375" y="250">No pointers, better locality, less memory.</text>
   <text class="note" x="375" y="268">Deletion needs tombstones. Performance collapses</text>
-  <text class="note" x="375" y="286">as load factor approaches 1 — resize by ~0.75.</text>
+  <text class="note" x="375" y="286">as load factor approaches 1. Resize by ~0.75.</text>
 </svg>

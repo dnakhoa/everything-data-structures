@@ -1,6 +1,6 @@
 [book]
 title = "Everything Data Structures"
-description = "A complete course on data structures — from asymptotic analysis to distributed systems, in five volumes and 31 chapters."
+description = "A complete course on data structures, from asymptotic analysis to distributed systems, in five volumes and 31 chapters."
 authors = ["Ngoc Anh Khoa Doan"]
 language = "en"
 src = "src"

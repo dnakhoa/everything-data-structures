@@ -6,7 +6,7 @@ An array is a contiguous block of memory containing elements of identical type. 
 
 The address formula: address(arr[i]) = base_address + i × element_size
 
-This direct addressing is why arrays provide O(1) indexed access. No traversal, no searching—the location is known.
+This direct addressing is why arrays provide O(1) indexed access. No traversal, no searching, the location is known.
 
 ## 3.2 One-Dimensional Arrays
 
@@ -256,5 +256,5 @@ The dynamic array (vector) concept emerged with languages supporting heap alloca
 
 ## Where this connects
 
-- [Chapter 4: Linked Lists—The Art of Distributed Storage](ch04-linked-lists-the-art-of-distributed-storage.md) — the same sequence problem solved with pointers instead of contiguity
-- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — why contiguous layout beats pointer-chasing by more than the asymptotics suggest
+- [Chapter 4: Linked Lists—The Art of Distributed Storage](ch04-linked-lists-the-art-of-distributed-storage.md). The same sequence problem solved with pointers instead of contiguity
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md). Why contiguous layout beats pointer-chasing by more than the asymptotics suggest

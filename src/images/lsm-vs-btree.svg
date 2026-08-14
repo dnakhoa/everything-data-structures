@@ -12,7 +12,7 @@
     .aG   { stroke: #10b981; stroke-width: 2; fill: none; }
   </style>
   <!-- B-TREE -->
-  <text class="cap" x="16" y="24">B-tree — update in place</text>
+  <text class="cap" x="16" y="24">B-tree: update in place</text>
   <rect class="mem" x="20" y="42" width="90" height="30"/><text class="t" x="65" y="62">write</text>
   <path class="aR" d="M110,57 L150,57"/><path class="aR" d="M142,52 L150,57 L142,62"/>
   <rect class="box" x="150" y="42" width="150" height="30"/><text class="t" x="225" y="62">find the right page</text>
@@ -25,12 +25,12 @@
     <rect class="rand" x="268" y="100" width="46" height="34"/><text class="sm" x="291" y="121">page</text>
     <rect class="box"  x="320" y="100" width="46" height="34"/>
   </g>
-  <text class="note" x="60" y="152" fill="#ef4444">Each write seeks to a different page — random I/O.</text>
+  <text class="note" x="60" y="152" fill="#ef4444">Each write seeks to a different page. Random I/O.</text>
   <text class="note" x="60" y="168">Reads are fast: one path, O(log_B n) transfers.</text>
   <!-- divider -->
   <line x1="16" y1="186" x2="664" y2="186" stroke="currentColor" stroke-width="1" opacity=".18"/>
   <!-- LSM -->
-  <text class="cap" x="16" y="212">LSM tree — buffer, then flush sequentially</text>
+  <text class="cap" x="16" y="212">LSM tree: buffer, then flush sequentially</text>
   <rect class="mem" x="20" y="230" width="90" height="30"/><text class="t" x="65" y="250">write</text>
   <path class="aG" d="M110,245 L150,245"/><path class="aG" d="M142,240 L150,245 L142,250"/>
   <rect class="mem" x="150" y="228" width="112" height="34"/>
@@ -46,7 +46,7 @@
   <rect class="disk" x="302" y="290" width="144" height="30"/><text class="sm" x="374" y="310">SST L1  (merged, larger)</text>
   <text class="note" x="20" y="288" fill="#10b981">Every disk write is sequential.</text>
   <text class="note" x="20" y="304">Write throughput ~10× a B-tree.</text>
-  <text class="note" x="20" y="320">Reads may check several SSTs —</text>
+  <text class="note" x="20" y="320">Reads may check several SSTs,</text>
   <text class="note" x="20" y="336">a Bloom filter per SST skips most.</text>
   <text class="note" x="470" y="304">B-tree: fast reads, random writes.</text>
   <text class="note" x="470" y="320">LSM: fast writes, more read work</text>

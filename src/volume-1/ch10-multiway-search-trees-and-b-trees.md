@@ -220,5 +220,5 @@ Donald Comer provided the comprehensive analysis in his 1979 paper "The Ubiquito
 
 ## Where this connects
 
-- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — the external-memory model that explains why B-trees exist
-- [Chapter 14: Probabilistic Data Structures](../volume-3/ch14-probabilistic-data-structures.md) — the Bloom filters that make LSM-tree reads viable
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md). The external-memory model that explains why B-trees exist
+- [Chapter 14: Probabilistic Data Structures](../volume-3/ch14-probabilistic-data-structures.md). The Bloom filters that make LSM-tree reads viable

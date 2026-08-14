@@ -1,6 +1,6 @@
 # Chapter 20: Data Structure Design Patterns
 
-The preceding chapters covered structures. This one covers the recurring shapes of the *code around* them — how to extend a structure without rewriting it, how to expose traversal without exposing internals, and how to keep the cost of an abstraction visible.
+The preceding chapters covered structures. This one covers the recurring shapes of the *code around* them: how to extend a structure without rewriting it, how to expose traversal without exposing internals, and how to keep the cost of an abstraction visible.
 
 The patterns here are the Gang of Four patterns as they specifically apply to collections, plus a few that are particular to data structures and appear in no pattern catalog.
 
@@ -18,7 +18,7 @@ class SynchronizedDict(dict):
             return super().__getitem__(key)
 ```
 
-A decorator wraps a structure in another object with the same interface, adding behavior on the way through. Synchronization, logging, validation, caching, access counting, and copy-on-write are all naturally decorators — each is a concern orthogonal to *how the data is stored*, so each belongs outside the storage.
+A decorator wraps a structure in another object with the same interface, adding behavior on the way through. Synchronization, logging, validation, caching, access counting, and copy-on-write are all naturally decorators. Each is a concern orthogonal to *how the data is stored*, so each belongs outside the storage.
 
 The example above illustrates the pattern and also a trap worth naming, because it is the single most common way this pattern is misapplied. **Subclassing a built-in collection does not reliably intercept its operations.** `dict.update()`, `dict.get()`, and `dict.setdefault()` are implemented in C and do not route through `__getitem__`, so the lock above simply does not apply to them. The structure looks synchronized and is not.
 
@@ -45,7 +45,7 @@ class SynchronizedDict:
             return self._data.get(key, default)
 ```
 
-Worth being honest about what this buys: per-operation locking makes each operation atomic, but **sequences of operations still race**. `if k in d: d[k] += 1` acquires the lock twice and another thread can interleave between them. This is why Java deprecated `Hashtable` in favor of `ConcurrentHashMap`'s compound operations like `computeIfAbsent`, and why a synchronized wrapper is usually the wrong concurrency answer — see [Chapter 18](ch18-concurrent-data-structures.md).
+Worth being honest about what this buys: per-operation locking makes each operation atomic, but **sequences of operations still race**. `if k in d: d[k] += 1` acquires the lock twice and another thread can interleave between them. This is why Java deprecated `Hashtable` in favor of `ConcurrentHashMap`'s compound operations like `computeIfAbsent`, and why a synchronized wrapper is usually the wrong concurrency answer: see [Chapter 18](ch18-concurrent-data-structures.md).
 
 Real uses: Java's `Collections.unmodifiableList()` and `synchronizedMap()`; Python's `types.MappingProxyType`; the copy-on-write wrappers in persistent collection libraries.
 
@@ -68,7 +68,7 @@ class Composite(Component):
             c.operation()
 ```
 
-The composite pattern makes a leaf and a container of leaves interchangeable, so client code can treat "one thing" and "a tree of things" identically. Filesystems are the standard illustration — a directory's size is the sum of its children's sizes, and a file's size is its own, but the caller asks the same question of both:
+The composite pattern makes a leaf and a container of leaves interchangeable, so client code can treat "one thing" and "a tree of things" identically. Filesystems are the standard illustration. A directory's size is the sum of its children's sizes, and a file's size is its own, but the caller asks the same question of both:
 
 ```python
 class Node(ABC):
@@ -96,7 +96,7 @@ class Directory(Node):
 
 This is exactly how the expression trees in [Chapter 6](../volume-1/ch06-tree-fundamentals-and-binary-trees.md) work: a literal and an operator node both answer `evaluate()`. It is also how the DOM, scene graphs, GUI widget hierarchies, and query plan trees are built.
 
-**Two warnings.** First, recursive traversal means recursive depth — a deep composite will overflow the stack, and structures with user-controlled depth need an explicit stack instead. Second, the pattern is often written with `add()`/`remove()` on the base `Component` so leaves and composites share one interface; that forces leaves to implement operations that make no sense for them. Keeping child management on `Composite` alone is the safer choice, at the cost of clients needing a type check to add children.
+**Two warnings.** First, recursive traversal means recursive depth. A deep composite will overflow the stack, and structures with user-controlled depth need an explicit stack instead. Second, the pattern is often written with `add()`/`remove()` on the base `Component` so leaves and composites share one interface; that forces leaves to implement operations that make no sense for them. Keeping child management on `Composite` alone is the safer choice, at the cost of clients needing a type check to add children.
 
 ## 20.3 Iterator Pattern
 
@@ -122,7 +122,7 @@ class TreeIterator:
 
 The iterator decouples *what you want to visit* from *how the structure is laid out*. Its real value is that it lets a caller consume a traversal without the structure handing over its internals, and without building an intermediate list.
 
-The example above is a pre-order traversal made iterative — note the right child pushed before the left, so the left pops first. Doing this without recursion is not merely stylistic: it makes the traversal **lazy**, so a caller can stop early after examining three nodes of a million-node tree and pay for three.
+The example above is a pre-order traversal made iterative: note the right child pushed before the left, so the left pops first. Doing this without recursion is not merely stylistic: it makes the traversal **lazy**, so a caller can stop early after examining three nodes of a million-node tree and pay for three.
 
 In Python, generators express the same thing far more directly, and the in-order version is worth having since it is the traversal that yields a BST's keys in sorted order:
 
@@ -142,7 +142,7 @@ def in_order(node):
 first_five = list(itertools.islice(in_order(root), 5))
 ```
 
-**Iterator invalidation** is the classic hazard: mutating a structure while iterating it. Growing a Python list during a `for` loop skips elements; a C++ `vector` reallocation leaves every outstanding iterator dangling; Java throws `ConcurrentModificationException` from a modification counter checked on each `next()`. The three responses — undefined behavior, fail-fast, and snapshot semantics (`CopyOnWriteArrayList`) — represent a real design choice, and fail-fast is usually the right one because it converts a silent wrong answer into a loud crash.
+**Iterator invalidation** is the classic hazard: mutating a structure while iterating it. Growing a Python list during a `for` loop skips elements; a C++ `vector` reallocation leaves every outstanding iterator dangling; Java throws `ConcurrentModificationException` from a modification counter checked on each `next()`. The three responses (undefined behavior, fail-fast, and snapshot semantics (`CopyOnWriteArrayList`))represent a real design choice, and fail-fast is usually the right one because it converts a silent wrong answer into a loud crash.
 
 ## 20.4 Builder Pattern
 
@@ -170,7 +170,7 @@ class BSTBuilder:
         return node
 ```
 
-Builders matter most for data structures when **bulk construction beats repeated insertion** — which is often, and by more than people expect.
+Builders matter most for data structures when **bulk construction beats repeated insertion**, which is often, and by more than people expect.
 
 The example is a good illustration of why. Inserting n sorted values into a plain BST one at a time produces a linked list of height n. Collecting them, sorting once, and recursively taking the midpoint produces a perfectly balanced tree of height ⌈log₂ n⌉ in O(n log n) total, and needs no rotation logic at all.
 
@@ -183,7 +183,7 @@ The same asymmetry recurs throughout:
 | B-tree | O(n log n), ~70% node occupancy | O(n) sorted bulk load, ~100% occupancy |
 | Hash table | O(n) with resizes along the way | O(n), pre-sized, no rehashing |
 | R-tree | Poor structure, high overlap | Sort-Tile-Recursive packing, much better |
-| Suffix array | — | O(n) with SA-IS |
+| Suffix array | n/a | O(n) with SA-IS |
 
 The B-tree row is easy to overlook and matters in practice: incremental insertion leaves nodes about 70% full, so a bulk-loaded index is meaningfully smaller and shallower. This is exactly why `CREATE INDEX` on an existing table produces a better index than the same rows inserted one at a time, and why `REINDEX` is a real optimization.
 
@@ -193,7 +193,7 @@ One further note on the example: `build()` sorts `self.values` in place and can 
 
 Three more that earn their place in collection code.
 
-**Adapter** converts one interface to another. A max-heap from a min-heap by negating keys is the smallest possible example, and Python's `heapq` — min-only — makes it a daily occurrence:
+**Adapter** converts one interface to another. A max-heap from a min-heap by negating keys is the smallest possible example, and Python's `heapq` (min-only)makes it a daily occurrence:
 
 ```python
 class MaxHeap:
@@ -208,7 +208,7 @@ class MaxHeap:
         return -heapq.heappop(self._h)
 ```
 
-Also: a deque adapted to a stack or a queue, and a `Set` adapted from a `Map` with dummy values — which is literally how Java's `HashSet` is implemented.
+Also: a deque adapted to a stack or a queue, and a `Set` adapted from a `Map` with dummy values, which is literally how Java's `HashSet` is implemented.
 
 **Flyweight** shares immutable state between many objects. String interning is the ubiquitous case: Java and Python both intern short strings so that a million occurrences of `"active"` cost one allocation. Tries share prefixes for the same reason, and the shared subtrees of persistent structures in [Chapter 17](ch17-persistent-data-structures.md) are flyweights created automatically by immutability.
 
@@ -226,7 +226,7 @@ Also: a deque adapted to a stack or a queue, and a `Set` adapted from a `Map` wi
 | Many identical immutable values | Flyweight | Only helps if genuinely immutable |
 | Vary one decision | Policy | Runtime polymorphism costs a virtual call |
 
-**The pattern that applies to all of them:** an abstraction over a data structure hides the layout but does not hide the *cost*. A `List` interface backed by a linked list and one backed by an array have identical signatures and completely different performance, and code written against the interface will silently get whichever it is handed. This is the practical reason C++ names `std::vector` and `std::list` distinctly instead of offering one `List`, and the reason Java's `List` interface has been a recurring source of accidental O(n²) loops — `get(i)` in a loop over a `LinkedList` is quadratic and looks exactly like the linear version.
+**The pattern that applies to all of them:** an abstraction over a data structure hides the layout but does not hide the *cost*. A `List` interface backed by a linked list and one backed by an array have identical signatures and completely different performance, and code written against the interface will silently get whichever it is handed. This is the practical reason C++ names `std::vector` and `std::list` distinctly instead of offering one `List`, and the reason Java's `List` interface has been a recurring source of accidental O(n²) loops. `get(i)` in a loop over a `LinkedList` is quadratic and looks exactly like the linear version.
 
 Abstract the interface. Document the cost.
 
@@ -234,5 +234,5 @@ Abstract the interface. Document the cost.
 
 ## Where this connects
 
-- [Chapter 22: Practical Considerations](ch22-practical-considerations.md) — the practical judgment these patterns support
-- [Chapter 6: Tree Fundamentals and Binary Trees](../volume-1/ch06-tree-fundamentals-and-binary-trees.md) — the composite and iterator patterns in their original setting
+- [Chapter 22: Practical Considerations](ch22-practical-considerations.md). The practical judgment these patterns support
+- [Chapter 6: Tree Fundamentals and Binary Trees](../volume-1/ch06-tree-fundamentals-and-binary-trees.md). The composite and iterator patterns in their original setting

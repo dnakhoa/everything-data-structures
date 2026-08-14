@@ -13,7 +13,7 @@
   - [Chapter 3: Arrays—The Foundation of Contiguous Storage](volume-1/ch03-arrays-the-foundation-of-contiguous-storage.md)
   - [Chapter 4: Linked Lists—The Art of Distributed Storage](volume-1/ch04-linked-lists-the-art-of-distributed-storage.md)
   - [Chapter 5: Stacks and Queues—Ordered Access Patterns](volume-1/ch05-stacks-and-queues-ordered-access-patterns.md)
-- [Part 3: Hierarchical Structures — Trees]()
+- [Part 3: Hierarchical Structures and Trees]()
   - [Chapter 6: Tree Fundamentals and Binary Trees](volume-1/ch06-tree-fundamentals-and-binary-trees.md)
   - [Chapter 7: Binary Search Trees](volume-1/ch07-binary-search-trees.md)
   - [Chapter 8: Self-Balancing Trees](volume-1/ch08-self-balancing-trees.md)

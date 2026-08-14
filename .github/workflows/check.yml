@@ -28,6 +28,6 @@ jobs:
           mdbook build 2>build.log || { cat build.log; exit 1; }
           cat build.log
           if grep -q "WARN" build.log; then
-            echo "::error::mdBook emitted warnings — see log above"
+            echo "::error::mdBook emitted warnings, see log above"
             exit 1
           fi

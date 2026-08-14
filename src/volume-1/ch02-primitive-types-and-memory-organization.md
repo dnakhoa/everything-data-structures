@@ -2,7 +2,7 @@
 
 ## 2.1 The Building Blocks: Primitive Data Types
 
-Every data structure ultimately decomposes into primitive types—fundamental units that the hardware directly supports. Understanding these types, their properties, and their cost is essential for effective data structure design.
+Every data structure ultimately decomposes into primitive types, fundamental units that the hardware directly supports. Understanding these types, their properties, and their cost is essential for effective data structure design.
 
 ### Boolean Type
 
@@ -266,7 +266,7 @@ public class Stack<T> {
 }
 ```
 
-Java generics use type erasure—they exist only at compile time, with runtime types being just Object.
+Java generics use type erasure, they exist only at compile time, with runtime types being just Object.
 
 ### Python Duck Typing
 
@@ -288,5 +288,5 @@ Any object with append() and pop() works with this Stack. This flexibility comes
 
 ## Where this connects
 
-- [Chapter 3: Arrays—The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md) — the first structure built directly on this memory model
-- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — what the memory hierarchy does to these assumptions
+- [Chapter 3: Arrays—The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md). The first structure built directly on this memory model
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md). What the memory hierarchy does to these assumptions

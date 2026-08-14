@@ -10,9 +10,9 @@ The Fibonacci heap from [Chapter 9](../volume-1/ch09-heaps-and-priority-queues.m
 
 The response has been a search for structures with the same bounds and less machinery:
 
-- **Pairing heaps** (Fredman et al., 1986) are dramatically simpler — a single multiway tree with a `merge` operation — and fast in practice. Their exact amortized `decrease-key` complexity was an open problem for two decades; it is now known to be O(log log n), not O(1), yet they still beat Fibonacci heaps on essentially every real workload.
+- **Pairing heaps** (Fredman et al., 1986) are dramatically simpler (a single multiway tree with a `merge` operation)and fast in practice. Their exact amortized `decrease-key` complexity was an open problem for two decades; it is now known to be O(log log n), not O(1), yet they still beat Fibonacci heaps on essentially every real workload.
 - **Rank-pairing heaps** (Haeupler, Sen, Tarjan, 2011) achieve the full Fibonacci bounds with substantially simpler restructuring.
-- **Strict Fibonacci heaps** (Brodal, Lagogiannis, Tarjan, 2012) attain the same bounds in the *worst case* rather than amortized — theoretically significant for real-time systems, still not competitive in practice.
+- **Strict Fibonacci heaps** (Brodal, Lagogiannis, Tarjan, 2012) attain the same bounds in the *worst case* rather than amortized: theoretically significant for real-time systems, still not competitive in practice.
 
 The durable lesson is the one from [Chapter 1](../volume-1/ch01-the-philosophy-and-mathematics-of-data-structures.md): asymptotic superiority is a claim about behavior in a limit, and the limit may sit far beyond any input you will ever see.
 
@@ -24,18 +24,18 @@ Store data in space close to the information-theoretic minimum:
 - Operations directly on compressed representation
 - Rank, select, navigation
 
-A succinct structure uses Z + o(Z) bits, where Z is the information-theoretic minimum, while still supporting fast queries — crucially, **without decompressing**. That last property is what separates succinct structures from ordinary compression: gzip achieves better ratios but you must decompress before you can query.
+A succinct structure uses Z + o(Z) bits, where Z is the information-theoretic minimum, while still supporting fast queries: crucially, **without decompressing**. That last property is what separates succinct structures from ordinary compression: gzip achieves better ratios but you must decompress before you can query.
 
-The canonical example: a binary tree of n nodes takes 2n + o(n) bits succinctly, against roughly 128n bits for a pointer-based representation with two 64-bit pointers per node. That is a 64× reduction, and it turns "this index does not fit in RAM" into "this index fits in RAM" — which is a far bigger performance win than any constant-factor speedup.
+The canonical example: a binary tree of n nodes takes 2n + o(n) bits succinctly, against roughly 128n bits for a pointer-based representation with two 64-bit pointers per node. That is a 64× reduction, and it turns "this index does not fit in RAM" into "this index fits in RAM", which is a far bigger performance win than any constant-factor speedup.
 
 Everything is built on two primitives over a bit vector:
 
-- `rank(i)` — how many 1s occur before position i
-- `select(k)` — the position of the k-th 1
+- `rank(i)`: how many 1s occur before position i
+- `select(k)`: the position of the k-th 1
 
 Both answer in O(1) using auxiliary structures occupying o(n) extra bits. Tree navigation, string search, and set membership all reduce to these two operations.
 
-[Chapter 24](../volume-4/ch24-research-grade-data-structures.md) covers the machinery properly — LOUDS, balanced parentheses, DFUDS, wavelet matrices, and the FM-index.
+[Chapter 24](../volume-4/ch24-research-grade-data-structures.md) covers the machinery properly: LOUDS, balanced parentheses, DFUDS, wavelet matrices, and the FM-index.
 
 **Status: deployed where memory is the binding constraint.** Genomic aligners (BWA, Bowtie) index the human genome with FM-indexes. Succinct tries back autocomplete at scale. The Rust `succinct` and C++ `sdsl-lite` libraries are production-quality.
 
@@ -45,15 +45,15 @@ For massive datasets that don't fit in memory:
 - Cuckoo hashing on disk
 - Buffered repository trees
 
-A hash table's defining virtue is that a lookup is one random probe. On disk, one random probe is a 100μs seek, and the virtue becomes the defect — which is why disk-resident indexes are overwhelmingly B-trees rather than hash tables, as [Chapter 16](ch16-external-memory-and-cache-oblivious-structures.md) explains.
+A hash table's defining virtue is that a lookup is one random probe. On disk, one random probe is a 100μs seek, and the virtue becomes the defect, which is why disk-resident indexes are overwhelmingly B-trees rather than hash tables, as [Chapter 16](ch16-external-memory-and-cache-oblivious-structures.md) explains.
 
 The techniques that make hashing viable in external memory all amount to trading probes for batching:
 
-- **Linear hashing** and **extendible hashing** grow one bucket at a time rather than rehashing everything, so a resize never stalls. Both date to 1979–80 and both are still in use — extendible hashing indexes Berkeley DB and, more recently, PostgreSQL hash indexes.
+- **Linear hashing** and **extendible hashing** grow one bucket at a time rather than rehashing everything, so a resize never stalls. Both date to 1979–80 and both are still in use: extendible hashing indexes Berkeley DB and, more recently, PostgreSQL hash indexes.
 - **Cuckoo hashing on disk** bounds lookups to a constant number of probes (two, in the basic scheme), which matters far more when a probe is 100μs than when it is 100ns. The cost is expensive insertions when eviction chains grow long.
 - **Buffered repository trees** and **B^ε-trees** buffer updates in internal nodes and flush them down in batches, converting many random writes into few sequential ones. This is the same insight as the LSM tree, arrived at from the theory side. TokuDB and its successor, Percona's fractal tree indexes, shipped it commercially.
 
-**Status: mature.** The interesting modern development is that NVMe changes the calculus — a random read on NVMe is ~10μs rather than ~10ms, which narrows the gap between hash and tree indexes considerably and is quietly reopening design questions that were settled in the disk era.
+**Status: mature.** The interesting modern development is that NVMe changes the calculus. A random read on NVMe is ~10μs rather than ~10ms, which narrows the gap between hash and tree indexes considerably and is quietly reopening design questions that were settled in the disk era.
 
 ## 19.4 Learned Indexes
 
@@ -62,9 +62,9 @@ Machine learning for index structures:
 - Can be faster for certain access patterns
 - Active research area
 
-The idea, from Kraska et al.'s 2018 paper "The Case for Learned Index Structures," is a genuine reframing: **an index is a function from key to position, and a model can approximate a function.** If your keys are integers 1 to 100,000,000 stored in order, the "index" is `position = key − 1` — no tree needed. Real data is not that clean, but real data is rarely random either, and a model that captures the shape of the key distribution can beat a structure that assumes nothing about it.
+The idea, from Kraska et al.'s 2018 paper "The Case for Learned Index Structures," is a genuine reframing: **an index is a function from key to position, and a model can approximate a function.** If your keys are integers 1 to 100,000,000 stored in order, the "index" is `position = key − 1`, no tree needed. Real data is not that clean, but real data is rarely random either, and a model that captures the shape of the key distribution can beat a structure that assumes nothing about it.
 
-A learned index predicts a position, then does a bounded local search to correct the prediction. The **Recursive Model Index** stages simple models — usually linear regressions, not neural networks, because inference must cost nanoseconds — with each stage narrowing the range.
+A learned index predicts a position, then does a bounded local search to correct the prediction. The **Recursive Model Index** stages simple models (usually linear regressions, not neural networks, because inference must cost nanoseconds)with each stage narrowing the range.
 
 Reported results are strong: up to 3× faster lookups at a fraction of the memory of a B-tree. The caveats are equally real, and they are what keeps this out of most production systems:
 
@@ -81,7 +81,7 @@ Conflict-free replicated data types for distributed systems:
 - No coordination needed
 - Used in collaborative applications
 
-A CRDT is a structure whose merge operation is **commutative, associative, and idempotent**. Those three algebraic properties are the entire trick: if merging is order-independent and repeat-safe, replicas that receive the same updates in any order, possibly more than once, provably converge to the same state — with no coordination, no consensus, and no leader.
+A CRDT is a structure whose merge operation is **commutative, associative, and idempotent**. Those three algebraic properties are the entire trick: if merging is order-independent and repeat-safe, replicas that receive the same updates in any order, possibly more than once, provably converge to the same state. With no coordination, no consensus, and no leader.
 
 That means a CRDT keeps working while partitioned. In CAP terms it chooses AP and gets convergence anyway, by restricting itself to operations that cannot conflict.
 
@@ -98,7 +98,7 @@ The building blocks, in increasing order of difficulty:
 
 **Delta CRDTs** address the practical problem with the basic formulation: naive state-based CRDTs ship the entire state on every sync, which is untenable for a large document. Delta CRDTs transmit only the changed portion while preserving the convergence properties.
 
-Collaborative text editing is the demanding case, since concurrent inserts at the same position must produce a consistent order without a coordinator. Yjs and Automerge are the mature implementations, and both are fast enough for real editors — Yjs handles documents with millions of operations.
+Collaborative text editing is the demanding case, since concurrent inserts at the same position must produce a consistent order without a coordinator. Yjs and Automerge are the mature implementations, and both are fast enough for real editors: Yjs handles documents with millions of operations.
 
 [Chapter 27](../volume-5/ch27-distributed-data-structures.md) develops the theory and the distributed-systems context.
 
@@ -108,9 +108,9 @@ Collaborative text editing is the demanding case, since concurrent inserts at th
 
 One significant omission from the original survey, added because it went from research to ubiquitous in roughly three years.
 
-Embedding models turn text, images, and audio into high-dimensional vectors — typically 384 to 1,536 dimensions — and searching them means approximate nearest neighbor over millions of points. [Chapter 15](ch15-spatial-and-geometric-data-structures.md) explained why KD-trees collapse at these dimensionalities. The structures that work instead:
+Embedding models turn text, images, and audio into high-dimensional vectors (typically 384 to 1,536 dimensions)and searching them means approximate nearest neighbor over millions of points. [Chapter 15](ch15-spatial-and-geometric-data-structures.md) explained why KD-trees collapse at these dimensionalities. The structures that work instead:
 
-- **HNSW** (Hierarchical Navigable Small World, Malkov and Yashunin, 2016) builds a layered proximity graph and greedily descends it — a skip list where the "links" are nearest neighbors. It is the default in most vector databases: excellent recall, fast queries, high memory use, awkward deletion.
+- **HNSW** (Hierarchical Navigable Small World, Malkov and Yashunin, 2016) builds a layered proximity graph and greedily descends it. A skip list where the "links" are nearest neighbors. It is the default in most vector databases: excellent recall, fast queries, high memory use, awkward deletion.
 - **IVF** (inverted file index) clusters vectors and searches only the nearest clusters. Lower memory, tunable recall.
 - **Product quantization** compresses vectors into compact codes, letting billion-scale indexes fit in RAM at some accuracy cost. Usually combined with IVF.
 - **ScaNN** (Google, 2020) uses anisotropic quantization tuned for inner-product search specifically.
@@ -133,5 +133,5 @@ That last question filters out most of them.
 
 ## Where this connects
 
-- [Chapter 24: Research-Grade Data Structures](../volume-4/ch24-research-grade-data-structures.md) — the research-grade treatment of succinct structures
-- [Chapter 15: Spatial and Geometric Data Structures](ch15-spatial-and-geometric-data-structures.md) — the spatial structures vector search replaces
+- [Chapter 24: Research-Grade Data Structures](../volume-4/ch24-research-grade-data-structures.md). The research-grade treatment of succinct structures
+- [Chapter 15: Spatial and Geometric Data Structures](ch15-spatial-and-geometric-data-structures.md). The spatial structures vector search replaces

@@ -70,5 +70,5 @@
   <path class="path" d="M336,144 L408,144"/>
   <circle cx="426" cy="144" r="5" fill="#ef4444"/>
   <text class="note" x="16" y="248">Each node's height comes from a coin flip: ~½ the nodes reach L1, ~¼ reach L2, ~⅛ reach L3. Expected height is O(log n) and</text>
-  <text class="note" x="16" y="266">expected total space is O(n) — about 2n nodes, not n log n. Search drops a level whenever the next key overshoots.</text>
+  <text class="note" x="16" y="266">expected total space is O(n), about 2n nodes, not n log n. Search drops a level whenever the next key overshoots.</text>
 </svg>

@@ -11,7 +11,7 @@
 - [Chapter 4: Linked Lists—The Art of Distributed Storage](ch04-linked-lists-the-art-of-distributed-storage.md)
 - [Chapter 5: Stacks and Queues—Ordered Access Patterns](ch05-stacks-and-queues-ordered-access-patterns.md)
 
-## Part 3: Hierarchical Structures — Trees
+## Part 3: Hierarchical Structures, Trees
 
 - [Chapter 6: Tree Fundamentals and Binary Trees](ch06-tree-fundamentals-and-binary-trees.md)
 - [Chapter 7: Binary Search Trees](ch07-binary-search-trees.md)

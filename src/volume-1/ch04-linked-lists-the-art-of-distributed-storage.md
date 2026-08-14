@@ -324,5 +324,5 @@ The doubly linked list emerged later as programmers recognized the need for bidi
 
 ## Where this connects
 
-- [Chapter 3: Arrays—The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md) — the contiguous alternative, and when it wins
-- [Chapter 18: Concurrent Data Structures](../volume-3/ch18-concurrent-data-structures.md) — why lock-free versions of these structures are hard
+- [Chapter 3: Arrays—The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md). The contiguous alternative, and when it wins
+- [Chapter 18: Concurrent Data Structures](../volume-3/ch18-concurrent-data-structures.md). Why lock-free versions of these structures are hard

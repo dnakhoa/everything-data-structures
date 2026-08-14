@@ -221,5 +221,5 @@ Simplified red-black tree that only allows right children to be red:
 
 ## Where this connects
 
-- [Chapter 8: Self-Balancing Trees](ch08-self-balancing-trees.md) — what to do when this degrades to a linked list
-- [Chapter 17: Persistent Data Structures](../volume-3/ch17-persistent-data-structures.md) — making a BST persistent, so old versions survive updates
+- [Chapter 8: Self-Balancing Trees](ch08-self-balancing-trees.md). What to do when this degrades to a linked list
+- [Chapter 17: Persistent Data Structures](../volume-3/ch17-persistent-data-structures.md). Making a BST persistent, so old versions survive updates

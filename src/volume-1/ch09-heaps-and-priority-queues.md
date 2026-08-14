@@ -340,5 +340,5 @@ Binomial heaps were introduced by Vuillemin in 1978, providing efficient meld op
 
 ## Where this connects
 
-- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — why Fibonacci heaps win on paper and lose in practice
-- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — the greedy algorithms that are built on this structure
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md). Why Fibonacci heaps win on paper and lose in practice
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md). The greedy algorithms that are built on this structure

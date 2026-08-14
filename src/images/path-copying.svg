@@ -12,7 +12,7 @@
     .note  { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .74; }
     .lg    { fill: currentColor; font: 11px system-ui, sans-serif; }
   </style>
-  <text class="cap" x="16" y="24">Inserting 25 into a persistent BST — version 1 stays valid</text>
+  <text class="cap" x="16" y="24">Inserting 25 into a persistent BST. Version 1 stays valid</text>
   <!-- version roots -->
   <text class="rt" x="150" y="52">v1 root</text>
   <text class="rt" x="330" y="52">v2 root</text>
@@ -40,14 +40,14 @@
   <!-- legend -->
   <g transform="translate(40,258)">
     <circle class="copy"  cx="10" cy="0" r="9"/>
-    <text class="lg" x="26" y="4">Copied — a child pointer changed (2 nodes)</text>
+    <text class="lg" x="26" y="4">Copied: a child pointer changed (2 nodes)</text>
     <circle class="fresh" cx="330" cy="0" r="9"/>
     <text class="lg" x="346" y="4">New node</text>
   </g>
   <g transform="translate(40,286)">
     <circle class="share" cx="10" cy="0" r="9"/>
-    <text class="lg" x="26" y="4">Shared with v1 — nothing about it changed</text>
+    <text class="lg" x="26" y="4">Shared with v1: nothing about it changed</text>
   </g>
   <text class="note" x="400" y="290">Cost per update: O(log n) copied nodes, not O(n).</text>
-  <text class="note" x="400" y="306">Node 30 must be copied — its right pointer now points to 25.</text>
+  <text class="note" x="400" y="306">Node 30 must be copied. Its right pointer now points to 25.</text>
 </svg>

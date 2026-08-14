@@ -65,7 +65,7 @@ k: latent dimension (typical 50-200)
 **Alternating Least Squares (ALS)**:
 ```python
 def als(R, k, iterations, reg=0.1):
-    """`reg` is the L2 regularization weight — spelled `lambda` in the papers,
+    """`reg` is the L2 regularization weight, spelled `lambda` in the papers,
     which is a reserved word in Python."""
     m, n = R.shape
     U = random(m, k)
@@ -313,5 +313,5 @@ avg: 24.1, max: 45 (spike during incident), p99: 38
 
 ## Where this connects
 
-- [Chapter 29: System Design as Data Structure Composition](ch29-system-design-as-data-structure-composition.md) — the component structures these patterns compose
-- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — the vector-search structures behind modern recommendation
+- [Chapter 29: System Design as Data Structure Composition](ch29-system-design-as-data-structure-composition.md). The component structures these patterns compose
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md). The vector-search structures behind modern recommendation

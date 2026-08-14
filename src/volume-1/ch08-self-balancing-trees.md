@@ -422,5 +422,5 @@ def treap_insert(root, node):
 
 ## Where this connects
 
-- [Chapter 7: Binary Search Trees](ch07-binary-search-trees.md) — the unbalanced baseline these structures fix
-- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md) — why skip lists trade rotations for randomness
+- [Chapter 7: Binary Search Trees](ch07-binary-search-trees.md). The unbalanced baseline these structures fix
+- [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md). Why skip lists trade rotations for randomness

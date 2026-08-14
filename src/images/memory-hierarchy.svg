@@ -50,7 +50,7 @@
   <text class="note" x="112" y="150" text-anchor="middle" transform="rotate(-90 112 150)">slower, larger, cheaper →</text>
   <text class="cap"  x="20" y="300">The right-hand column is the point.</text>
   <text class="note" x="20" y="322">If an L1 hit took one second, a disk seek would take four months. The RAM model of Chapter 1 treats those</text>
-  <text class="note" x="20" y="340">two accesses as identical — which is why it mispredicts real performance by orders of magnitude.</text>
+  <text class="note" x="20" y="340">two accesses as identical, which is why it mispredicts real performance by orders of magnitude.</text>
   <text class="note" x="20" y="362">Memory moves in blocks: 64-byte cache lines, 4 KB pages. Reading one byte costs the same as reading its</text>
   <text class="note" x="20" y="380">whole block, so a structure whose data sits together gets the rest of the block for free.</text>
 </svg>

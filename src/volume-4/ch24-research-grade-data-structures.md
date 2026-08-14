@@ -304,5 +304,5 @@ Combine data structures efficiently:
 
 ## Where this connects
 
-- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md) — where this research is heading next
-- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — the cache-oblivious model several of these depend on
+- [Chapter 19: Emerging and Specialized Structures](../volume-3/ch19-emerging-and-specialized-structures.md). Where this research is heading next
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md). The cache-oblivious model several of these depend on

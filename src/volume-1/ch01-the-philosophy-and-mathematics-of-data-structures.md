@@ -4,7 +4,7 @@
 
 A data structure is a systematic organization of data that enables efficient access and modification. But this dry definition obscures what data structures truly represent: the art of translating abstract relationships into concrete, manipulable forms. Every program is a model of some reality, and data structures are the vocabulary of that model.
 
-Consider the challenge of representing a family tree. You could use an array, storing each person and a numeric index indicating their parent. This works, but querying becomes cumbersome—what is the average age of all grandchildren of a particular person? The structure constrains the operations you can perform efficiently.
+Consider the challenge of representing a family tree. You could use an array, storing each person and a numeric index indicating their parent. This works, but querying becomes cumbersome, what is the average age of all grandchildren of a particular person? The structure constrains the operations you can perform efficiently.
 
 Now consider representing the same family tree as a tree structure, where each node contains a person's data and pointers to their children. Suddenly, the query becomes trivial: traverse from the given person to their children, then to their grandchildren, computing ages along the way. The data structure has made the problem tractable.
 
@@ -55,7 +55,7 @@ O(f(n)) describes an upper bound on running time. f(n) = O(g(n)) means that f gr
 
 ∃ c > 0, ∃ n₀ > 0, such that ∀ n ≥ n₀: 0 ≤ f(n) ≤ c·g(n)
 
-When we say a hash table has O(1) lookup, we mean the lookup time is bounded by a constant, regardless of how many elements are stored. This is an upper bound—we're saying lookup will never be worse than constant time.
+When we say a hash table has O(1) lookup, we mean the lookup time is bounded by a constant, regardless of how many elements are stored. This is an upper bound, we're saying lookup will never be worse than constant time.
 
 ### Big-Omega Notation: Lower Bounds
 
@@ -139,7 +139,7 @@ Logarithmic growth is remarkably slow. Even at n = 1 billion, log₂(n) ≈ 30. 
 
 Sometimes we care less about individual operation cost and more about total cost over a sequence of operations. Amortized analysis computes the average cost per operation over a worst-case sequence.
 
-Consider a dynamic array (like Python's list or Java's ArrayList). When it fills, it doubles its capacity and copies all elements. This copy costs O(n), which seems expensive. However, this expensive operation happens only rarely—specifically, when the array size is a power of 2.
+Consider a dynamic array (like Python's list or Java's ArrayList). When it fills, it doubles its capacity and copies all elements. This copy costs O(n), which seems expensive. However, this expensive operation happens only rarely, specifically, when the array size is a power of 2.
 
 Over n insert operations, the total cost is:
 n + 1 + 2 + 4 + 8 + ... + n ≤ 2n
@@ -212,5 +212,5 @@ The mathematical foundations of data structures draw from several disciplines:
 
 ## Where this connects
 
-- [Chapter 22: Practical Considerations](../volume-3/ch22-practical-considerations.md) — how these bounds translate into actual decisions
-- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) — why the RAM model this chapter assumes is not how real hardware behaves
+- [Chapter 22: Practical Considerations](../volume-3/ch22-practical-considerations.md). How these bounds translate into actual decisions
+- [Chapter 16: External Memory and Cache-Oblivious Structures](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md). Why the RAM model this chapter assumes is not how real hardware behaves

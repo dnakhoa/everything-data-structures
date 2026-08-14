@@ -25,11 +25,11 @@ Most structure choices resolve with these, asked in order.
 
 This is the single most consequential question, and the one most often skipped. Ordered iteration, range queries, "the next key after X", and "the smallest key" all require a tree or a sorted structure. A hash table can do none of them at any price.
 
-The failure mode is not discovering this on day one — it is discovering it six months in, when someone asks for "all records between these two dates" and the answer requires replacing the container.
+The failure mode is not discovering this on day one. It is discovering it six months in, when someone asks for "all records between these two dates" and the answer requires replacing the container.
 
 | Order needed? | Go to |
 |---------------|-------|
-| No — point lookups only | Hash table |
+| No, point lookups only | Hash table |
 | Yes | Balanced BST (in memory), B+ tree (on disk) |
 | Only by priority, one at a time | Heap |
 | Only by prefix | Trie or radix tree |
@@ -54,7 +54,7 @@ The failure mode is not discovering this on day one — it is discovering it six
 
 **4. How exact must it be?**
 
-If an approximate answer is acceptable, the space savings are usually one to five orders of magnitude — but check which way the errors go first ([Chapter 14](../volume-3/ch14-probabilistic-data-structures.md)).
+If an approximate answer is acceptable, the space savings are usually one to five orders of magnitude, but check which way the errors go first ([Chapter 14](../volume-3/ch14-probabilistic-data-structures.md)).
 
 ## B.3 By Operation
 
@@ -90,7 +90,7 @@ The right answer changes with n, and the changes are larger than intuition sugge
 
 ## B.5 Common Mistakes
 
-**Using a linked list because insertion is O(1).** It is O(1) only once you already hold the node. Finding it is O(n), and the traversal is cache-hostile. `std::vector` beats `std::list` for middle insertion at surprisingly large sizes — measure before believing otherwise.
+**Using a linked list because insertion is O(1).** It is O(1) only once you already hold the node. Finding it is O(n), and the traversal is cache-hostile. `std::vector` beats `std::list` for middle insertion at surprisingly large sizes: measure before believing otherwise.
 
 **Using a hash map when you needed order.** See B.2, question 1. This is the most expensive mistake on this page because it surfaces late.
 
@@ -98,9 +98,9 @@ The right answer changes with n, and the changes are larger than intuition sugge
 
 **Ignoring the worst case on untrusted input.** A hash table is O(1) average and O(n) adversarial. If users can choose the keys, you need a keyed hash or a treeifying table ([Chapter 12](../volume-2/ch12-hash-tables.md)).
 
-**Optimizing before profiling — and profiling the wrong thing.** If a function is slow and the arithmetic is trivial, the problem is memory, and only hardware counters will show it ([Chapter 22](../volume-3/ch22-practical-considerations.md)).
+**Optimizing before profiling, and profiling the wrong thing.** If a function is slow and the arithmetic is trivial, the problem is memory, and only hardware counters will show it ([Chapter 22](../volume-3/ch22-practical-considerations.md)).
 
-**Testing with random data.** Real data arrives sorted far more often than random data does — by timestamp, by ID, by insertion order. Sorted input is the worst case for a naive BST and for quicksort with a fixed pivot. Test sorted, reverse-sorted, and all-identical deliberately.
+**Testing with random data.** Real data arrives sorted far more often than random data does: by timestamp, by ID, by insertion order. Sorted input is the worst case for a naive BST and for quicksort with a fixed pivot. Test sorted, reverse-sorted, and all-identical deliberately.
 
 ## B.6 Language Defaults
 
@@ -109,13 +109,13 @@ What to reach for first, per language, before writing anything custom.
 | Need | Python | Java | C++ | Go | Rust |
 |------|--------|------|-----|-----|------|
 | Hash map | `dict` | `HashMap` | `unordered_map` | `map` | `HashMap` |
-| Ordered map | — (use `sortedcontainers`) | `TreeMap` | `map` | — | `BTreeMap` |
+| Ordered map | None (use `sortedcontainers`) | `TreeMap` | `map` | n/a | `BTreeMap` |
 | Dynamic array | `list` | `ArrayList` | `vector` | slice | `Vec` |
-| Deque | `collections.deque` | `ArrayDeque` | `deque` | — | `VecDeque` |
+| Deque | `collections.deque` | `ArrayDeque` | `deque` | n/a | `VecDeque` |
 | Heap | `heapq` (min only) | `PriorityQueue` | `priority_queue` (max) | `container/heap` | `BinaryHeap` (max) |
 | Set | `set` | `HashSet` | `unordered_set` | `map[T]struct{}` | `HashSet` |
-| Ordered set | — | `TreeSet` | `set` | — | `BTreeSet` |
+| Ordered set | n/a | `TreeSet` | `set` | n/a | `BTreeSet` |
 
-Two traps worth remembering: Python has **no ordered map or tree in the standard library** — `dict` preserves insertion order, which is not the same as sorted order. And `heapq` is min-only while C++ and Rust default to max-heaps, which is a reliable source of inverted-comparator bugs when porting.
+Two traps worth remembering: Python has **no ordered map or tree in the standard library**. `dict` preserves insertion order, which is not the same as sorted order. And `heapq` is min-only while C++ and Rust default to max-heaps, which is a reliable source of inverted-comparator bugs when porting.
 
 For fuller detail on what these are actually implemented as, see [Chapter 22](../volume-3/ch22-practical-considerations.md); for exact complexities, [Appendix A](appendix-a-complexity-cheat-sheet.md).
