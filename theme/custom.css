@@ -9,6 +9,40 @@ figure svg {
   height: auto;
 }
 
+/* On narrow screens, shrinking a detailed diagram to fit makes its labels
+   unreadable. Scroll it at a legible size instead. */
+@media (max-width: 700px) {
+  figure {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  figure svg {
+    min-width: 620px;
+    max-width: none;
+  }
+}
+
+/* Printing: diagrams must fit the page, and scroll containers must not clip. */
+@media print {
+  figure,
+  .content table {
+    overflow: visible !important;
+    width: auto !important;
+    display: table;
+    break-inside: avoid;
+  }
+
+  figure svg {
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+
+  figure {
+    display: block;
+  }
+}
+
 figcaption {
   margin-top: 0.6rem;
   font-size: 0.875rem;
