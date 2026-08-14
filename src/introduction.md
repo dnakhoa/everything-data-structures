@@ -1,6 +1,6 @@
 # Preface
 
-*Everything Data Structures*: by **Ngoc Anh Khoa Doan**
+*Everything Data Structures*, by **Ngoc Anh Khoa Doan**, with the editorial help of Claude.
 
 This book represents a monumental effort to document every significant data structure known to computer science, from the most elementary building blocks to the most sophisticated, specialized, and esoteric structures employed in cutting-edge research and industrial applications. The study of data structures is not merely an academic exercise, it is the foundation upon which all efficient software is built.
 

@@ -11,7 +11,7 @@ A complete, free course on data structures, from asymptotic analysis and pointer
 
 Five volumes · 31 chapters · 4 appendices · ~55,000 words · Python, C, C++, Java and Go examples.
 
-Written by [Ngoc Anh Khoa Doan](https://github.com/dnakhoa).
+Written by [Ngoc Anh Khoa Doan](https://github.com/dnakhoa), with the editorial help of Claude.
 
 ---
 
