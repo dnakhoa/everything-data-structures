@@ -13,6 +13,8 @@ Five volumes · 31 chapters · 4 appendices · ~55,000 words · Python, C, C++, 
 
 Written by [Ngoc Anh Khoa Doan](https://github.com/dnakhoa), with the editorial help of Claude.
 
+Also by the author: **[Frontier LLM Engineering](https://github.com/dnakhoa/frontier-llm-engineering)** — a free field guide to how frontier language models are actually built, with exercises and runnable labs.
+
 ---
 
 ## Why this exists
