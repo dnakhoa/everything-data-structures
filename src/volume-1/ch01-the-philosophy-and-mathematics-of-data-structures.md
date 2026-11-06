@@ -102,11 +102,11 @@ The signature of O(1) is "doesn't depend on n." Whether you have 10 elements or 
 **Logarithmic Time: O(log n)**
 - Binary search in sorted array
 - Balanced tree operations (BST, AVL, Red-Black, B-Tree)
-- Skip list operations
-- Binary search in balanced tree
-- van Emde Boas tree operations
+- Skip list operations (expected, not worst case)
 
 Logarithmic growth is remarkably slow. Even at n = 1 billion, log₂(n) ≈ 30. This means an O(log n) operation takes at most about 30 steps for a billion elements.
+
+O(log n) is the floor for comparison-based search, but not for every kind of search. When keys are integers below some bound u, a van Emde Boas tree answers predecessor queries in O(log log u), about 5 steps for 32-bit keys, by exploiting the bits of the key rather than comparing whole keys ([Chapter 24](../volume-4/ch24-research-grade-data-structures.md)).
 
 **Linear Time: O(n)**
 - Sequential scan of array
