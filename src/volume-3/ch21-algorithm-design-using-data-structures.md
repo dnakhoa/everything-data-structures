@@ -2,7 +2,7 @@
 
 Algorithm design is usually taught as a catalog of paradigms and data structures as a separate catalog of containers. They are not separate. **Each paradigm is defined by a specific bookkeeping problem, and the paradigm becomes practical exactly when a structure solves that bookkeeping in the right complexity.**
 
-Dijkstra's algorithm is the cleanest demonstration. The algorithm (repeatedly settle the nearest unsettled vertex)is unchanged since 1956. Its complexity is entirely a property of the structure answering "which is nearest?":
+Dijkstra's algorithm is the cleanest demonstration. The algorithm (repeatedly settle the nearest unsettled vertex) is unchanged since 1956. Its complexity is entirely a property of the structure answering "which is nearest?":
 
 | Priority queue | Complexity | Best for |
 |----------------|-----------|----------|
@@ -28,7 +28,7 @@ The structural insight worth carrying: **the split and the combine trade off aga
 Where a structure changes the answer outright:
 
 - **Segment trees** ([Chapter 23](../volume-4/ch23-advanced-competitive-programming-data-structures.md)) are divide-and-conquer made persistent. Rather than re-splitting per query, the split is stored once as a tree and reused, turning O(n) range queries into O(log n).
-- **Karatsuba multiplication** and **Strassen's algorithm** win by reducing the number of subproblems (3 instead of 4, 7 instead of 8)so the branching factor `a` drops and the exponent falls with it.
+- **Karatsuba multiplication** and **Strassen's algorithm** win by reducing the number of subproblems (3 instead of 4, 7 instead of 8) so the branching factor `a` drops and the exponent falls with it.
 - **Deep recursion** on user-controlled input is a stack-overflow bug. An explicit stack is not just a style preference.
 
 ## 21.2 Dynamic Programming
@@ -92,7 +92,7 @@ Look at the three examples through their structures:
 | Kruskal's MST | Add cheapest edge that doesn't cycle | Sort + **union-find** | O(E log E) |
 | Interval scheduling | Take earliest finish time | Sort by end time | O(n log n) |
 
-Kruskal's is the interesting row, because its bookkeeping is not "what's cheapest" (sorting answers that once)but "would this edge create a cycle?" Union-find answers it in near-constant amortized time, α(n), and without union-find the cycle check would be a graph traversal per edge and the algorithm would be O(E·V). A different question needs a different structure.
+Kruskal's is the interesting row, because its bookkeeping is not "what's cheapest" (sorting answers that once) but "would this edge create a cycle?" Union-find answers it in near-constant amortized time, α(n), and without union-find the cycle check would be a graph traversal per edge and the algorithm would be O(E·V). A different question needs a different structure.
 
 **Greedy is only correct when the problem has the right structure**, and that is a genuine mathematical condition, not a hopeful assumption. The **matroid** property guarantees it. Kruskal's is correct because forests of a graph form a matroid. Absent such a property, greedy produces plausible wrong answers: it fails on 0/1 knapsack, on set cover (though it gives a ln n approximation), and on shortest paths with negative edges, which is exactly why Dijkstra requires non-negative weights. A greedy algorithm that is *nearly* right is often worse than an obviously wrong one, because nobody notices.
 

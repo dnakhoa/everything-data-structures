@@ -175,6 +175,136 @@ if (bits[i / 8] & (1 << (i % 8))) { ... }
 **Networking**: IP packet filters, routing tables
 **Database**: Bitmap indexes
 
+### Compressed Bitmaps
+
+A bitmap pays one bit for every value that *could* be in the set, whether or not it is. For n values from a universe of size U, that is U bits, against 32n bits for a sorted array of 32-bit integers, so the plain bitmap is smaller only when n > U/32: more than about 3% of the universe present. Bitmap indexes hit this constantly. A column of 10 million rows with 10,000 distinct values needs one 10-million-bit (1.25 MB) bitmap per value, 12.5 GB in all, to record what sorted arrays of row IDs store in 40 MB (10 million IDs, 4 bytes each). Yet bitmaps are worth keeping, because intersecting or uniting two of them is a loop of word-wide ANDs and ORs, 64 elements per instruction, and counting the result is a popcount per word. Compressed bitmaps try to keep that speed while paying space only where values actually are.
+
+**Run-length encoding.** A sparse bitmap is mostly long runs of zero words (and clustered data also produces runs of one words). Word-aligned schemes replace each run with a single counter word and keep every other word as a literal copy, so logical operations still work a machine word at a time. WAH (Word-Aligned Hybrid) cuts the bitmap into 31-bit groups and stores each 32-bit word as either a *literal*, a flag bit plus 31 bitmap bits, or a *fill*, a flag bit, the fill value (0 or 1), and how many consecutive all-0 or all-1 groups it stands for. EWAH (Enhanced WAH) works on 64-bit words and uses a marker word meaning "k clean words of 0s (or of 1s), then m literal words". To AND two such bitmaps, walk both in step and skip a whole run at once, so the cost is proportional to the compressed sizes rather than to U. The weakness is random access: there is no way to find bit i without decoding from the start, so a single membership test is O(compressed size). Git stores its reachability bitmaps (which objects each commit can reach, in pack order) in EWAH.
+
+**Roaring bitmaps** keep fast random access by partitioning instead of run-length encoding. For a 32-bit value x, the high 16 bits (`x >> 16`) pick a *chunk* of 65,536 consecutive values, and the low 16 bits (`x & 0xFFFF`) are stored in that chunk's *container*. The top level is a sorted array of the chunk numbers present, each paired with its container; empty chunks cost nothing. Each container chooses its own representation:
+
+| Container | Contents | Size | Used when |
+|-----------|----------|------|-----------|
+| Array | sorted 16-bit low halves | 2 bytes per value | at most 4096 values |
+| Bitmap | 65,536 bits | 8 KB, fixed | more than 4096 values |
+| Run | sorted (start, length − 1) pairs | 4 bytes per run | the values form few runs and this is smallest |
+
+The threshold of 4096 is where the two basic containers cost the same: 4096 values × 2 bytes = 8192 bytes = 8 KB, which is exactly a 65,536-bit bitmap. Below it the array is smaller, above it the bitmap is, so the rule simply picks the smaller one, and a container is converted when an insertion or deletion crosses the line. As a result no container uses more than 16 bits per value: an array container uses exactly 16, and a bitmap container spreads 65,536 bits over more than 4096 values. Run containers were added later for data with long runs, such as sorted columns; libraries switch a container to runs when that is smallest, typically when asked to optimize (`runOptimize()` in the Java library).
+
+Operations follow the two levels:
+
+- **Membership:** binary search the top level for the high half (at most 65,536 keys, so about 16 probes), then binary search an array container, test one bit in a bitmap container, or binary search the run starts. Both levels are bounded, so this is effectively O(1), and unlike EWAH no decoding from the start is needed.
+- **Insertion** into an array container shifts up to 4095 entries, and the 4097th value converts it to a bitmap. That bounded shift is the price of the sorted array.
+- **Intersection:** merge the two sorted top-level arrays; only chunks present in both can contribute. Then intersect container pairs. Two bitmaps: 1024 64-bit ANDs, with popcount giving the result's size, and the result becomes an array if it holds 4096 values or fewer. Array and bitmap: test each array value against the bitmap, O(size of the array), and the result is an array. Two arrays: merge them, or use galloping (exponential) search when one is much smaller. Real libraries have routines for run containers too, and use SIMD instructions for the bitmap and array cases.
+
+The cost of an intersection therefore depends on the sizes of the containers involved, never on U, and the dense parts are processed a word at a time. Here is a model in Python, with a Python `int` standing in for the 65,536-bit bitmap:
+
+```python
+from bisect import bisect_left
+
+ARRAY_MAX = 4096         # 4096 values x 2 bytes = 8 KB = one 65,536-bit bitmap
+
+
+def runs_of(lows):
+    """Sorted distinct 16-bit values -> list of (start, length - 1) runs."""
+    runs = []
+    for v in lows:
+        if runs and runs[-1][0] + runs[-1][1] + 1 == v:
+            runs[-1] = (runs[-1][0], runs[-1][1] + 1)
+        else:
+            runs.append((v, 0))
+    return runs
+
+
+def make_container(lows):
+    """Pick the smallest representation for one chunk's sorted low halves."""
+    runs = runs_of(lows)
+    sizes = {"array": 2 * len(lows), "bitmap": 8192, "run": 4 * len(runs)}
+    if len(lows) > ARRAY_MAX:
+        del sizes["array"]               # an array container never passes 8 KB
+    kind = min(sizes, key=sizes.get)     # ties go to the first: array, then bitmap
+    if kind == "array":
+        return kind, list(lows)
+    if kind == "run":
+        return kind, runs
+    bits = 0
+    for v in lows:
+        bits |= 1 << v
+    return kind, bits
+
+
+def values(container):
+    kind, data = container
+    if kind == "array":
+        return data
+    if kind == "run":
+        return [v for s, l in data for v in range(s, s + l + 1)]
+    return [v for v in range(65536) if data >> v & 1]
+
+
+def contains(container, low):
+    kind, data = container
+    if kind == "array":
+        i = bisect_left(data, low)
+        return i < len(data) and data[i] == low
+    if kind == "bitmap":
+        return data >> low & 1 == 1
+    i = bisect_left(data, (low + 1, 0)) - 1      # last run starting at or before low
+    return i >= 0 and low <= data[i][0] + data[i][1]
+
+
+class Roaring:
+    def __init__(self, xs=()):
+        chunks = {}
+        for x in sorted(set(xs)):
+            chunks.setdefault(x >> 16, []).append(x & 0xFFFF)
+        self.chunks = {hi: make_container(lows) for hi, lows in chunks.items()}
+
+    def __contains__(self, x):
+        c = self.chunks.get(x >> 16)
+        return c is not None and contains(c, x & 0xFFFF)
+
+    def __iter__(self):
+        for hi in sorted(self.chunks):
+            for low in values(self.chunks[hi]):
+                yield hi << 16 | low
+
+    def __and__(self, other):
+        out = Roaring()
+        for hi in self.chunks.keys() & other.chunks.keys():
+            (ka, a), (kb, b) = self.chunks[hi], other.chunks[hi]
+            if ka == kb == "bitmap":
+                lows = values(("bitmap", a & b))     # 1024 word ANDs in C
+            elif ka == "array":
+                lows = [v for v in a if contains((kb, b), v)]
+            elif kb == "array":
+                lows = [v for v in b if contains((ka, a), v)]
+            else:                                    # runs: decode one side
+                lows = [v for v in values((ka, a)) if contains((kb, b), v)]
+            if lows:
+                out.chunks[hi] = make_container(lows)
+        return out
+```
+
+A set with three very different chunks:
+
+```python
+s = Roaring([1, 2, 3, 1000, 50000]                         # chunk 0: 5 scattered values
+            + list(range(65536 + 100, 65536 + 8100))       # chunk 1: 8000 in a row
+            + list(range(2 * 65536, 3 * 65536, 3)))        # chunk 2: every third value
+assert {hi: c[0] for hi, c in s.chunks.items()} == {0: "array", 1: "run", 2: "bitmap"}
+
+evens = Roaring(range(0, 3 * 65536, 2))                    # three half-full bitmaps
+both = s & evens
+assert {hi: c[0] for hi, c in both.chunks.items()} == {0: "array", 1: "array", 2: "bitmap"}
+assert set(both) == set(s) & set(range(0, 3 * 65536, 2))
+assert 65636 in both and 65637 not in both
+```
+
+`s` holds 29,851 values. Chunk 0 becomes an array container of 10 bytes, chunk 1 a single run of 4 bytes (an array would be 16,000 bytes, a bitmap 8 KB), and chunk 2, with 21,846 values, a bitmap of 8 KB: about 8.2 KB in total. A sorted array of 32-bit integers would take 119,404 bytes, and a plain bitmap over all 32-bit values 512 MB. In the intersection with `evens` (all bitmaps), chunk 0 is array ∧ bitmap and keeps 3 values; chunk 1 is run ∧ bitmap and keeps 4000 values, few enough to fall back to an array container; chunk 2 is bitmap ∧ bitmap and keeps the 10,923 multiples of 6, so it stays a bitmap.
+
+In its authors' benchmarks Roaring is usually faster than WAH and EWAH, and often smaller, and it has become the default compressed bitmap. Apache Lucene's `RoaringDocIdSet` (and so Elasticsearch and OpenSearch), the bitmap indexes of Apache Druid and Apache Pinot, ClickHouse's bitmap functions, and Spark's tracking of empty shuffle blocks all use it. Delta Lake and Apache Iceberg store deletion vectors, the positions of deleted rows in a data file, as 64-bit Roaring bitmaps, which apply the same high/low split one level up: the high 32 bits select an ordinary 32-bit Roaring bitmap.
+
 ## 3.6 Array Variants for Specific Purposes
 
 ### Circular Buffers
@@ -503,6 +633,8 @@ The array concept predates electronic computers. In mathematics, matrices and ve
 The dynamic array (vector) concept emerged with languages supporting heap allocation. The Ada language (1983) provided array slicing; modern languages provide richer array operations.
 
 Binary search was first described by John Mauchly in the 1946 Moore School Lectures, but according to Knuth (*The Art of Computer Programming*, Vol. 3) the published versions worked only for some array lengths until D. H. Lehmer's in 1960. Getting it right stayed hard: Joshua Bloch's 2006 report of the `(low + high) / 2` overflow covered both the JDK and *Programming Pearls*. Two-dimensional prefix sums entered graphics as Franklin Crow's summed-area tables (1984) and computer vision as the integral images of Paul Viola and Michael Jones's face detector (2001).
+
+Compressed bitmaps grew out of bitmap indexes. Gennady Antoshenkov's Byte-aligned Bitmap Code (1995) was used in Oracle; Kesheng Wu, Ekow Otoo and Arie Shoshani's WAH (journal version 2006) aligned the runs to machine words; Daniel Lemire, Owen Kaser and Kamel Aouiche's EWAH (2010) moved to 64-bit words. Roaring was introduced by Samy Chambi, Daniel Lemire, Owen Kaser and Robert Godin in 2016, and run containers were added in a follow-up paper by Lemire, Gregory Ssi-Yan-Kai and Kaser the same year.
 
 ## Exercises
 
@@ -871,6 +1003,55 @@ Trace for n = 40:
 For n = 10¹⁸ the interval starts with 10¹⁸ + 1 values, so at most ⌈log₂(10¹⁸ + 2)⌉ = 60 iterations. Starting from hi = 2³², which is enough for any 64-bit n, would cut that to at most 33.
 
 In C, two lines overflow. `mid * mid` exceeds 2⁶³ − 1 once mid > about 3.04 × 10⁹, which happens on the first probe for n = 10¹⁸ (mid = 5 × 10¹⁷); test `mid > n / mid` instead, which is equivalent for integer division and cannot overflow (mid is 0 only when n = 0, so handle that case first). And `lo + hi` can overflow for n near 2⁶³, so use `lo + (hi - lo) / 2`, as in Section 3.7. Python avoids both because its integers are unbounded, at the cost of arbitrary-precision arithmetic on every step.
+
+</details>
+
+**3.10 ★ Choosing containers.** Using the Roaring rules of Section 3.5, give the chunks, the container type of each, and the total container size for each set below. Compare with a sorted array of 32-bit integers.
+
+(a) The 5000 even numbers 0, 2, 4, ..., 9998.
+
+(b) The 100,000 consecutive values 0, 1, ..., 99,999.
+
+(c) The 1000 values 0, 65,536, 2 × 65,536, ..., 999 × 65,536.
+
+<details>
+<summary>Solution</summary>
+
+**(a)** All values are below 65,536, so there is one chunk (high half 0) with 5000 values. That is more than 4096, so an array container is ruled out (it would need 10,000 bytes, more than a bitmap). No two values are consecutive, so a run container needs 5000 runs, 20,000 bytes. The bitmap container wins at **8192 bytes**, about 13 bits per value, against 20,000 bytes for the sorted array.
+
+**(b)** Two chunks. Chunk 0 is full (0 to 65,535): one run, 4 bytes, against 8192 for a bitmap. Chunk 1 holds 65,536 to 99,999, low halves 0 to 34,463: again one run, 4 bytes. Total **8 bytes** of containers, against 400,000 bytes for the array. A plain bitmap or an array container could not get close; this is what run containers are for.
+
+**(c)** 1000 chunks, each holding a single value with low half 0, so 1000 array containers of 2 bytes each. The containers total only 2000 bytes, but every chunk also needs its 2-byte key in the top level, plus a pointer (in memory) or an offset and a cardinality (on disk). That is already 4 bytes per value (2 for the key, 2 for the container) before counting any pointer, offset or cardinality, as much as the 4000-byte sorted array, so here Roaring **loses**. Its 16-bits-per-value guarantee holds inside containers; when every chunk holds one value, the top level dominates.
+
+```python
+r = Roaring(range(0, 10000, 2))
+assert [c[0] for c in r.chunks.values()] == ["bitmap"]
+r = Roaring(range(100000))
+assert {hi: c for hi, c in r.chunks.items()} == {0: ("run", [(0, 65535)]),
+                                                 1: ("run", [(0, 34463)])}
+r = Roaring(x * 65536 for x in range(1000))
+assert len(r.chunks) == 1000 and all(c == ("array", [0]) for c in r.chunks.values())
+```
+
+</details>
+
+**3.11 ★★ Roaring on random data.** n distinct 32-bit integers are drawn uniformly at random. Estimate the size of a Roaring bitmap for n = 10⁶ and for n = 10⁹, and compare each with a sorted array of 32-bit integers and with a plain bitmap of 2³² bits. Count 8 bytes of overhead per container, as Roaring's standard serialized format does (a 2-byte key, a 2-byte cardinality and a 4-byte offset). At what n do the containers switch from arrays to bitmaps?
+
+<details>
+<summary>Hint</summary>
+
+There are 65,536 chunks, and with uniform data each gets about n / 65,536 values.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+**n = 10⁶.** Each chunk gets about 10⁶ / 65,536 ≈ 15 values, so practically every chunk is non-empty (the chance that one is empty is about e⁻¹⁵) and every container is an array. Containers: 10⁶ × 2 bytes = 2 MB. Overhead: 65,536 × 8 bytes = 512 KB. Total about **2.5 MB**, against 4 MB for the sorted array and 512 MB for the plain bitmap. Random data has no runs and no dense regions, so the saving over the sorted array comes only from not repeating the high half, which every value in a chunk shares.
+
+**n = 10⁹.** Each chunk gets about 15,259 values, more than 4096, so every container is an 8 KB bitmap: 65,536 × 8 KB = **512 MB** plus 512 KB of overhead, the same as the plain bitmap (which is the right representation at this density), against 4 GB for the sorted array.
+
+**The switch** happens when a chunk's expected count crosses 4096, a density of 4096 / 65,536 = 1/16, so at about n = 2³² / 16 ≈ 2.7 × 10⁸. Below that Roaring costs about 16 bits per value plus overhead; above it, a fixed 512 MB. Either way it is never far from the better of the sorted array and the plain bitmap, which is the point of choosing the container per chunk.
 
 </details>
 

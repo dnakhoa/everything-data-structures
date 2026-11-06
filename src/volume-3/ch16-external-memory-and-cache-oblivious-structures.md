@@ -35,7 +35,7 @@ The I/O model accounts for disk access:
 
 Goal: Minimize block transfers.
 
-The external memory model (also called the I/O model or the Aggarwal–Vitter model, after its 1988 authors)replaces "count the operations" with "count the block transfers." Computation on data already in memory is free; only I/O counts. This sounds crude, and it predicts real performance remarkably well.
+The external memory model (also called the I/O model or the Aggarwal–Vitter model, after its 1988 authors) replaces "count the operations" with "count the block transfers." Computation on data already in memory is free; only I/O counts. This sounds crude, and it predicts real performance remarkably well.
 
 The model changes the answers, not just the constants:
 
@@ -94,7 +94,7 @@ Compare the layouts directly:
 | B-tree | O(log_B n) | Yes, node size = B |
 | van Emde Boas layout | O(log_B n) | No |
 
-The level-order row is worth noting because it is the layout most people write by default. Storing a binary tree breadth-first feels cache-friendly (it is contiguous, after all)but a root-to-leaf path in it touches one new block per level near the bottom, where almost all the nodes are.
+The level-order row is worth noting because it is the layout most people write by default. Storing a binary tree breadth-first feels cache-friendly (it is contiguous, after all) but a root-to-leaf path in it touches one new block per level near the bottom, where almost all the nodes are.
 
 **Other cache-oblivious results.** Funnelsort achieves the optimal sorting bound obliviously, using a recursively-defined merger structure. Cache-oblivious B-trees combine the vEB layout with a packed-memory array to support updates. These are theoretically beautiful and less common in production than the theory would suggest. The constant factors are worse than a well-tuned B-tree, and in practice you usually *do* know your page size.
 

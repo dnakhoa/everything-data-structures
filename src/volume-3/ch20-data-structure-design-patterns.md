@@ -193,7 +193,7 @@ One further note on the example: `build()` sorts `self.values` in place and can 
 
 Three more that earn their place in collection code.
 
-**Adapter** converts one interface to another. A max-heap from a min-heap by negating keys is the smallest possible example, and Python's `heapq` (min-only)makes it a daily occurrence:
+**Adapter** converts one interface to another. A max-heap from a min-heap by negating keys is the smallest possible example, and Python's `heapq` (min-only) makes it a daily occurrence:
 
 ```python
 class MaxHeap:

@@ -12,7 +12,7 @@
 
 ## D.2 CAP and PACELC
 
-CAP says that **when a network partition occurs**, a distributed system must sacrifice either consistency or availability. Partitions are not optional (they are a fact of networks)so the real choice is only ever between CP and AP:
+CAP says that **when a network partition occurs**, a distributed system must sacrifice either consistency or availability. Partitions are not optional (they are a fact of networks) so the real choice is only ever between CP and AP:
 
 | Choice | During a partition | Example |
 |--------|-------------------|---------|

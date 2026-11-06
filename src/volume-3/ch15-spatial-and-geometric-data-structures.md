@@ -152,7 +152,7 @@ R-Tree:
         └──────────────────┘
 ```
 
-KD-trees and quadtrees index *points*. R-trees index *extended objects* (roads, building footprints, delivery zones)and they are the structure databases actually ship.
+KD-trees and quadtrees index *points*. R-trees index *extended objects* (roads, building footprints, delivery zones) and they are the structure databases actually ship.
 
 An R-tree is a B-tree whose keys are **minimum bounding rectangles (MBRs)**. Each internal entry stores the MBR enclosing everything in its subtree. A query descends into every child whose MBR intersects the query region, which may be more than one, and that is the crucial difference from a B-tree. Where a B-tree descends exactly one path, an R-tree may descend several.
 
