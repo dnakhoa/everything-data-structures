@@ -34,7 +34,7 @@
 
 **Leaf**: A node with no children.
 
-**Sentinel**: A dummy node that removes special cases (an empty-list check, a null-pointer test)by guaranteeing a node always exists.
+**Sentinel**: A dummy node that removes special cases (an empty-list check, a null-pointer test) by guaranteeing a node always exists.
 
 **Tombstone**: A marker left in place of a deleted entry so that probe sequences in an open-addressed hash table are not broken.
 
@@ -98,7 +98,7 @@
 
 **Eventual Consistency**: A guarantee that replicas converge given no further updates, with no bound on when.
 
-**Merkle Tree**: A tree of hashes where each node hashes its children, allowing two large datasets to be compared (and their differences located)in logarithmic work.
+**Merkle Tree**: A tree of hashes where each node hashes its children, allowing two large datasets to be compared (and their differences located) in logarithmic work.
 
 **Quorum**: A subset of replicas that must acknowledge an operation. Overlapping read and write quorums (R + W > N) give strong consistency.
 
@@ -110,7 +110,7 @@
 
 **Count-Min Sketch**: A fixed-size frequency estimator over a stream, which overestimates but never underestimates.
 
-**HyperLogLog**: A cardinality estimator using the maximum leading-zero count of hashes, giving ~2% error in about 12KB regardless of set size.
+**HyperLogLog**: A cardinality estimator using the maximum leading-zero count of hashes, giving about 0.81% standard error in 12 KB (16,384 registers) regardless of set size.
 
 **Rank / Select**: The two primitives underlying succinct structures. `rank(i)` counts 1-bits before position i; `select(k)` finds the position of the k-th 1-bit.
 

@@ -52,7 +52,7 @@ Training: Supervised learning on key distributions
 Prediction: Binary search within confidence bounds
 ```
 
-The reframing is genuine: an index is a function from key to position, and a model can approximate a function. A B-tree assumes nothing whatsoever about the key distribution, which makes it robust and also means it throws away information. Real key distributions (timestamps, auto-increment IDs, sorted identifiers)are highly regular, and a model that captures that regularity beats a structure that ignores it.
+The reframing is genuine: an index is a function from key to position, and a model can approximate a function. A B-tree assumes nothing whatsoever about the key distribution, which makes it robust and also means it throws away information. Real key distributions (timestamps, auto-increment IDs, sorted identifiers) are highly regular, and a model that captures that regularity beats a structure that ignores it.
 
 The honest status, five years on from the original paper: **learned indexes remain mostly research, and the parts that shipped are elsewhere.** Updates are the hard problem. The original design was read-only, and while ALEX and the PGM-index support updates, distribution shift can force retraining. Worst-case bounds disappear, which matters for anything adversarial. And "neural network" oversells it: the models that work are staged linear regressions, because inference has to cost nanoseconds.
 
@@ -83,7 +83,7 @@ The realistic near-term position: quantum computing will likely matter first for
 
 Two shifts already underway deserve to be added, because they are changing decisions today rather than eventually.
 
-**Vector search became infrastructure in about three years.** Embedding models turned similarity search from a niche problem into a default component of application architecture, and the structures that serve it (HNSW graphs, IVF, product quantization)went from papers to production defaults faster than almost anything in this book's history. Note what drove it: not a better algorithm, but a change in what data looked like. Structures follow workloads.
+**Vector search became infrastructure in about three years.** Embedding models turned similarity search from a niche problem into a default component of application architecture, and the structures that serve it (HNSW graphs, IVF, product quantization) went from papers to production defaults faster than almost anything in this book's history. Note what drove it: not a better algorithm, but a change in what data looked like. Structures follow workloads.
 
 **NVMe is quietly reopening settled questions.** A great deal of received wisdom: B-trees over hash indexes on disk, LSM trees over in-place updates, "random I/O is catastrophic". Was calibrated against spinning disks where a seek cost 10ms. On NVMe a random read costs about 10μs, a thousandfold improvement, and the gap between sequential and random access narrows from 10,000× to something closer to 10×. Several tradeoffs that were obvious in 2005 are now genuinely arguable. When the hardware assumptions under a piece of conventional wisdom change by three orders of magnitude, the wisdom deserves rechecking.
 

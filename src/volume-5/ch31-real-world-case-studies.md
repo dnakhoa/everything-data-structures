@@ -83,7 +83,7 @@ Partition heals. Neither vector dominates the other
 
 Dynamo pushes reconciliation to the application, and for a shopping cart the resolution is a set union, which is why a deleted item famously sometimes reappears. That is the visible cost of choosing availability, and it is a deliberate trade, not a bug.
 
-**Merkle trees** solve the other problem: detecting divergence without comparing everything. Each replica hashes its key range into a tree; two replicas compare root hashes, and if they match (the common case)they are identical and nothing more transfers. If they differ, they descend only into subtrees whose hashes disagree. Comparing two replicas of a million keys with one difference takes about 20 hash comparisons instead of a million. The same structure, for the same reason, is how Git compares trees and how BitTorrent verifies pieces.
+**Merkle trees** solve the other problem: detecting divergence without comparing everything. Each replica hashes its key range into a tree; two replicas compare root hashes, and if they match (the common case) they are identical and nothing more transfers. If they differ, they descend only into subtrees whose hashes disagree. Comparing two replicas of a million keys with one difference takes about 20 hash comparisons instead of a million. The same structure, for the same reason, is how Git compares trees and how BitTorrent verifies pieces.
 
 **Structures in play**: consistent hashing with virtual nodes ([Chapter 27](ch27-distributed-data-structures.md)), vector clocks, Merkle trees, and per-node LSM or B-tree storage. Dynamo's design became DynamoDB, Cassandra, Riak, and Voldemort.
 
@@ -146,7 +146,7 @@ Delta Lake solves a problem created by cloud object storage: S3 gives cheap, dur
 
 The fix is to stop treating the file listing as the source of truth. **The transaction log is the table**; the Parquet files are just content addressed by it. A reader replays the log to compute the current file set, and a file not named in the log does not exist as far as the table is concerned, so a failed job leaves orphaned files that are simply invisible, rather than corruption.
 
-This makes the table state a **persistent data structure** in exactly the sense of [Chapter 17](../volume-3/ch17-persistent-data-structures.md): each log entry produces a new version, old versions remain valid, and unchanged files are shared between them. "Time travel" (querying the table as of last Tuesday)is not a feature bolted on but a direct consequence of the representation.
+This makes the table state a **persistent data structure** in exactly the sense of [Chapter 17](../volume-3/ch17-persistent-data-structures.md): each log entry produces a new version, old versions remain valid, and unchanged files are shared between them. "Time travel" (querying the table as of last Tuesday) is not a feature bolted on but a direct consequence of the representation.
 
 Replaying the entire log would get slow, so Delta periodically writes a **checkpoint** (a Parquet file holding the full state at version N), and readers start from the newest checkpoint and replay only the entries after it. This is the same log-plus-snapshot pattern used by Raft, Redis AOF with RDB, and every event-sourced system in [Chapter 30](ch30-advanced-system-patterns-and-case-studies.md).
 
@@ -190,7 +190,7 @@ Two structural ideas do most of the work here.
 
 The origin shield exists for a specific failure mode: without it, a popular object expiring simultaneously across 300 edge PoPs sends 300 requests to the origin at once, a **thundering herd**. The shield collapses them into one. The general technique is *request coalescing*: concurrent misses for the same key wait on a single in-flight fetch rather than each issuing their own.
 
-**Cache key design is where correctness lives.** Include too much in the key (a tracking parameter, a session cookie)and the hit rate collapses because every request is unique. Include too little and users are served each other's content, which is a security incident rather than a performance problem. The `Vary` header is the standard mechanism, and getting it wrong is one of the more common ways to leak data between users.
+**Cache key design is where correctness lives.** Include too much in the key (a tracking parameter, a session cookie) and the hit rate collapses because every request is unique. Include too little and users are served each other's content, which is a security incident rather than a performance problem. The `Vary` header is the standard mechanism, and getting it wrong is one of the more common ways to leak data between users.
 
 ## 31.6 What the Five Have in Common
 

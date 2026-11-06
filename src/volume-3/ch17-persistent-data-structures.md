@@ -69,7 +69,7 @@ v2 = insert(v1, 35)     # v1 still queryable, unchanged
 v3 = insert(v2, 60)     # three coexisting versions
 ```
 
-There is no mutation anywhere in that function (it only ever constructs new nodes)which is what makes the old roots remain valid.
+There is no mutation anywhere in that function (it only ever constructs new nodes) which is what makes the old roots remain valid.
 
 **This is path copying**, and its cost is the height of the tree:
 
@@ -121,7 +121,7 @@ Functional languages favor immutable structures:
 
 Each of those bullets deserves unpacking, because they are the practical reasons persistence is worth its overhead.
 
-**Thread-safe by default** is the big one. Every concurrency hazard in [Chapter 18](ch18-concurrent-data-structures.md) (torn reads, lost updates, iterator invalidation)comes from one thread mutating what another is reading. If nothing is ever mutated, there is nothing to synchronize. Readers need no locks at all, and a writer publishes a new version with a single atomic pointer swap. This is why Clojure's concurrency story is as simple as it is.
+**Thread-safe by default** is the big one. Every concurrency hazard in [Chapter 18](ch18-concurrent-data-structures.md) (torn reads, lost updates, iterator invalidation) comes from one thread mutating what another is reading. If nothing is ever mutated, there is nothing to synchronize. Readers need no locks at all, and a writer publishes a new version with a single atomic pointer swap. This is why Clojure's concurrency story is as simple as it is.
 
 **Undo/redo becomes free.** Keeping a stack of old roots *is* the undo history; no command objects, no inverse operations, no replay. Editors and CAD tools built on persistent structures get unlimited undo as a side effect of the data model.
 

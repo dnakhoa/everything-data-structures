@@ -10,7 +10,7 @@ The Fibonacci heap from [Chapter 9](../volume-1/ch09-heaps-and-priority-queues.m
 
 The response has been a search for structures with the same bounds and less machinery:
 
-- **Pairing heaps** (Fredman et al., 1986) are dramatically simpler (a single multiway tree with a `merge` operation)and fast in practice. Their exact amortized `decrease-key` complexity was an open problem for two decades; it is now known to be O(log log n), not O(1), yet they still beat Fibonacci heaps on essentially every real workload.
+- **Pairing heaps** (Fredman et al., 1986) are dramatically simpler (a single multiway tree with a `merge` operation) and fast in practice. Their exact amortized `decrease-key` complexity was an open problem for two decades; it is now known to be O(log log n), not O(1), yet they still beat Fibonacci heaps on essentially every real workload.
 - **Rank-pairing heaps** (Haeupler, Sen, Tarjan, 2011) achieve the full Fibonacci bounds with substantially simpler restructuring.
 - **Strict Fibonacci heaps** (Brodal, Lagogiannis, Tarjan, 2012) attain the same bounds in the *worst case* rather than amortized: theoretically significant for real-time systems, still not competitive in practice.
 
@@ -64,7 +64,7 @@ Machine learning for index structures:
 
 The idea, from Kraska et al.'s 2018 paper "The Case for Learned Index Structures," is a genuine reframing: **an index is a function from key to position, and a model can approximate a function.** If your keys are integers 1 to 100,000,000 stored in order, the "index" is `position = key − 1`, no tree needed. Real data is not that clean, but real data is rarely random either, and a model that captures the shape of the key distribution can beat a structure that assumes nothing about it.
 
-A learned index predicts a position, then does a bounded local search to correct the prediction. The **Recursive Model Index** stages simple models (usually linear regressions, not neural networks, because inference must cost nanoseconds)with each stage narrowing the range.
+A learned index predicts a position, then does a bounded local search to correct the prediction. The **Recursive Model Index** stages simple models (usually linear regressions, not neural networks, because inference must cost nanoseconds) with each stage narrowing the range.
 
 Reported results are strong: up to 3× faster lookups at a fraction of the memory of a B-tree. The caveats are equally real, and they are what keeps this out of most production systems:
 
@@ -108,7 +108,7 @@ Collaborative text editing is the demanding case, since concurrent inserts at th
 
 One significant omission from the original survey, added because it went from research to ubiquitous in roughly three years.
 
-Embedding models turn text, images, and audio into high-dimensional vectors (typically 384 to 1,536 dimensions)and searching them means approximate nearest neighbor over millions of points. [Chapter 15](ch15-spatial-and-geometric-data-structures.md) explained why KD-trees collapse at these dimensionalities. The structures that work instead:
+Embedding models turn text, images, and audio into high-dimensional vectors (typically 384 to 1,536 dimensions) and searching them means approximate nearest neighbor over millions of points. [Chapter 15](ch15-spatial-and-geometric-data-structures.md) explained why KD-trees collapse at these dimensionalities. The structures that work instead:
 
 - **HNSW** (Hierarchical Navigable Small World, Malkov and Yashunin, 2016) builds a layered proximity graph and greedily descends it. A skip list where the "links" are nearest neighbors. It is the default in most vector databases: excellent recall, fast queries, high memory use, awkward deletion.
 - **IVF** (inverted file index) clusters vectors and searches only the nearest clusters. Lower memory, tunable recall.

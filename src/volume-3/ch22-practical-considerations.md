@@ -67,7 +67,7 @@ Three practical notes that catch people repeatedly:
 
 - **Go randomizes map iteration order on purpose**, so that code cannot come to depend on it. If you need order, sort the keys.
 - **Rust's default hasher is SipHash**, chosen to resist collision attacks, and it is measurably slower than a non-cryptographic hash. For internal maps with trusted keys, `FxHashMap` is often 2× faster.
-- **C++ `std::list` is nearly always a mistake.** The textbook case for a linked list (cheap insertion in the middle)loses to `std::vector` at surprisingly large n, because finding the insertion point requires a traversal and the traversal is cache-hostile. Measure before believing otherwise.
+- **C++ `std::list` is nearly always a mistake.** The textbook case for a linked list (cheap insertion in the middle) loses to `std::vector` at surprisingly large n, because finding the insertion point requires a traversal and the traversal is cache-hostile. Measure before believing otherwise.
 
 ## 22.3 Performance Optimization
 
@@ -174,7 +174,7 @@ def to_dot(node, out):
             to_dot(child, out)
 ```
 
-**For memory bugs** (use-after-free, double-free, buffer overruns in hand-written C structures)reach for the sanitizers rather than reasoning: `-fsanitize=address` and `-fsanitize=undefined` find in seconds what code review misses for weeks. For concurrent structures, `-fsanitize=thread`, Java's JCStress, or Rust's `loom` are effectively mandatory; a race that has not manifested in testing is not a race that does not exist.
+**For memory bugs** (use-after-free, double-free, buffer overruns in hand-written C structures) reach for the sanitizers rather than reasoning: `-fsanitize=address` and `-fsanitize=undefined` find in seconds what code review misses for weeks. For concurrent structures, `-fsanitize=thread`, Java's JCStress, or Rust's `loom` are effectively mandatory; a race that has not manifested in testing is not a race that does not exist.
 
 **A checklist for the specific bug classes that recur:**
 

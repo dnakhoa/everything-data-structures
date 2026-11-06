@@ -4,7 +4,7 @@
 
 Sometimes we don't need exact answers, we need fast, space-efficient approximate answers. Probabilistic data structures trade accuracy for speed and space.
 
-That trade is worth stating precisely, because the amount of accuracy given up is small and the amount of space saved is not. Tracking the unique visitors to a website exactly means storing every visitor ID: 100 million IDs at 16 bytes each is 1.6GB. A HyperLogLog answers the same question to within about 2% using **12 kilobytes**: a factor of 130,000. For a dashboard, 2% error is invisible and 1.6GB is not.
+That trade is worth stating precisely, because the amount of accuracy given up is small and the amount of space saved is not. Tracking the unique visitors to a website exactly means storing every visitor ID: 100 million IDs at 16 bytes each is 1.6GB. A HyperLogLog answers the same question with a standard error under 1% using **12 kilobytes**: a factor of 130,000. For a dashboard, an error of a percent or two is invisible and 1.6GB is not.
 
 The general shape of every structure in this chapter:
 
@@ -135,7 +135,7 @@ Modern alternative to Bloom filters:
 - O(1) expected operations
 - Uses cuckoo hashing internally
 
-A cuckoo filter stores a short **fingerprint** of each element (typically 8 to 12 bits)in a cuckoo hash table with two candidate buckets per item. A query checks both buckets for the fingerprint.
+A cuckoo filter stores a short **fingerprint** of each element (typically 8 to 12 bits) in a cuckoo hash table with two candidate buckets per item. A query checks both buckets for the fingerprint.
 
 The trick that makes it work is **partial-key cuckoo hashing**. Standard cuckoo hashing needs the original key to relocate an item, and a filter has thrown the key away. Cuckoo filters compute the second bucket as:
 
@@ -151,7 +151,7 @@ Use a cuckoo filter when you need deletion or the lowest false-positive rate per
 
 ## 14.5 HyperLogLog
 
-Estimates the number of distinct elements with ~2% error using ~12KB:
+Estimates the number of distinct elements with about 0.81% standard error using 12 KB (derived below):
 
 ```
 Idea: Hash each element
@@ -177,7 +177,7 @@ m = number of registers, M[i] = max leading zeros in register i
 α_m ≈ 0.7213 / (1 + 1.079/m)     bias correction constant
 ```
 
-Standard error is 1.04/√m. With m = 16,384 registers at 6 bits each (12KB)that is 0.81% error, for a set of any cardinality up to about 2⁶⁴.
+Standard error is 1.04/√m. With m = 16,384 registers at 6 bits each (12KB), that is 0.81% error, for a set of any cardinality up to about 2⁶⁴.
 
 **The mergeability is the underrated property.** The union of two HyperLogLogs is the element-wise maximum of their registers. That means cardinality across a hundred servers can be computed by each server keeping its own sketch and sending 12KB to a coordinator. No coordination, no shuffling of raw data, and the merge is exact. Merging sketches of A and B gives precisely the sketch you'd get from counting A ∪ B directly. This is why every distributed analytics system uses it.
 
@@ -225,7 +225,7 @@ Count-Min sketches are linear: adding two sketches element-wise gives the sketch
 
 **MinHash** estimates the Jaccard similarity of two sets (|A∩B|/|A∪B|)without comparing them. Hash every element of a set and keep the minimum hash. The probability that two sets share the same minimum is exactly their Jaccard similarity, so keeping k independent minima estimates it to within about 1/√k. Combined with locality-sensitive hashing, this is how near-duplicate detection works at web scale: Google used it for deduplicating crawled pages, and it remains standard for plagiarism detection and clustering.
 
-**t-digest** estimates quantiles (medians, p95, p99)over a stream in a few kilobytes, with the crucial property that accuracy is *highest at the extremes*. Ordinary sampling gives uniform accuracy, which is backwards for latency monitoring: nobody cares about a precise median, and everyone cares about p99. t-digest is what Prometheus-adjacent tooling, Elasticsearch percentile aggregations, and most latency dashboards use.
+**t-digest** estimates quantiles (medians, p95, p99) over a stream in a few kilobytes, with the crucial property that accuracy is *highest at the extremes*. Ordinary sampling gives uniform accuracy, which is backwards for latency monitoring: nobody cares about a precise median, and everyone cares about p99. t-digest is what Prometheus-adjacent tooling, Elasticsearch percentile aggregations, and most latency dashboards use.
 
 ## 14.8 Applications
 

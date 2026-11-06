@@ -73,7 +73,7 @@ The structure that makes each operation cheapest, with the cost of choosing it.
 | Insert in the middle given a position | Linked list, O(1) | Finding the position is O(n) |
 | Merge two collections | Leftist / pairing heap, O(log n) | Slower than a binary heap otherwise |
 | Membership, huge set | Bloom filter, O(k) | False positives; no enumeration |
-| Count distinct | HyperLogLog, O(1) | ~2% error |
+| Count distinct | HyperLogLog, O(1) | ~0.81% standard error in 12 KB |
 | Connectivity under merging | Union-find, O(α(n)) | Cannot split |
 
 ## B.4 By Scale
