@@ -571,6 +571,11 @@ The operation `dist[v] = min(dist[v], dist[u] + w)` is called **relaxing** the e
 | 6 | (6, C) | stale, skip | (7,D) |
 | 7 | (7, D) | none | empty |
 
+<figure>
+{{#include ../images/dijkstra-trace.svg}}
+<figcaption>The graph from the trace. Blue edges are the parent pointers Dijkstra leaves behind; together they form a tree of shortest paths from S.</figcaption>
+</figure>
+
 Result: S:0, B:1, A:3, C:4, D:7, with path S → B → A → C → D. Note that A was first reached directly (cost 4) and improved via B; the direct edge was not the shortest route.
 
 **Why it is correct.** When a vertex u is popped with its true distance, every vertex still in the heap has a distance at least as large. Any path to u through one of those vertices therefore costs at least as much, *because edges cannot make a path cheaper*. So u's distance is final.
