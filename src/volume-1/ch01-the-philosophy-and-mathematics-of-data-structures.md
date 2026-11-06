@@ -55,7 +55,7 @@ O(f(n)) describes an upper bound on running time. f(n) = O(g(n)) means that f gr
 
 ∃ c > 0, ∃ n₀ > 0, such that ∀ n ≥ n₀: 0 ≤ f(n) ≤ c·g(n)
 
-When we say a hash table has O(1) lookup, we mean the lookup time is bounded by a constant, regardless of how many elements are stored. This is an upper bound, we're saying lookup will never be worse than constant time.
+When we say array indexing is O(1), we mean the access time is bounded by a constant, regardless of how many elements are stored. This is an upper bound, we're saying access will never be worse than constant time.
 
 ### Big-Omega Notation: Lower Bounds
 
@@ -117,7 +117,7 @@ Logarithmic growth is remarkably slow. Even at n = 1 billion, log₂(n) ≈ 30. 
 
 **Linearithmic Time: O(n log n)**
 - Comparison-based sorting (merge sort, heap sort, quicksort average case)
-- Building a heap
+- Building a heap by n successive inserts (bottom-up heapify builds one in O(n))
 - Balanced tree operations if rebuilding required
 
 **Polynomial Time: O(n^k)**
@@ -142,9 +142,9 @@ Sometimes we care less about individual operation cost and more about total cost
 Consider a dynamic array (like Python's list or Java's ArrayList). When it fills, it doubles its capacity and copies all elements. This copy costs O(n), which seems expensive. However, this expensive operation happens only rarely, specifically, when the array size is a power of 2.
 
 Over n insert operations, the total cost is:
-n + 1 + 2 + 4 + 8 + ... + n ≤ 2n
+n + (1 + 2 + 4 + 8 + ... + n) ≤ n + 2n = 3n
 
-So the amortized cost per insert is O(2n/n) = O(1). Each individual insert is O(1) on average, even though occasional inserts are O(n).
+So the amortized cost per insert is O(3n/n) = O(1). Each individual insert is O(1) on average, even though occasional inserts are O(n).
 
 Three techniques for amortized analysis exist:
 
@@ -154,7 +154,7 @@ Simply sum the costs of all operations and divide by n. If the total cost of any
 **Accounting Method:**
 Assign different charges to different operations. Some operations are charged more than they cost; the excess is stored as "credit" and used to pay for operations that cost more than they were charged. The total credit never goes negative.
 
-For dynamic arrays, we might charge 3 units for each insert: 1 unit for the immediate insert, 1 unit for future copying, and 1 unit for the eventual deallocation.
+For dynamic arrays, we might charge 3 units for each insert: 1 unit for the immediate insert, 1 unit to copy this element at the next resize, and 1 unit to copy one of the older elements that were already copied at the previous resize.
 
 **Potential Method:**
 Define a potential function Φ that maps data structure states to non-negative numbers. The amortized cost of an operation is the real cost plus the change in potential:
@@ -163,7 +163,7 @@ amortized_cost = real_cost + ΔΦ
 
 If Φ is always non-negative and Φ(start) = 0, the total amortized cost is an upper bound on total real cost.
 
-For a dynamic array, define Φ = 2n - m, where n is the current size and m is the capacity. When the array is full, Φ = 0. When half-full, Φ = n (maximum).
+For a dynamic array, define Φ = 2n - m, where n is the current size and m is the capacity. Right after a doubling, before the new element is written, the array is half full and Φ = 0. When the array is full, Φ = n (its maximum), exactly enough to pay for copying the n elements at the next resize.
 
 ## 1.6 The RAM Model and Real Costs
 
@@ -193,10 +193,10 @@ A lower bound establishes that no algorithm can do better than a certain complex
 The proof uses a decision tree argument. Any comparison sort can be represented as a binary decision tree, where each internal node represents a comparison and each leaf represents a final ordering. A binary tree with L leaves must have height at least log₂ L. Since there are n! possible orderings, the tree needs at least n! leaves, requiring height at least log₂(n!) = Ω(n log n).
 
 **Static Dictionary: Ω(log n)**
-For static sets (no insertions or deletions), the cell probe model proves that any data structure answering membership queries needs Ω(log n) time if it uses O(n) space. This is why balanced binary trees are optimal for static ordered sets.
+For static sets (no insertions or deletions), any comparison-based structure answering membership queries needs Ω(log n) comparisons in the worst case. This is why binary search and balanced binary trees are optimal among comparison-based structures for static ordered sets. Hashing escapes the bound because it does not compare keys: FKS perfect hashing answers static membership in O(1) worst-case time with O(n) space.
 
 **Dynamic Dictionary: Ω(1)**
-Surprisingly, with amortization or randomization, we can achieve O(1) expected time for dynamic sets. Hash tables achieve this, though at the cost of potential false positives and worst-case degradation.
+Surprisingly, with amortization or randomization, we can achieve O(1) expected time for dynamic sets. Hash tables achieve this, though at the cost of worst-case degradation.
 
 ## 1.8 References for Further Study
 
@@ -207,6 +207,162 @@ The mathematical foundations of data structures draw from several disciplines:
 - **Algebra**: Group theory in symmetric structures, polynomial methods
 - **Probability**: Randomization in skip lists, hashing, and probabilistic data structures
 - **Algebraic Topology**: Recent connections to persistent homology and spatial data structures
+
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**1.1 ★ Constants for a Θ bound.** Show that f(n) = 3n² + 10n + 5 is Θ(n²) by giving explicit constants c₁, c₂ and n₀ that satisfy the formal definition in Section 1.3. Then explain why the definition needs n₀ at all.
+
+<details>
+<summary>Solution</summary>
+
+Take c₁ = 3 and c₂ = 4.
+
+- Lower bound: 3n² ≤ 3n² + 10n + 5 holds for every n ≥ 1, since 10n + 5 > 0.
+- Upper bound: 3n² + 10n + 5 ≤ 4n² is equivalent to 10n + 5 ≤ n². At n = 10 this is 105 ≤ 100, which fails. At n = 11 it is 115 ≤ 121, which holds, and for larger n the left side grows by 10 per step while the right side grows by 2n + 1 ≥ 23, so it keeps holding.
+
+So c₁ = 3, c₂ = 4, n₀ = 11 work. Other choices are fine too: c₂ = 18 works from n₀ = 1, because 3n² + 10n + 5 ≤ 3n² + 10n² + 5n² for n ≥ 1.
+
+n₀ exists so that small inputs, where lower-order terms dominate, do not decide the bound. With c₂ = 4 the inequality is false for n ≤ 10 and true forever after; asymptotic notation only cares about "forever after".
+
+</details>
+
+**1.2 ★ Count the copies.** A dynamic array starts with capacity 1 and doubles its capacity whenever an insert finds it full. Starting from empty, you insert 17 elements. Which inserts trigger a resize, how many element copies happen in total, and what is the total cost if each write of a new element costs 1 and each copy costs 1? Compare the total with the 3n bound from Section 1.5.
+
+<details>
+<summary>Solution</summary>
+
+A resize happens when an insert finds size = capacity:
+
+| Insert # | Size before | Capacity before | Copies | Capacity after |
+|----------|-------------|-----------------|--------|----------------|
+| 2 | 1 | 1 | 1 | 2 |
+| 3 | 2 | 2 | 2 | 4 |
+| 5 | 4 | 4 | 4 | 8 |
+| 9 | 8 | 8 | 8 | 16 |
+| 17 | 16 | 16 | 16 | 32 |
+
+Total copies: 1 + 2 + 4 + 8 + 16 = 31. Total cost: 17 writes + 31 copies = 48. The bound is 3 × 17 = 51, so 48 ≤ 51 as promised.
+
+The copies form a geometric series whose largest term (16) is less than n = 17, so the copies sum to less than 2n. Insert 17 is the worst case for this n: it pays for a 16-element copy and then leaves the new array almost empty.
+
+</details>
+
+**1.3 ★★ Rank the growth rates.** Order these functions from slowest-growing to fastest-growing as n → ∞. Mark any two that are Θ of each other.
+
+n log₂ n, n^1.5, 2^(log₂ n), log₂(n!), n² / log₂ n, √n, (log₂ n)³, 1.01ⁿ
+
+<details>
+<summary>Hint</summary>
+
+Simplify first: one of these is just n in disguise, and Section 1.7 tells you the order of log₂(n!). For a polylog against a power, substitute n = 2^k.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(log₂ n)³ < √n < 2^(log₂ n) < n log₂ n ≡ log₂(n!) < n^1.5 < n² / log₂ n < 1.01ⁿ
+
+Reasons, pair by pair:
+
+- **(log₂ n)³ vs √n.** With n = 2^k the ratio is k³ / 2^(k/2), which goes to 0. Any power of a logarithm is o(n^ε) for every ε > 0. The crossover is late, though: √n only passes (log₂ n)³ at about n ≈ 6 × 10⁸, so for small inputs the "slower" function is larger.
+- **2^(log₂ n)** is exactly n.
+- **n vs n log₂ n.** The ratio is log₂ n, which is unbounded.
+- **n log₂ n vs log₂(n!).** These are Θ of each other: log₂(n!) ≤ n log₂ n trivially, and log₂(n!) ≥ (n/2) log₂(n/2) (see Exercise 1.5).
+- **n log₂ n vs n^1.5.** Divide both by n: log₂ n is o(√n).
+- **n^1.5 vs n² / log₂ n.** The ratio (n² / log₂ n) / n^1.5 = √n / log₂ n is unbounded.
+- **n² / log₂ n vs 1.01ⁿ.** Every exponential with base > 1 eventually beats every polynomial. Here 1.01ⁿ overtakes n² / log₂ n at about n ≈ 1,190.
+
+</details>
+
+**1.4 ★★ The potential method by hand.** Use the potential Φ = 2n − m from Section 1.5 (n = size, m = capacity) for a doubling dynamic array. Charge real cost 1 for writing the new element plus 1 per element copied. Compute the amortized cost (real cost + ΔΦ) of (a) an insert that does not resize and (b) an insert that finds the array full with n = m elements.
+
+<details>
+<summary>Hint</summary>
+
+In case (b), compute Φ before the insert with n = m, and Φ after with size m + 1 and capacity 2m.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+**(a) No resize.** Real cost 1. n grows by 1 and m is unchanged, so ΔΦ = 2. Amortized cost = 1 + 2 = 3.
+
+**(b) Resize.** Real cost is m copies plus 1 write, so m + 1.
+
+- Before: Φ = 2m − m = m.
+- After: size m + 1, capacity 2m, so Φ = 2(m + 1) − 2m = 2.
+- ΔΦ = 2 − m.
+
+Amortized cost = (m + 1) + (2 − m) = 3.
+
+Both cases cost exactly 3, so n inserts have amortized cost 3n. The potential built up by cheap inserts (2 per insert) is what pays for the copy: by the time the array is full, Φ has climbed to m, and the resize spends it. Because Φ ≥ 0 after the first insert, total real cost is at most total amortized cost (up to the constant Φ at the start), which gives the same 3n bound as aggregate analysis.
+
+</details>
+
+**1.5 ★★ How many comparisons does sorting 10 items need?** Section 1.7 claims log₂(n!) = Ω(n log n) without proof.
+
+(a) Prove log₂(n!) ≥ (n/2) log₂(n/2) for n ≥ 2, and conclude that log₂(n!) = Θ(n log n).
+
+(b) Use the decision-tree argument to give a lower bound on the number of comparisons any comparison sort needs in the worst case on 10 elements.
+
+<details>
+<summary>Hint</summary>
+
+For (a), throw away the smaller half of the factors in n! = 1 × 2 × ... × n, and make each remaining factor smaller too.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+**(a)** n! = 1 × 2 × ... × n. The largest ⌈n/2⌉ factors are each at least n/2, and the rest are at least 1, so
+
+n! ≥ (n/2)^(n/2)
+
+Taking log₂ of both sides gives log₂(n!) ≥ (n/2) log₂(n/2) = (n/2)(log₂ n − 1), which is at least (n/4) log₂ n once n ≥ 4. So log₂(n!) = Ω(n log n). For the upper bound, each of the n factors is at most n, so n! ≤ nⁿ and log₂(n!) ≤ n log₂ n. Together: log₂(n!) = Θ(n log n).
+
+**(b)** 10! = 3,628,800 orderings, so the decision tree needs at least that many leaves. A binary tree of height h has at most 2^h leaves, so 2^h ≥ 3,628,800, giving h ≥ log₂(3,628,800) ≈ 21.79. Height is an integer, so h ≥ 22: some input forces at least 22 comparisons. (This bound happens to be achievable; 22 comparisons suffice for 10 elements. Merge sort uses up to 25.)
+
+</details>
+
+**1.6 ★★★ Shrinking without thrashing.** You add a pop operation to the doubling array, and to save memory you halve the capacity whenever a pop leaves the array at most half full (n ≤ m/2).
+
+(a) Find a sequence of operations that costs Θ(n) per operation.
+
+(b) Change the rule to: halve the capacity when a pop leaves the array at most a quarter full (n ≤ m/4). Argue that every operation is now amortized O(1).
+
+<details>
+<summary>Hint</summary>
+
+For (a), start from a full array and alternate push and pop. For (b), ask how full the array is immediately after any resize, and how many operations must happen before the next one.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+**(a)** Fill the array so that n = m = 2^k. Then repeat: push, pop, push, pop, ...
+
+- push: the array is full, so it doubles to capacity 2m and copies m elements. Now n = m + 1.
+- pop: now n = m ≤ 2m/2, so it halves to capacity m and copies m elements. Now n = m = capacity again.
+- push: full again, double, copy m elements.
+
+Every operation after the fill copies m ≈ n elements, so a sequence of length 2n costs Θ(n²), Θ(n) per operation. The two thresholds coincide, so the array never gets to accumulate slack between resizes. In a simulation with m = 1024, 4,000 alternating operations after the fill copy about 4.1 million elements.
+
+**(b)** Immediately after any resize, the array is (essentially) half full:
+
+- After a grow from capacity m to M = 2m, the size is m + 1 ≈ M/2.
+- After a shrink from capacity 2M to M (triggered at n = 2M/4 = M/2), the size is M/2.
+
+From that state, the next grow needs the size to rise from about M/2 to M: at least about M/2 pushes. The next shrink needs the size to fall from M/2 to M/4: at least M/4 pops. Either way, at least about M/4 operations happen between consecutive resizes, and a resize copies at most M elements. Charging the copy to those operations costs at most about 4 copies each, so every operation is amortized O(1). (Rerunning the simulation from (a) with the quarter rule, the 4,000 alternating operations trigger exactly one resize, a 1,024-element copy on the first push, instead of 4.1 million copies.)
+
+The general lesson: the grow threshold and the shrink threshold must be separated by a constant factor, so that a resize always leaves room for Θ(m) cheap operations before the next one.
+
+</details>
 
 ---
 

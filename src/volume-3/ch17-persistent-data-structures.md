@@ -32,23 +32,23 @@ Confluent persistence is genuinely harder than the other two. When versions can 
 <figcaption>Path copying: only the root-to-insertion path is duplicated.</figcaption>
 </figure>
 
-Share unchanged nodes on modification. Inserting 25 requires copying every node on the path from the root down to the insertion point, and only those nodes. Everything hanging off that path is shared with the previous version:
+Share unchanged nodes on modification. Inserting 35 requires copying every node on the path from the root down to the insertion point, and only those nodes. Everything hanging off that path is shared with the previous version:
 
 ```
-Before (version 1):        After (version 2), inserting 25:
+Before (version 1):        After (version 2), inserting 35:
 
       A(50)                  A(50)          A'(50)      ← new root
      /     \                /     \        /      \
   B(30)   C(70)          B(30)   C(70)  B'(30)     │
    /                      /               /   \     │
-D(10)                  D(10)          D(10)  E(25)  │
+D(10)                  D(10)          D(10)  E(35)  │
                           ↑              ↑     ↑     │
                           └──────────────┘     │     │
                               shared        new    shared
                                             node   (C(70))
 
 Version 1 root = A, version 2 root = A'.
-Copied: A → A', B → B'.  New: E(25).  Shared: D(10), C(70).
+Copied: A → A', B → B'.  New: E(35).  Shared: D(10), C(70).
 ```
 
 Note that **B must be copied, not shared**: its right-child pointer changes to point at the new node E. This is the part that is easy to get wrong. Any node whose pointers change must be copied; a node is only shareable if nothing about it changes. Since only nodes along the root-to-leaf path have changed children, exactly O(log n) nodes are copied in a balanced tree.
@@ -65,7 +65,7 @@ def insert(node, key):
     return node                                                      # already present
 
 v1 = build_tree([50, 30, 70, 10])
-v2 = insert(v1, 25)     # v1 still queryable, unchanged
+v2 = insert(v1, 35)     # v1 still queryable, unchanged
 v3 = insert(v2, 60)     # three coexisting versions
 ```
 
@@ -144,6 +144,221 @@ Driscoll, Sarnak, Sleator, and Tarjan's 1986 paper "Making Data Structures Persi
 Chris Okasaki's *Purely Functional Data Structures* (1998), which grew out of his 1996 CMU thesis, addressed the complementary question: which structures can be implemented efficiently *without any mutation at all*? His treatment of amortization under persistence is the subtle part. The usual banker's argument breaks when an expensive operation can be re-executed by replaying an old version, and Okasaki's solution using lazy evaluation and memoization is why the book remains standard reading.
 
 Phil Bagwell introduced the Hash Array Mapped Trie in 2001. Rich Hickey built Clojure's collections on it in 2007, which more than anything else moved persistent structures from a functional-programming specialty into general practice.
+
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**17.1 ★ Which level of persistence?** Classify each system as partial, full, or confluent persistence, and name the shape of its version history (line, tree, or DAG).
+
+1. PostgreSQL MVCC, as described in 17.4: a transaction reads the snapshot that existed when it started, and writers only ever modify the current state.
+2. An editor with an undo *tree* (Vim and Emacs both have one): you can undo back to any earlier state, make a new edit there, and the abandoned branch stays reachable.
+3. Git, including merge commits.
+4. A ZFS filesystem with read-only snapshots.
+
+<details>
+<summary>Solution</summary>
+
+| System | Level | Version history | Why |
+|--------|-------|-----------------|-----|
+| PostgreSQL MVCC | Partial | Line | Old snapshots are readable, but every write goes to the newest state. |
+| Undo tree | Full | Tree | Editing an old state creates a new branch from it, so updates apply to any version. |
+| Git | Confluent | DAG | A merge commit has two parents: two versions combine into one. |
+| ZFS read-only snapshots | Partial | Line | Snapshots are retained old roots that can be read but not written; only the live filesystem changes. |
+
+The ZFS answer changes if you use *clones*, which are writable copies of a snapshot. Writing to a clone updates an old version, which makes the history a tree: full persistence.
+
+</details>
+
+**17.2 ★ Trace a second path copy.** Start from the two versions in 17.2: v1 holds 50, 30, 70, 10, and `v2 = insert(v1, 35)`. Now run `v3 = insert(v2, 60)`. Which nodes does this call allocate? Which nodes does v3 share with v2, and which with v1? How many `Node` objects exist across all three versions, and how many would three full copies need?
+
+<details>
+<summary>Hint</summary>
+
+Follow the search path for 60 from the root of v2. Only the nodes on that path are copied.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+The search path for 60 in v2 is A'(50), then right to C(70), then left to an empty slot. So the call copies A' and C and allocates one new leaf:
+
+```
+v3 root = A''(50)
+         /        \
+     B'(30)      C'(70)        A'', C' are copies; F(60) is new
+     /    \       /
+  D(10)  E(35)  F(60)
+```
+
+- **Allocated by this call:** A''(50), C'(70), F(60). That is 3 nodes: 2 copies plus the new leaf.
+- **Shared with v2:** B'(30), D(10), E(35). v3's left subtree is exactly v2's left subtree, the same objects.
+- **Shared with v1:** only D(10). Every other v1 node (A, B, C) has since been replaced on some copied path.
+
+Totals: v1 has 4 nodes, v2 added 3 (A', B', E), v3 added 3 (A'', C', F), so 10 `Node` objects back all three versions. Three independent copies would need 4 + 5 + 6 = 15.
+
+</details>
+
+**17.3 ★★ Find the bug.** A colleague wants persistence without writing a recursive copy, so they copy the root and then reuse an existing in-place insert:
+
+```python
+def _insert_mutating(node, key):
+    """Ordinary ephemeral BST insert: modifies the tree in place."""
+    if key < node.key:
+        if node.left is None:
+            node.left = Node(key, None, None)
+        else:
+            _insert_mutating(node.left, key)
+    elif key > node.key:
+        if node.right is None:
+            node.right = Node(key, None, None)
+        else:
+            _insert_mutating(node.right, key)
+
+def insert(root, key):
+    if root is None:
+        return Node(key, None, None)
+    new_root = Node(root.key, root.left, root.right)   # copy the root...
+    _insert_mutating(new_root, key)                    # ...then insert into the copy
+    return new_root
+```
+
+Build v1 holding 50, 30, 70 with the chapter's correct `insert`, then call `v2 = insert(v1, 20)` with this one. What does an in-order traversal of v1 print afterwards? Why did the colleague's tests, which inserted into a one-node tree and checked both versions, pass?
+
+<details>
+<summary>Hint</summary>
+
+The new root is a copy, but its child pointers are not. What object does `new_root.left` point at?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+v1 prints `[20, 30, 50, 70]`: the "old" version has the new key in it.
+
+`new_root.left` is the *same* node 30 that v1's root points at. `_insert_mutating` walks from `new_root` to that shared 30 and sets its `left` field in place, so the change is visible through both roots. Persistence is broken for every insert that lands two or more levels below the root.
+
+The one-node test passed by accident. Inserting 40 into a tree holding only 50 attaches the new leaf directly to `new_root`, which really is a fresh copy, so v1 is untouched. The bug only appears when the modified node is below the root.
+
+The fix is the rule from 17.2: **every node whose pointers change must be copied**, and that is every node on the root-to-insertion path, not just the root. The chapter's recursive `insert` does exactly that by building a new node at each level of the recursion. A good regression test records the in-order keys of every old version and asserts they never change after later operations.
+
+</details>
+
+**17.4 ★★ The price of an unbalanced persistent tree.** Insert the keys 1, 2, ..., n in increasing order into the chapter's path-copying BST (no balancing), keeping every version. Exactly how many `Node` objects are allocated in total? Evaluate it for n = 1000 and compare with an ephemeral BST and with a balanced persistent tree.
+
+<details>
+<summary>Solution</summary>
+
+When key k is inserted, the current tree is a right-leaning chain 1 → 2 → ... → k−1, and the search path for k visits all k−1 nodes. Each of them gets a new right pointer, so all are copied, plus one new leaf: **k allocations** for the k-th insert.
+
+Total: 1 + 2 + ... + n = n(n+1)/2, which is Θ(n²). For n = 1000 that is 500,500 nodes, all of them reachable from some retained version, so none can be freed.
+
+An ephemeral BST fed the same input allocates 1,000 nodes (it is just as slow, Θ(n²) comparisons, but it does not keep the waste). A balanced persistent tree copies O(log n) nodes per insert, so O(n log n) in total: on the order of n log₂ n ≈ 10,000 for n = 1000, plus a few extra copies per rotation. Even random insertion order into the unbalanced tree averages about 750 allocations for n = 100, against 5,050 for sorted input.
+
+This is the point of the line in 17.2 that balance matters more under persistence: an unbalanced ephemeral tree wastes time, but an unbalanced persistent tree also turns that time into permanent memory.
+
+</details>
+
+**17.5 ★★ HAMT bitmap indexing.** A HAMT node stores a 32-bit bitmap (bit i set means logical slot i is occupied, bit 0 is least significant) and a compact array holding only the occupied children, in slot order. One node has bitmap `0b10110010` and children `['a', 'b', 'c', 'd']`.
+
+1. Which logical slots are occupied, and which child is in each?
+2. Look up slot 5 and slot 6.
+3. Write `physical_index(bitmap, slot)`, `lookup(bitmap, children, slot)`, and `with_child(bitmap, children, slot, child)`. The last one must return a *new* bitmap and children list without modifying the inputs, since the old node may be shared with an older version. What does adding child `'x'` at slot 3 produce?
+
+<details>
+<summary>Hint</summary>
+
+The physical position of slot s is the number of occupied slots below s, which is a population count of the bitmap masked to bits 0 through s−1.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+1. Bits 1, 4, 5, and 7 are set, so slot 1 → `'a'`, slot 4 → `'b'`, slot 5 → `'c'`, slot 7 → `'d'`.
+2. Slot 5: bit 5 is set. The bits below it are `0b10010` (bits 1 and 4), popcount 2, so the answer is `children[2] == 'c'`. Slot 6: bit 6 is clear, so the slot is empty and the lookup fails without touching the array.
+3. The three functions:
+
+```python
+def physical_index(bitmap, slot):
+    return bin(bitmap & ((1 << slot) - 1)).count("1")
+
+def lookup(bitmap, children, slot):
+    if not (bitmap >> slot) & 1:
+        return None
+    return children[physical_index(bitmap, slot)]
+
+def with_child(bitmap, children, slot, child):
+    """Return a NEW (bitmap, children); the inputs are not modified."""
+    i = physical_index(bitmap, slot)
+    if (bitmap >> slot) & 1:                                # replace
+        return bitmap, children[:i] + [child] + children[i + 1:]
+    return bitmap | (1 << slot), children[:i] + [child] + children[i:]
+
+bm, ch = 0b10110010, ['a', 'b', 'c', 'd']
+assert lookup(bm, ch, 5) == 'c' and lookup(bm, ch, 6) is None
+bm2, ch2 = with_child(bm, ch, 3, 'x')
+assert bm2 == 0b10111010 and ch2 == ['a', 'x', 'b', 'c', 'd']
+assert ch == ['a', 'b', 'c', 'd']                           # old node intact
+assert lookup(bm2, ch2, 5) == 'c'                           # index shifted, lookup still right
+```
+
+Adding slot 3: one occupied slot (slot 1) lies below it, so `'x'` goes at physical index 1. The new bitmap is `0b10111010` and the new array is `['a', 'x', 'b', 'c', 'd']`. Note that `'b'`, `'c'`, and `'d'` all moved one position right, yet lookups still find them, because the physical index is recomputed from the bitmap every time. In production code the popcount is a single instruction (`int.bit_count()` in Python 3.10+, `POPCNT` on x86).
+
+</details>
+
+**17.6 ★★★ Amortization breaks under persistence.** Here is the classic two-list queue made persistent with immutable cons cells: `None` is the empty list and `(head, tail)` is a cell.
+
+```python
+steps = 0
+
+def reverse(lst):
+    global steps
+    out = None
+    while lst is not None:
+        steps += 1
+        head, lst = lst
+        out = (head, out)
+    return out
+
+def enqueue(q, x):
+    front, back = q
+    return (front, (x, back))          # O(1)
+
+def dequeue(q):
+    front, back = q
+    if front is None:                  # front ran out: reverse back into front
+        front, back = reverse(back), None
+    x, front = front
+    return x, (front, back)
+```
+
+Ephemerally, this queue is O(1) amortized: each element is moved by `reverse` once. Enqueue 0 through n−1 into `(None, None)` to get version `q`. Then (a) dequeue all n elements in a chain, always using the latest version, and (b) call `dequeue(q)` n times on the *same* version `q`. How many `reverse` steps does each pattern take? Explain what went wrong with the amortized argument, and how Okasaki's approach from 17.5 repairs it.
+
+<details>
+<summary>Hint</summary>
+
+In pattern (b), does the work done by one call's `reverse` help the next call?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+In `q`, `front` is empty and `back` holds all n elements.
+
+- **(a) Chain:** the first dequeue reverses n cells, producing a version whose `front` holds the rest. The next n−1 dequeues pop from that `front` with no reversal. Total: **n steps**, O(1) amortized, exactly as in the ephemeral analysis.
+- **(b) Replay:** every call receives the same `q` with an empty `front`, so every call reverses all n cells again. The reversed list built by one call is returned inside that call's new version, which the caller discards. Total: **n² steps**, O(n) per operation.
+
+Measured with n = 1000: 1,000 steps for (a), 1,000,000 for (b).
+
+The amortized argument charges the expensive reversal to the n cheap enqueues that preceded it, which works only if that "credit" is spent once. Persistence lets you return to version `q` as often as you like, and each return spends the same credit again. Any amortized bound that relies on an expensive operation happening rarely is vulnerable in the same way.
+
+Okasaki's fix is to make the expensive work *shared* rather than repeated. The reversal is created as a lazy suspension stored inside the version itself and memoized when it is first forced, and the queue creates it early (as soon as the back list grows longer than the front) so that enough cheap operations have already paid for it. Every version that descends from `q` holds the *same* suspension object, so whichever one forces it first pays, and the rest reuse the memoized result. The debt is paid once per version, not once per use, and O(1) amortized holds even under persistence. This is the "lazy evaluation and memoization" from 17.5.
+
+</details>
 
 ---
 

@@ -256,6 +256,205 @@ Philippe Flajolet spent much of his career on this family. Probabilistic countin
 
 Graham Cormode and S. Muthukrishnan introduced the Count-Min Sketch in 2005, and Andrei Broder developed MinHash at AltaVista in 1997 for exactly the problem the web had just created: too many near-identical pages.
 
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**14.1 ★ Size a Bloom filter, then overfill it.** You expect 1,000,000 items and want a 1% false-positive rate. (a) Using the formulas in the `BloomFilter` constructor, compute m (bits) and k. How much memory is that? (b) The estimate was wrong and 2,000,000 items arrive. What is the false-positive rate now? And at 3,000,000?
+
+<details>
+<summary>Solution</summary>
+
+(a) m = ⌈−n ln p / (ln 2)²⌉ = ⌈1,000,000 × 4.6052 / 0.48045⌉ = **9,585,059 bits**, about 1.2 MB (9.6 bits per item, matching the table). k = round((m/n) ln 2) = round(6.64) = **7**.
+
+(b) Plug into p ≈ (1 − e^(−kn/m))^k with m and k fixed:
+
+| Items inserted | kn/m | Fraction of bits set | False-positive rate |
+|----------------|------|----------------------|---------------------|
+| 1,000,000 | 0.730 | 0.518 | 1.0% |
+| 2,000,000 | 1.461 | 0.768 | 15.7% |
+| 3,000,000 | 2.191 | 0.888 | 43.6% |
+
+Doubling the load multiplies the false-positive rate by about 16, and tripling it makes the filter close to useless. This is what "degrades quickly rather than gracefully" means in Section 14.2: p is a k-th power of the fill fraction, so a modest rise in fill is amplified seven times over. Size for the load you will actually reach, or use a scalable Bloom filter.
+
+</details>
+
+**14.2 ★ Match the structure to the mistake.** For each task, pick a structure from the table in Section 14.1 and say which direction its error goes and why that direction is acceptable here. (a) Before querying the database, check whether a username might already be taken. (b) Count distinct daily visitors across 50 web servers. (c) Find the source IPs sending the most packets through a router. (d) Track which articles each user has already seen, where articles expire and must be removed.
+
+<details>
+<summary>Solution</summary>
+
+(a) **Bloom filter.** False positives only. A false "maybe taken" costs one database query to confirm; a false negative would let a duplicate through, and a Bloom filter never produces one.
+
+(b) **HyperLogLog**, one per server, merged at a coordinator by taking the register-wise maximum. Error is about ±1% in either direction, which is fine for a dashboard number, and the merge means no raw visitor IDs cross the network.
+
+(c) **Count-Min Sketch.** Overestimates only, and the error is bounded by ε·N, so it is small relative to heavy hitters and large relative to rare items. That is the right bias for this task: the top talkers are estimated accurately, and nobody cares about precise counts for IPs that sent three packets.
+
+(d) **Cuckoo filter** (or a counting Bloom filter). Still false positives only, which here means occasionally hiding an article the user has not actually seen: a mild cost. Expiry needs deletion, which a plain Bloom filter cannot do. The rule from Section 14.3 applies: delete only articles that were actually inserted.
+
+</details>
+
+**14.3 ★★ Trace a Count-Min Sketch.** A sketch has d = 2 rows and w = 5 columns, with hashes
+
+| Item | h₀ | h₁ |
+|------|----|----|
+| a | 0 | 1 |
+| b | 2 | 1 |
+| c | 0 | 3 |
+| d | 4 | 3 |
+
+Process the stream `a a a b c c d`. (a) Show both rows. (b) Give the estimate for each item and compare it to the true count. (c) For ε = 0.001 and δ = 0.01, what w and d does Section 14.6 prescribe?
+
+<details>
+<summary>Solution</summary>
+
+(a) True counts: a = 3, b = 1, c = 2, d = 1.
+
+```
+row 0 (h₀):  [5] [0] [1] [0] [1]     cell 0 = a + c = 3 + 2
+row 1 (h₁):  [0] [4] [0] [3] [0]     cell 1 = a + b, cell 3 = c + d
+```
+
+(b)
+
+| Item | Row 0 | Row 1 | Estimate (min) | True | Error |
+|------|-------|-------|----------------|------|-------|
+| a | 5 | 4 | 4 | 3 | +1 |
+| b | 1 | 4 | 1 | 1 | 0 |
+| c | 5 | 3 | 3 | 2 | +1 |
+| d | 1 | 3 | 1 | 1 | 0 |
+
+Every estimate is ≥ the truth, as promised. `a` and `c` are overestimated because *both* of their rows had collisions; the minimum only helps when at least one row is clean. More rows make that more likely, which is what d buys.
+
+(c) w = ⌈e/ε⌉ = ⌈2718.28⌉ = **2,719** and d = ⌈ln(1/δ)⌉ = ⌈ln 100⌉ = ⌈4.61⌉ = **5**, so 13,595 counters. With probability at least 99%, every estimate is within 0.001 × N of the truth, where N is the total stream length, regardless of how many distinct items there are.
+
+</details>
+
+**14.4 ★★ HyperLogLog arithmetic.** (a) Four registers hold maximum leading-zero counts M = [2, 3, 2, 10]. Compare the arithmetic mean and the harmonic mean of the per-register estimates 2^M[i]. Which better reflects the three "normal" registers? (b) How many registers does HyperLogLog need for a standard error of 1%, given that m must be a power of two? How much memory at 6 bits per register? (c) Explain why merging two sketches by register-wise maximum gives *exactly* the sketch of the union.
+
+<details>
+<summary>Solution</summary>
+
+(a) The per-register estimates are 4, 8, 4, 1024.
+
+- Arithmetic mean: (4 + 8 + 4 + 1024) / 4 = **260**.
+- Harmonic mean: 4 / (1/4 + 1/8 + 1/4 + 1/1024) = 4 / 0.62598 ≈ **6.39**.
+
+One unlucky register drags the arithmetic mean up by a factor of 50. In the harmonic mean, the outlier contributes 1/1024 to the denominator, almost nothing, so the result stays near the typical register. This is why the estimator in Section 14.5 sums 2^(−M[i]).
+
+(b) Solve 1.04/√m ≤ 0.01: √m ≥ 104, so m ≥ 10,816. The next power of two is **2¹⁴ = 16,384** (2¹³ = 8,192 gives 1.15%, not good enough). At 6 bits each that is 16,384 × 6 / 8 = 12,288 bytes, **12 KB**, the figure the chapter quotes, with an actual standard error of 0.81%.
+
+(c) A register's value depends only on the elements whose hashes route to it: M[i] = max of the leading-zero count over those elements. For the union, the elements routed to register i are those from A plus those from B, and the maximum over a union is the maximum of the two maxima. Duplicates do no harm, because the same element produces the same hash and the same count in both sketches. So max(M_A[i], M_B[i]) is not an approximation of the union's register; it is the union's register.
+
+</details>
+
+**14.5 ★★ Find the bug.** Someone replaces the Kirsch-Mitzenmacher positions in `BloomFilter` with a "simpler" version:
+
+```python
+def _positions(self, item):
+    h = hash(item)
+    for i in range(self.k):
+        yield (h + i) % self.m
+```
+
+m and k are still sized for 1%. The filter has no false negatives and is still about half full after n insertions. What goes wrong, and roughly how badly?
+
+<details>
+<summary>Hint</summary>
+
+Picture the bit array after many insertions. Does a run of 7 consecutive 1-bits now happen by coincidence?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+The k positions are no longer independent: each item sets one *run* of k consecutive bits. The false-positive formula assumes the k positions of a query are scattered, so each is independently 1 with probability about ½, giving (½)⁷ ≈ 1%. Here the query also tests a run of 7 consecutive bits, and the set bits are clumped into runs, so a run of 7 ones is far more common than (½)⁷. In particular, any query whose start lands inside an existing run (or in a region where overlapping runs have merged) is a false positive with no coincidence required.
+
+Simulating it (n = 1,000, m = 9,586, k = 7, uniform random h) gives a false-positive rate of about **22%**, against 1.05% for `h1 + i*h2` with the same m and k. The fill fraction is the same in both (about 50%); only the correlation changed.
+
+The fix is the chapter's version: two independent hashes, with positions h1 + i·h2. h2 must also be non-zero mod m, or every position collapses to h1 and that item behaves as if k = 1, so a careful implementation guards against it.
+
+</details>
+
+**14.6 ★★★ Derive the optimal k.** Starting from p = (1 − e^(−kn/m))^k, show that the false-positive rate is minimised at k = (m/n) ln 2, that the filter is then exactly half full, and that the bits per element needed for a target p is about 1.44 log₂(1/p). Use it to reproduce the 1% row of the table in Section 14.2.
+
+<details>
+<summary>Hint</summary>
+
+Substitute q = e^(−kn/m), the expected fraction of bits still 0, and write ln p in terms of q alone.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+Let q = e^(−kn/m). Then k = −(m/n) ln q, and
+
+ln p = k · ln(1 − q) = −(m/n) · ln q · ln(1 − q).
+
+For fixed m and n, minimising p means maximising f(q) = ln q · ln(1 − q) over 0 < q < 1. Both factors are negative, so f is positive, and f is symmetric: f(q) = f(1 − q). Its derivative, f′(q) = ln(1 − q)/q − ln q/(1 − q), vanishes at q = ½, and that is its only zero in (0, 1), so q = ½ is the maximum.
+
+- q = ½ means half the bits are still 0: **the optimal filter is half full**.
+- e^(−kn/m) = ½ gives **k = (m/n) ln 2**.
+- The false-positive rate is then p = (1 − ½)^k = 2^(−k) = 2^(−(m/n) ln 2).
+
+Solving for bits per element: log₂(1/p) = (m/n) ln 2, so
+
+m/n = log₂(1/p) / ln 2 ≈ **1.44 · log₂(1/p)**,
+
+which is the "Space" line in Section 14.2's properties list, and equals −ln p / (ln 2)², the formula in the constructor.
+
+For p = 1%: log₂ 100 = 6.644, so m/n = 6.644 / 0.6931 = **9.59 bits**, and k = 9.59 × 0.6931 = 6.64, rounded to **7**. Each extra bit per element multiplies p by 2^(−ln 2) ≈ 0.62, which is why every 4.8 bits per element buys a factor of 10.
+
+</details>
+
+**14.7 ★★★ Why MinHash works.** (a) Let h be a random hash function with no ties, so the element of A ∪ B with the smallest hash is equally likely to be any of them. Prove that Pr[min h(A) = min h(B)] = |A ∩ B| / |A ∪ B|. (b) Implement `signature(items, k)` and `estimate_jaccard(sig_a, sig_b)`, and check it on A = {0, ..., 599} and B = {300, ..., 899}.
+
+<details>
+<summary>Hint</summary>
+
+Look at the single element x of A ∪ B with the smallest hash. When is it the minimum of A? Of B? Of both?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) Let x be the element of A ∪ B with the smallest hash value. x is the minimum of A if x ∈ A (nothing in A can be smaller than the minimum of a superset), and similarly for B. If x ∈ A ∩ B, both minima equal h(x). If x is in only one set, say A, then min h(A) = h(x), while min h(B) is the hash of some other element and is strictly larger (no ties). So the minima agree **exactly** when x ∈ A ∩ B. Since x is uniform over A ∪ B,
+
+Pr[min h(A) = min h(B)] = |A ∩ B| / |A ∪ B| = J(A, B).
+
+Each of k independent hash functions gives an independent yes/no trial with success probability J, so the fraction of agreeing minima estimates J with standard error √(J(1 − J)/k) ≤ 1/(2√k).
+
+(b)
+
+```python
+import hashlib
+
+def h(seed, item):
+    """One member of a family of hash functions, chosen by `seed`."""
+    data = ("%d:%s" % (seed, item)).encode()
+    return int.from_bytes(hashlib.blake2b(data, digest_size=8).digest(), "big")
+
+def signature(items, k):
+    return [min(h(seed, x) for x in items) for seed in range(k)]
+
+def estimate_jaccard(sig_a, sig_b):
+    return sum(x == y for x, y in zip(sig_a, sig_b)) / len(sig_a)
+
+A = set(range(0, 600))
+B = set(range(300, 900))                # |A & B| = 300, |A | B| = 900
+est = estimate_jaccard(signature(A, 400), signature(B, 400))
+assert abs(est - 1 / 3) < 0.07          # standard error is about 0.024
+```
+
+The true similarity is 300/900 = 1/3. The signatures are 400 integers each regardless of set size, and comparing them costs O(k), not O(|A| + |B|).
+
+One trap worth knowing: the proof needs the minimum to be uniform over the set, and cheap linear hashes such as (a·x + b) mod p do not deliver that on structured keys like consecutive integers. On this exact example, a linear family with p = 2⁶¹ − 1 gives estimates around 0.28 to 0.29 instead of 0.33, and the bias stays when k is raised to 4,000, because it is in each hash function, not in the sampling. Use a well-mixed hash.
+
+</details>
+
 ---
 
 ## Where this connects

@@ -41,7 +41,7 @@ After the wait, s is guaranteed to be in the past everywhere on Earth.
 So any transaction that starts later gets a strictly larger timestamp.
 ```
 
-Spanner **waits out the clock uncertainty** rather than trying to eliminate it. With ε ≈ 7ms of uncertainty, every commit sleeps roughly 7ms before releasing locks. Google chose to buy an ordering guarantee with latency, and then spent heavily on GPS receivers and atomic clocks in every datacenter to keep the price low, because the cost of the whole system is proportional to ε.
+Spanner **waits out the clock uncertainty** rather than trying to eliminate it. Because s is taken from the top of an interval 2ε wide and the wait ends only when the bottom of the interval passes s, a commit waits about 2ε: with ε ≈ 7ms, roughly 14ms before releasing locks (in practice partly overlapped with the Paxos round). Google chose to buy an ordering guarantee with latency, and then spent heavily on GPS receivers and atomic clocks in every datacenter to keep the price low, because the cost of the whole system is proportional to ε.
 
 **Structures in play**: B-trees for tablet storage (via Colossus), a Paxos state machine per tablet group, two-phase locking, and MVCC. Every row version is timestamped, so a snapshot read at time t needs no locks at all and never blocks a writer. That last property is [Chapter 17](../volume-3/ch17-persistent-data-structures.md)'s partial persistence, deployed globally.
 
@@ -62,7 +62,7 @@ Consistent hashing ring (N=3, R=2, W=2):
 - N: Number of replicas
 - R: Minimum read replicas
 - W: Minimum write replicas
-- Quorum: max(R,W) > N/2
+- Quorum overlap: R + W > N
 ```
 
 **Anti-entropy**: Merkle trees for background synchronization. Each replica maintains local Merkle tree of its key range; trees compared to detect divergence.
@@ -210,6 +210,129 @@ Three observations worth carrying:
 **The interesting decision is always what to give up.** Spanner and Dynamo faced the same problem and chose opposite sides of CAP, and both were right for their workload. A system that appears to give up nothing has usually hidden the cost somewhere you haven't looked yet.
 
 **Sequential access wins repeatedly.** Kafka's append-only log, Delta Lake's log, LSM-tree flushes, Merkle tree comparison: the same principle from [Chapter 16](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md), reappearing at every scale from cache lines to datacenters.
+
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**31.1 ★★ How long is commit wait?** Spanner's TrueTime returns an interval [earliest, latest] of width 2ε around the true time. A transaction picks s = TT.now().latest and then waits until TT.now().earliest > s. Assuming ε stays constant, show that the wait lasts about 2ε, and compute it for ε = 1 ms, 4 ms and 7 ms. Then explain what could go wrong if Spanner skipped the wait.
+
+<details>
+<summary>Hint</summary>
+
+Start by assuming the interval is centered on the true time t, so latest = t + ε and earliest = t − ε, then check whether an off-center clock changes the answer.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+Take a clock centered on the true time. At true time t₀, the transaction picks s = latest = t₀ + ε. At a later true time t, earliest = t − ε, and the wait ends when t − ε > s = t₀ + ε, that is when t > t₀ + 2ε. So the wait is 2ε: 2 ms, 8 ms and 14 ms for ε = 1, 4 and 7 ms. If the true time sits at some other fixed position inside the interval, both bounds shift by the same amount and the offset cancels: the wait is still 2ε.
+
+After the wait, earliest > s, which means the true time is definitely past s on every machine whose TrueTime interval is correct. Any transaction that starts after this one commits will pick a timestamp from a later interval, so its timestamp exceeds s. Commit order then matches real-time order: external consistency.
+
+Without the wait, transaction T1 could commit with s₁ = t₀ + ε and release its locks immediately. A client sees T1's result and then starts T2 on another server whose clock reads slightly behind; that server might pick s₂ < s₁. A snapshot read at a time between s₂ and s₁ would then see T2's write but not T1's, although T1 visibly finished first. The wait trades a few milliseconds of write latency for never having that anomaly, and halving ε halves the price.
+
+</details>
+
+**31.2 ★ Quorums and sloppy quorums.** Dynamo uses N = 3. For each (R, W) of (1, 1), (1, 3), (2, 2), (3, 1), say whether a read is guaranteed to see the latest acknowledged write when no nodes fail, and which configuration favors what. Then explain why, even with R + W > N, a sloppy quorum does not give that guarantee during a failure.
+
+<details>
+<summary>Solution</summary>
+
+The overlap condition is R + W > N, here R + W > 3.
+
+| (R, W) | R + W | read sees latest write? | favors |
+|---|---|---|---|
+| (1, 1) | 2 | no | lowest latency, highest availability |
+| (1, 3) | 4 | yes | fast reads; any one node down blocks writes |
+| (2, 2) | 4 | yes | balanced; tolerates one failure for both |
+| (3, 1) | 4 | yes | fast, always-available writes; slow reads |
+
+Dynamo's common configuration is (2, 2).
+
+A sloppy quorum counts the first W healthy nodes on the preference list, which may include nodes outside the key's normal three replicas. If replica B is unreachable, a write might be acknowledged by A and D (holding a hint for B). A read that then goes to B (now reachable) and C reaches two of the key's home replicas, neither of which has the write, so it returns stale data even though R + W = 4 > 3. The overlap argument only works when both quorums are drawn from the same set of N nodes. Sloppy quorum gives up that guarantee to keep accepting writes, and hinted handoff plus anti-entropy repair the divergence later.
+
+</details>
+
+**31.3 ★★ Vector clocks after reconciliation.** Continue the shopping-cart example in §31.2. The client reads the key, receives both [(A,2), (B,1)] and [(A,2), (C,1)], merges the carts, and writes the result through node A. (a) What vector clock does the new version get, and why does it replace both siblings? (b) For each pair, say whether the first happened before the second, after it, or concurrently: [(A,1)] and [(A,1), (B,1)]; [(A,2), (B,1)] and [(A,1), (B,2)]; [(A,3), (B,1), (C,1)] and [(A,2), (C,1)]; [(B,1)] and [(C,1)].
+
+<details>
+<summary>Solution</summary>
+
+(a) The client sends back a context that is the entry-wise maximum of the clocks it read, [(A,2), (B,1), (C,1)], and node A increments its own entry: [(A,3), (B,1), (C,1)]. This clock is at least as large as both siblings in every entry and strictly larger in A, so it dominates both. Every node that later sees it can discard the two siblings: the conflict is resolved.
+
+(b) Compare entry by entry, treating a missing entry as 0.
+
+| first | second | relation |
+|---|---|---|
+| [(A,1)] | [(A,1), (B,1)] | before: equal on A, and B: 0 < 1 |
+| [(A,2), (B,1)] | [(A,1), (B,2)] | concurrent: A is larger in the first, B in the second |
+| [(A,3), (B,1), (C,1)] | [(A,2), (C,1)] | after: every entry ≥, A strictly greater |
+| [(B,1)] | [(C,1)] | concurrent: each has an entry the other lacks |
+
+Concurrent versions are returned to the client as siblings; ordered ones are resolved by keeping the later.
+
+</details>
+
+**31.4 ★★ The arithmetic of Merkle comparison.** Two replicas each store 2^20 (about a million) keys under a binary Merkle tree with one leaf per key. They compare by checking the roots, then, at every node whose hashes differ, comparing both children. (a) How many hash comparisons if exactly one key differs? (b) Estimate the count if 1,000 keys, scattered at random, differ. (c) What does that suggest about when Merkle synchronization stops paying off?
+
+<details>
+<summary>Solution</summary>
+
+(a) The tree has 20 levels below the root. One differing leaf makes exactly one node differ at each level: the root and 19 internal nodes above the leaf, 20 differing internal nodes in all. The protocol compares the root (1) and both children of each differing internal node (2 × 20), so 41 hash comparisons in total, against a million for a flat comparison. (The chapter's "about 20" counts levels. Skipping the right child when the left child matches, since a differing parent with a matching left child must have a differing right child, brings it down to between 21 and 41.)
+
+(b) Near the top, 1,000 random leaves make nearly every node differ, but levels 0 to 9 hold only 1,023 nodes in total (about 950 of them differ). Further down there are more nodes per level than differences, so close to 1,000 nodes differ per level, one per differing key, for the remaining 10 levels. That is about 10,000 differing internal nodes (the exact expectation is 10,145), so about 20,300 comparisons. A rule of thumb is 2 × k × log₂(N/k) for k differences among N keys: 2 × 1,000 × log₂(1,048) ≈ 20,000.
+
+(c) The cost grows nearly linearly in the number of differences, plus a log factor. When the replicas differ in a large fraction of keys, the tree walk costs more than just streaming every key's hash in order (N comparisons, sequential). Merkle trees are built for the common case: replicas that are almost the same. This is also why Dynamo-style systems run anti-entropy continuously, so the differences stay small.
+
+</details>
+
+**31.5 ★ Find an offset with a sparse index.** A Kafka segment's `.index` file holds these (offset, byte position) entries: (0, 0), (52, 4120), (97, 8233), (150, 12400). How does the broker find offset 120? With the default of one index entry per 4,096 bytes of log and 8 bytes per entry, how large is the index for a 1 GiB segment?
+
+<details>
+<summary>Solution</summary>
+
+Binary-search the index for the largest offset ≤ 120: that is (97, 8233). Seek to byte 8,233 of the `.log` file and scan forward, reading record headers, past offsets 97 to 119 (23 records) until reaching offset 120. The scan reads at most about 4 KB, which is likely already in the page cache and is sequential.
+
+Index size: 2^30 / 2^12 = 262,144 entries × 8 bytes = 2 MiB per 1 GiB segment, 1/512 of the data. A dense index with one entry per record would be far larger for small records, which is the trade the chapter describes: a little sequential scanning in exchange for an index small enough to stay in memory.
+
+</details>
+
+**31.6 ★★ What the hierarchy buys.** Use the tier latencies in §31.5 as end-to-end response times. Suppose the edge PoP hits 90% of requests, the regional tier hits 60% of what reaches it, and the origin shield hits 50% of what reaches it. (a) What fraction of requests reach the origin, and what is the mean latency? (b) What is the mean latency if the edge hit rate improves to 95%, with the other tiers' hit rates unchanged? (c) Without the shield (regional misses go straight to the origin), what fraction of requests reach the origin?
+
+<details>
+<summary>Solution</summary>
+
+(a) Served at the edge: 0.90. At regional: 0.10 × 0.6 = 0.06. At the shield: 0.10 × 0.4 × 0.5 = 0.02. At the origin: 0.10 × 0.4 × 0.5 = 0.02, that is 2% of requests.
+
+Mean latency = 0.90 × 5 + 0.06 × 30 + 0.02 × 80 + 0.02 × 200 = 4.5 + 1.8 + 1.6 + 4.0 = 11.9 ms.
+
+(b) Edge 0.95, regional 0.05 × 0.6 = 0.03, shield 0.01, origin 0.01. Mean = 4.75 + 0.9 + 0.8 + 2.0 = 8.45 ms. Five more points of edge hit rate cut mean latency by 29% and origin load in half, because misses are what dominate the mean: 2% of requests at the origin contributed a third of the latency in (a). This is the same reasoning as average memory access time for CPU caches.
+
+(c) 0.10 × 0.4 = 4% of requests reach the origin, double the load. And that is the average; the shield's larger job is collapsing simultaneous misses for the same object from many PoPs into one origin fetch, which the averages here do not show.
+
+</details>
+
+**31.7 ★★★ Optimistic commits on object storage.** In Delta Lake (§31.4), writers commit version N+1 by atomically creating the log file for N+1. Writers W1 and W2 both read version 7. W1 commits version 8 first. (a) W1 only appended new files to partition date=2024-01-01. W2 read and rewrote files in partition date=2024-01-02. Must W2 redo its work? (b) Instead, W1 was a compaction that removed file f4 and added a merged file, and W2 was an UPDATE that read f4 and wrote a modified copy. Must W2 redo its work? (c) Why must "create the file for version N+1" be a put-if-absent operation, and what happens if the storage only offers a plain overwrite?
+
+<details>
+<summary>Hint</summary>
+
+The conflict check compares what W2 read against what W1's commit changed. For (c), consider both writers succeeding at writing the same file name.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) No. W2's attempt to create version 8 fails, so it reads version 8's log entry, sees that W1 only added files in a partition W2 never read, and concludes its own result is still correct against the new table state. It retries the commit as version 9 without redoing any work. This is the common case the design relies on: concurrent writers usually touch disjoint data.
+
+(b) Yes. W2 read f4, but version 8 removed f4, and the merged file now holds those rows. If W2 committed anyway, its log entry would remove f4 (already gone) and add its modified copy, while the merged file still contains the unmodified rows: the table would hold both versions of those rows. This is a real conflict, so W2 must abort, re-read the table at version 8, and redo the UPDATE.
+
+(c) The atomic create is the only serialization point in the whole protocol: it decides which of the concurrent writers gets each version number. With plain overwrite, both W1 and W2 would successfully write the file for version 8, the second silently replacing the first. W1 believes it committed, but its log entry is gone, and readers will never see its files: a lost write with no error. This is why Delta Lake on stores that lacked a put-if-absent primitive needed an external coordination service (a lock or a conditional write in a database) to guard log commits.
+
+</details>
 
 ---
 
