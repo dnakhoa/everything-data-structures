@@ -184,6 +184,128 @@ def score_server(server):
     return (0.4 * cpu_score + 0.3 * mem_score + 0.3 * conn_score)
 ```
 
+### Power of Two Choices
+
+Least connections answers "which server is least loaded?" exactly, by looking at every server. The power of two choices asks a cheaper question: pick two servers uniformly at random and send the request to the less loaded of the two. On top of the `LeastConnections` bookkeeping above, only `select` changes:
+
+```python
+import random
+
+
+class PowerOfTwoChoices(LeastConnections):
+    def __init__(self, servers, rng=random):
+        super().__init__(servers)
+        self.servers = list(servers)
+        self.rng = rng
+
+    def select(self):
+        a, b = self.rng.sample(self.servers, 2)  # two distinct servers
+        return a if self.connections[a] <= self.connections[b] else b
+```
+
+`select` now reads two counters instead of S, so it is O(1) worst case, and it needs no ordering structure over the servers at all: no heap, no buckets.
+
+**The result.** The clean model is balls into bins: n balls (requests) are placed one at a time into n bins (servers), and none leave. If each ball goes to one bin chosen at random, the fullest bin ends up with (1 + o(1)) ln n / ln ln n balls with high probability, which is Θ(log n / log log n). If each ball looks at d ≥ 2 random bins and joins the least loaded, the maximum drops to ln ln n / ln d + Θ(1), which is Θ(log log n) (Azar, Broder, Karlin and Upfal, 1994). Going from one choice to two is an exponential improvement. Going from two to three only divides the leading term by ln 3 / ln 2 ≈ 1.58.
+
+The reason is squaring. Let βᵢ be the fraction of bins with load at least i. A ball can raise a bin to load i + 1 only if both of its choices already have load at least i, which happens with probability about βᵢ². So, heuristically, βᵢ₊₁ ≈ βᵢ². There are only n balls, so at most half the bins can hold two or more: β₂ ≤ 1/2, and the sequence is at most 1/2, 1/4, 1/16, 1/256, 1/65,536, and so on. The exponent doubles at every level, so after about log₂ log₂ n levels the expected number of bins that high falls below one. With one choice, the load of a bin is roughly Poisson with mean 1, and the fraction of bins with load at least k is about 1/(e·k!), which shrinks only factorially. (The real proof is a layered induction that makes this heuristic rigorous by bounding the deviation at every level.)
+
+A seeded simulation shows the difference:
+
+```python
+import random
+
+
+def throw(n_bins, n_balls, d, seed=1):
+    """Each ball goes to the least loaded of d bins chosen at random."""
+    rng = random.Random(seed)
+    load = [0] * n_bins
+    for _ in range(n_balls):
+        best = min((rng.randrange(n_bins) for _ in range(d)), key=load.__getitem__)
+        load[best] += 1
+    return load
+
+
+for n in (10**3, 10**4, 10**5, 10**6):
+    print(n, [max(throw(n, n, d)) for d in (1, 2, 3)])
+
+for d in (1, 2):  # how many of 10**6 bins reach load >= k, for k = 1..8
+    load = throw(10**6, 10**6, d)
+    print(d, [sum(x >= k for x in load) for k in range(1, 9)])
+
+for m in (10**4, 10**5, 10**6):  # 1,000 bins, m balls: excess over the mean
+    print(m, [max(throw(1000, m, d)) - m // 1000 for d in (1, 2)])
+```
+
+It prints the following (the code takes a few seconds):
+
+| n = number of balls = number of bins | 1,000 | 10,000 | 100,000 | 1,000,000 |
+|---|---|---|---|---|
+| max load, one choice | 5 | 6 | 7 | 8 |
+| max load, two choices | 3 | 3 | 4 | 4 |
+| max load, three choices | 2 | 3 | 3 | 3 |
+
+| bins with load ≥ k (n = 10⁶) | k = 2 | 3 | 4 | 5 | 6 | 7 | 8 |
+|---|---|---|---|---|---|---|---|
+| one choice | 264,128 | 80,618 | 19,032 | 3,702 | 562 | 84 | 8 |
+| two choices | 229,701 | 9,014 | 6 | 0 | 0 | 0 | 0 |
+
+The second table is the squaring argument in action: with one choice each level holds only about k times fewer bins than the level below it (the factorial at work), and with two choices the count collapses from 9,014 to 6 in one step. The absolute numbers in the first table are small because both bounds grow slowly, but a load balancer cares about a different regime, where there are far more requests than servers. There the gap widens:
+
+| 1,000 bins, m balls: max load minus the mean m/n | m = 10⁴ | 10⁵ | 10⁶ |
+|---|---|---|---|
+| one choice | 11 | 42 | 105 |
+| two choices | 2 | 2 | 3 |
+
+With one choice the excess grows like √(m log n / n). With two choices it stays at ln ln n / ln 2 + O(1) no matter how many balls are thrown (Berenbrink, Czumaj, Steger and Vöcking, 2000): the fullest server is never more than a few requests above average.
+
+**Why not just pick the least loaded?** With exact, instantly updated load and a single balancer, least loaded is better than two choices. Real balancers have neither. Load figures arrive by periodic health checks or load reports, and a fleet of independent balancers (or worker processes inside one) cannot see each other's decisions between updates. Every one of them sees the same server as least loaded and sends it everything until the next update arrives: the server that looked idle is buried, and the next update moves the herd to a different victim. Two random choices cannot herd like this, because any given server is one of the two candidates for only about 2/S of the requests, so it receives at most about twice its fair share no matter how attractive its stale load looks. Mitzenmacher ("How Useful Is Old Information?", 2000) analysed exactly this. A small queueing simulation reproduces it: 100 servers, 90 new jobs per tick, each busy server finishing a job with probability 0.95 per tick (so the servers are about 95% utilised), and the balancer sees a load snapshot refreshed every `period` ticks.
+
+```python
+import random
+
+
+def mean_queue(policy, period, n=100, arrivals=90, p_serve=0.95, ticks=10_000, seed=1):
+    """Average jobs queued per server when the balancer sees loads refreshed every `period` ticks."""
+    rng = random.Random(seed)
+    queue = [0] * n
+    total = 0
+    for t in range(ticks):
+        if t % period == 0:
+            seen = queue[:]  # the stale view
+            low = min(seen)
+            lowest = [i for i in range(n) if seen[i] == low]
+        for _ in range(arrivals):
+            if policy == "random":
+                s = rng.randrange(n)
+            elif policy == "least loaded":
+                s = rng.choice(lowest)  # ties broken at random
+            else:  # "two choices"
+                a, b = rng.randrange(n), rng.randrange(n)
+                s = a if seen[a] <= seen[b] else b
+            queue[s] += 1
+        for i in range(n):
+            if queue[i] and rng.random() < p_serve:
+                queue[i] -= 1
+        total += sum(queue)
+    return total / (ticks * n)
+
+
+for period in (1, 5, 20, 50):
+    print(period, [round(mean_queue(p, period), 2)
+                   for p in ("random", "least loaded", "two choices")])
+```
+
+| snapshot refreshed every | random | least loaded | two choices |
+|---|---|---|---|
+| 1 tick | 8.61 | **1.03** | 1.28 |
+| 5 ticks | 8.61 | 16.93 | **2.30** |
+| 20 ticks | 8.61 | 130.30 | **5.38** |
+| 50 ticks | **8.61** | 702.69 | 10.99 |
+
+Even at a period of one tick the balancer routes 90 jobs on the same snapshot; least loaded still wins there because, with queues this short, many servers tie at the minimum and the random tie-break spreads the batch. At five ticks it is already twice as bad as ignoring load entirely, and at 50 ticks the queues grow without bound: the system is unstable. Two choices degrades gracefully. With very stale information it ends up slightly worse than random, which is also what Mitzenmacher found: old data is still mildly misleading, but it can no longer cause a stampede.
+
+**Where it is used.** NGINX's `random two` directive (since 1.15.1) picks two servers at random, honouring weights, and sends the request to the one with fewer active connections. HAProxy's `balance random(<draws>)` defaults to 2 draws and its documentation names the technique. Envoy's least request balancer, when all hosts have equal weight, samples a configurable number of hosts (2 by default) and picks the one with the fewest active requests; it calls this P2C. The same idea appears outside load balancing: Redis evicts by sampling a few keys and dropping the best candidate among them (see the eviction policies in §29.6), and two-choice hashing places each key in the emptier of two buckets.
+
 ### Consistent Hash for Load Balancing
 
 Ensure session affinity without sticky sessions:
@@ -219,27 +341,217 @@ def should_revalidate(item, beta=1.0):
     return time.time() - item.delta * beta * math.log(u) >= item.expires
 ```
 
-### LFU-D with Dynamic Aging
+### Eviction Policies as Data Structures
 
-Frequency-based with aging to prioritize recency:
+A cache with a size limit needs a rule for which entry to drop when a new one arrives. Each rule is a data structure: what it records per entry and what it must touch on every hit decide its cost as much as its hit rate does. All the policies below keep a hash map from key to entry (expected O(1)); what differs is the structure beside it.
+
+**LRU** evicts the entry whose last use is oldest. A hash map points into a doubly linked list kept in recency order: a hit unlinks the node and pushes it to the front, and eviction removes the tail, both in O(1). Chapter 12 builds it in [Exercise 12.6](../volume-2/ch12-hash-tables.md), and memcached's "LRU chain" in §29.2 is this list. LRU has two weaknesses, and both come from the list. Every hit is a write: the node moves, so a cache shared by many threads must take a lock on the list even to serve a read. And LRU remembers only recency: one scan over more distinct keys than the cache holds (a backup, a full table scan, a crawler) evicts every hot entry, and each of them must miss once to come back.
+
+### LFU in O(1), and Making It Forget
+
+LFU evicts the entry with the fewest accesses. The obvious structure is a min-heap keyed by count, at O(log n) per hit, because every hit changes a key. But counts only ever change by +1 and a new entry always starts at 1, so the heap can be replaced by buckets: a map from each count to the keys that have it, kept in recency order to break ties, plus the current minimum count (Shah, Mitra and Matani, 2010; the same trick as Exercise 29.7). A hit moves a key from bucket f to bucket f + 1. If bucket f was the minimum and is now empty, the new minimum is f + 1, because no count lies in between. An insertion sets the minimum back to 1. Eviction pops the oldest key from the minimum bucket.
+
 ```python
-class LFUD:
-    def __init__(self):
-        self.freq = {}  # key -> frequency count
+from collections import OrderedDict, defaultdict
+
+
+class LFUCache:
+    """O(1) LFU: keys grouped by frequency; ties go to the least recently used."""
+
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.entry = {}                          # key -> [value, freq]
+        self.by_freq = defaultdict(OrderedDict)  # freq -> keys, oldest first
         self.min_freq = 0
 
-    def access(self, key):
-        self.freq[key] = self.freq.get(key, 0) + 1
-        self.min_freq = min(self.freq.values())
+    def _bump(self, key):
+        e = self.entry[key]
+        f = e[1]
+        del self.by_freq[f][key]
+        if not self.by_freq[f]:
+            del self.by_freq[f]
+            if self.min_freq == f:
+                self.min_freq = f + 1  # nothing lies between f and f + 1
+        e[1] = f + 1
+        self.by_freq[f + 1][key] = None
 
-    def evict(self):
-        # Evict lowest frequency, age all frequencies
-        for key in list(self.freq.keys()):
-            self.freq[key] -= self.min_freq
-            if self.freq[key] <= 0:
-                del self.freq[key]
-        self.min_freq = 0
+    def get(self, key):
+        if key not in self.entry:
+            return None
+        self._bump(key)
+        return self.entry[key][0]
+
+    def put(self, key, value):
+        if key in self.entry:
+            self.entry[key][0] = value
+            self._bump(key)
+            return
+        if len(self.entry) == self.capacity:
+            bucket = self.by_freq[self.min_freq]
+            victim, _ = bucket.popitem(last=False)
+            if not bucket:
+                del self.by_freq[self.min_freq]
+            del self.entry[victim]
+        self.entry[key] = [value, 1]
+        self.by_freq[1][key] = None
+        self.min_freq = 1
 ```
+
+Every operation is a constant number of dictionary operations: O(1) expected. The original paper uses a doubly linked list of frequency nodes, each holding a linked list of keys; `OrderedDict` is that inner list.
+
+LFU resists scans by construction: scanned keys enter with count 1 and evict each other, never the hot keys with large counts. Its failure is the opposite one: it never forgets. A key that was hot yesterday keeps its count, while a key that is hot today enters at 1 and is the first to go. Two fixes are common. **Decay** periodically halves every count, as W-TinyLFU's sketch does below (Redis's LFU mode also decays its small per-key counters as time passes). **Dynamic aging** (LFU-DA) keeps one cache-wide value L, sets it to the priority of each entry it evicts, and gives an entry priority L + count whenever it is inserted or hit. A newcomer starts at L + 1, just above the last victim, so an entry whose count has stopped growing is eventually overtaken. Squid offers this as `heap LFUDA`, after work at HP Labs on web proxy caches in the late 1990s. Priorities now jump by more than one, so the buckets no longer apply and LFU-DA needs a heap: O(log n) per access. Exercise 29.10 builds it.
+
+### CLOCK (Second Chance)
+
+CLOCK approximates LRU without moving anything on a hit. Entries sit in a fixed circular array of slots, each with one **reference bit**, and a "hand" points at one slot. A hit sets the entry's bit. To evict, the hand sweeps forward: a slot with its bit set gets a second chance (the bit is cleared and the hand moves on), and the first slot found with its bit clear is the victim.
+
+```python
+class ClockCache:
+    """CLOCK (second chance): slots in a circle, one reference bit per slot."""
+
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.keys = [None] * capacity
+        self.values = [None] * capacity
+        self.ref = [False] * capacity
+        self.slot = {}              # key -> slot index
+        self.hand = 0
+
+    def get(self, key):
+        i = self.slot.get(key)
+        if i is None:
+            return None
+        self.ref[i] = True          # a hit only sets a bit: nothing moves
+        return self.values[i]
+
+    def put(self, key, value):
+        i = self.slot.get(key)
+        if i is None:
+            i = self._victim()
+            if self.keys[i] is not None:
+                del self.slot[self.keys[i]]
+            self.keys[i] = key
+            self.slot[key] = i
+        self.values[i] = value
+        self.ref[i] = True
+
+    def _victim(self):
+        while True:
+            i = self.hand
+            self.hand = (i + 1) % self.capacity
+            if self.keys[i] is None or not self.ref[i]:
+                return i
+            self.ref[i] = False     # second chance: clear the bit, move on
+
+
+c = ClockCache(3)
+for k in "abc":
+    c.put(k, k.upper())
+c.put("d", "D")                     # every bit set: sweep clears all, evicts a
+assert c.keys == ["d", "b", "c"] and c.ref == [True, False, False] and c.hand == 1
+c.get("b")                          # b's bit set again
+c.put("e", "E")                     # b gets a second chance, c is evicted
+assert c.keys == ["d", "b", "e"] and c.ref == [True, False, True] and c.hand == 0
+```
+
+The trace: a, b and c fill slots 0 to 2 with their bits set. Inserting d sends the hand all the way round, clearing a, b and c, and back to slot 0, where a's bit is now clear: a is evicted and d takes its slot, with the hand left at slot 1. The hit on b sets its bit. Inserting e finds b's bit set at slot 1 (cleared, second chance) and c's bit clear at slot 2, so c is evicted. LRU would have evicted a and then c as well. The two differ when every bit is set: then the sweep clears them all and CLOCK evicts in slot order, which is FIFO (Exercise 29.9).
+
+A hit is O(1) worst case and writes one bit. One eviction can sweep all c slots, but it is amortized O(1): each step of the hand either finds the victim or clears a bit, and each bit was set by an earlier access, so the total movement of the hand is at most the number of accesses plus the number of evictions.
+
+This is why operating systems and databases use CLOCK-style approximations instead of true LRU. In a virtual memory system, the MMU sets an "accessed" bit in the page table entry on every memory reference; the kernel cannot run code on every load and store to relink a list, so all it can do is read and clear those bits later, which is exactly what the clock hand does. Linux keeps active and inactive page lists and moves pages between them using the same bits. PostgreSQL's shared buffer pool is used concurrently by many backend processes, and a true LRU list would put a lock on every buffer hit. PostgreSQL 8.0 shipped ARC (below), replaced it with the simpler 2Q in a later 8.0.x release because of IBM's pending patent on ARC, and moved to a clock sweep in 8.1 (2005), largely to remove that contention. Each buffer carries a small usage count instead of one bit: a hit increments it (capped at 5), the sweep decrements it, and a buffer is evicted when the sweep finds it at zero, so a buffer used often survives several passes. Redis goes further and keeps no eviction structure at all: in its LRU modes it samples a few keys (5 by default) and evicts the one idle longest, the eviction-side cousin of the power of two choices.
+
+### ARC
+
+ARC, the Adaptive Replacement Cache (Megiddo and Modha, IBM, 2003), balances recency against frequency and tunes the balance itself. It keeps two LRU lists of cached entries: T1 for keys seen once recently, T2 for keys seen at least twice. It also keeps two **ghost** lists, B1 and B2, which hold only the keys (no values) of entries recently evicted from T1 and T2. A target size p splits the c slots between T1 and T2. A miss that finds its key in B1 means T1 was too small (a recency-only entry would have hit), so p grows; a miss that finds its key in B2 means T2 was too small, so p shrinks. Every step is a constant number of hash and list operations, O(1), and the metadata is about twice LRU's, since the ghost lists track up to c evicted keys. A scan only passes through T1, so the frequently used entries in T2 survive it. ZFS's in-memory cache is an ARC and is named after it.
+
+### W-TinyLFU
+
+W-TinyLFU (Einziger, Friedman and Manes) separates two questions that LRU and LFU answer together: which entry to evict, and whether a new key deserves a place at all. Its structure, as used by Caffeine, the standard Java caching library:
+
+- A small **window**, an LRU holding 1% of capacity at first, where every new key lands.
+- A **main region**, a segmented LRU holding the rest: 20% *probation* and 80% *protected*. A hit in probation promotes the entry to protected; protected's overflow is demoted back to probation.
+- An **admission filter**: a [Count-Min sketch](../volume-3/ch14-probabilistic-data-structures.md) that counts every access, hits and misses alike, including keys not in the cache.
+
+When the window overflows, its LRU victim becomes a candidate for the main region and competes with the main region's own victim, the LRU entry of probation. The sketch estimates both frequencies, and the candidate gets in only if its estimate is higher; otherwise the candidate is the one dropped. The sketch is what makes this cheap: it remembers frequencies for keys the cache no longer holds, in a few bits per key. Caffeine's has four 4-bit counters per key (so a count saturates at 15) and halves every counter after a number of increments equal to ten times the cache's maximum size, so old popularity fades. It costs about 8 bytes per cache entry, and Caffeine resizes the window at run time by hill climbing on the observed hit rate. A scanned key has an estimated count near 1, loses every admission contest, and never displaces anything in the main region, while the window still gives a burst of new keys a short LRU life.
+
+### Comparing Eviction Policies
+
+Costs below are on top of the expected-O(1) hash lookup that every policy does.
+
+| policy | per-access cost | metadata per entry | scan resistance |
+|---|---|---|---|
+| LRU | O(1); every hit relinks a shared list | 2 pointers | none: a scan larger than the cache flushes it |
+| CLOCK | hit O(1), sets one bit; eviction amortized O(1), worst case O(c) sweep | 1 bit (PostgreSQL: a small usage count) | none, same as LRU |
+| LFU (count buckets) | O(1); a hit moves the key to the next bucket | a count + 2 pointers | strong, but never forgets old popularity |
+| LFU-DA | O(log n) heap update | a count + a priority + heap position | strong; aging lets new keys in |
+| ARC | O(1) | 2 pointers, plus ghost keys for up to c evicted entries | yes: scans pass through T1 only |
+| W-TinyLFU | O(1): a few sketch counters + an SLRU relink | 2 pointers + about 8 bytes of sketch (Caffeine) | strong: one-hit keys fail admission |
+
+To see the differences in hit rates, the next simulation runs a cache of 1,000 entries over 200,000 requests to 10,000 keys with Zipf-like popularity (key of rank r requested with probability proportional to 1/r^0.9). It compares three workloads: the Zipf requests alone; the same requests with a scan of 3,000 never-repeated keys after every 2,000 requests; and a shift halfway through, after which a different set of keys is hot. Hit rates count only the Zipf requests, since a scan can never hit. LRU here is an `OrderedDict`, which has the same eviction behaviour as Chapter 12's hand-built version; `ClockCache` and `LFUCache` are the classes above.
+
+```python
+import itertools
+import random
+from collections import OrderedDict
+
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.capacity, self.d = capacity, OrderedDict()
+
+    def get(self, key):
+        if key not in self.d:
+            return None
+        self.d.move_to_end(key)
+        return self.d[key]
+
+    def put(self, key, value):
+        self.d[key] = value
+        self.d.move_to_end(key)
+        if len(self.d) > self.capacity:
+            self.d.popitem(last=False)
+
+
+N = 10_000  # keys 0..N-1 follow Zipf; keys >= N are scan keys
+
+
+def workload(scan_len=0, shift=False, s=0.9, length=200_000, burst=2_000, seed=1):
+    rng = random.Random(seed)
+    cum = list(itertools.accumulate(1 / (r + 1) ** s for r in range(N)))
+    scan_keys = itertools.count(N)  # a scan key is never requested again
+    trace = []
+    while len(trace) < length:
+        offset = N // 2 if shift and len(trace) >= length // 2 else 0
+        ranks = rng.choices(range(N), cum_weights=cum, k=burst)
+        trace += [(r + offset) % N for r in ranks]  # the offset changes which keys are hot
+        trace += [next(scan_keys) for _ in range(scan_len)]
+    return trace
+
+
+def hit_rate(cache, trace):
+    hits = 0
+    for key in trace:
+        if cache.get(key) is not None:
+            hits += key < N
+        else:
+            cache.put(key, True)
+    return hits / sum(key < N for key in trace)
+
+
+for label, trace in [("Zipf only", workload()),
+                     ("Zipf + scans", workload(scan_len=3_000)),
+                     ("hot set shifts", workload(shift=True))]:
+    print(label, [round(hit_rate(c(1_000), trace), 3)
+                  for c in (LRUCache, ClockCache, LFUCache)])
+```
+
+| workload | LRU | CLOCK | LFU |
+|---|---|---|---|
+| Zipf only | 0.554 | 0.541 | **0.627** |
+| Zipf + scans | 0.454 | 0.453 | **0.615** |
+| hot set shifts | **0.553** | 0.541 | 0.434 |
+
+Three things show. CLOCK gives up about one point of hit rate against LRU, which is the price of the approximation, and in return a hit writes one bit instead of relinking a shared list. When popularity is fixed, LFU wins clearly: with independent requests from fixed probabilities, the best a cache can do is hold the most probable keys, and LFU's counts estimate exactly those probabilities. The scans take ten points off LRU and CLOCK and barely touch LFU. But when the hot set moves, LFU loses 19 points and finishes last, because the old hot keys keep their large counts and the new ones are evicted on arrival. No policy in this table wins all three rows, which is the case for adaptive designs: ARC and W-TinyLFU both aim for LFU's first two rows and LRU's third.
 
 ## 29.7 Rate Limiting Data Structures
 
@@ -505,9 +817,134 @@ Each operation does O(1) expected work (hash-set insert and delete), and the ran
 
 </details>
 
+**29.8 ★★ Counting levels.** §29.5 argues that with two choices the fraction βᵢ of bins with load at least i roughly squares at each level, starting from β₂ ≤ 1/2, while with one choice the fraction with load at least k is about 1/(e·k!). Use these to estimate the maximum load (the highest level whose expected number of bins is at least about 1) for n = 10⁶ and n = 10¹² balls in as many bins, with one choice and with two. How much does multiplying n by a million add in each case? The simulation measured a maximum of 4 for two choices at n = 10⁶; why does the estimate come out higher?
+
+<details>
+<summary>Hint</summary>
+
+Write βᵢ as a power of two: β₂ = 2⁻¹, and squaring doubles the exponent. 10⁶ ≈ 2²⁰ and 10¹² ≈ 2⁴⁰.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+Two choices: β₂ = 2⁻¹, β₃ = 2⁻², β₄ = 2⁻⁴, β₅ = 2⁻⁸, β₆ = 2⁻¹⁶, β₇ = 2⁻³², β₈ = 2⁻⁶⁴.
+
+| n | n·β₆ | n·β₇ | n·β₈ | estimated max |
+|---|---|---|---|---|
+| 10⁶ | 15.3 | 0.0002 | | 6 |
+| 10¹² | 1.5 × 10⁷ | 233 | 5 × 10⁻⁸ | 7 |
+
+One choice: the expected number of bins with load at least k is about n/(e·k!).
+
+| n | k = 9 | k = 10 | k = 14 | k = 15 | estimated max |
+|---|---|---|---|---|---|
+| 10⁶ | 1.01 | 0.10 | | | 9 |
+| 10¹² | | | 4.2 | 0.28 | 14 |
+
+Multiplying n by a million adds five levels with one choice and one level with two. That is the gap between log n / log log n and log log n: squaring n (10⁶ to 10¹²) adds one to log₂ log₂ n, while it multiplies ln n / ln ln n by about 1.6 (from 5.3 to 8.3).
+
+The estimate for two choices is loose because β₂ = 1/2 is the worst case allowed by counting. In the simulation only 229,701 of 10⁶ bins (β₂ ≈ 0.23) reached load 2, and that is the value at the end; during most of the run β₂ was smaller still, and a ball reaches level 3 only if both of its choices were at level 2 at that moment. Starting the recurrence from the observed β₃ ≈ 0.009 gives n·β₃² ≈ 81 bins at level 4 (6 were observed) and n·β₄² far below 1 at level 5, which matches the measured maximum of 4. The one-choice estimate is accurate because the Poisson approximation is accurate: the simulation's 562, 84 and 8 bins at loads of at least 6, 7 and 8 compare with 594, 83 and 10 predicted.
+
+</details>
+
+**29.9 ★ When CLOCK becomes FIFO.** A `ClockCache(3)` from §29.6 receives put a, put b, put c, get c, get b, get a, put d. Which key does it evict, and which would LRU evict? What does this say about how much recency information CLOCK keeps, and why do systems accept it?
+
+<details>
+<summary>Solution</summary>
+
+After the three puts, a, b and c sit in slots 0, 1 and 2 with their bits set, and the hand is at slot 0. The three gets set bits that are already set. To insert d, the hand finds a's bit set (clears it), then b's (clears it), then c's (clears it), returns to slot 0, finds a's bit clear, and evicts a. LRU's recency order after the gets is c (oldest), b, a (newest), so LRU evicts c. CLOCK evicted the most recently used key.
+
+The reference bit records only "used since the hand last passed", not when. When every entry has been used since the last sweep, the bits carry no information, and the sweep falls back to slot order, which is insertion order: FIFO. CLOCK's recency resolution is one revolution of the hand.
+
+Systems accept this because the hit path is what they optimise. Under memory pressure the hand moves often, so the bits are a fair proxy for "used recently", and the occasional wrong choice costs one extra miss. True LRU would cost a list relink under a lock on every hit, which in an OS is not even possible (the hardware sets the accessed bit; no code runs on a hit). PostgreSQL's usage count, incremented on each use up to 5 and decremented by each pass of the hand, partly restores the missing information by letting often-used buffers survive several passes.
+
+</details>
+
+**29.10 ★★★ Make LFU forget.** Implement `LFUDACache(capacity)` with the same `get` and `put` as `LFUCache` in §29.6, using dynamic aging: a cache-wide value L, initially 0, set to the priority of each evicted entry; an entry's priority is L + count, recomputed with the current L whenever it is inserted or hit; ties go to the entry whose priority was set earliest. Make every operation O(log n) and keep memory O(n). Then trace a capacity-2 cache in which key a is put once and hit 9 times, followed by puts of new keys k1, k2, ...: how many newcomers does it take to evict a? What would plain LFU do?
+
+<details>
+<summary>Hint</summary>
+
+Use `heapq` and do not try to update entries inside the heap. Push a new item whenever a priority changes and skip stale items when popping. To keep memory O(n), rebuild the heap from the live items when it grows past a constant multiple of the capacity.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+```python
+import heapq
+import itertools
+
+
+class LFUDACache:
+    """LFU with dynamic aging: priority = L + count, L = priority of the last victim."""
+
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.L = 0
+        self.entry = {}                  # key -> [value, count, stamp of its live heap item]
+        self.heap = []                   # (priority, stamp, key); stale items are skipped
+        self.stamps = itertools.count()
+
+    def _push(self, key):
+        e = self.entry[key]
+        e[2] = next(self.stamps)
+        heapq.heappush(self.heap, (self.L + e[1], e[2], key))
+        if len(self.heap) > 2 * self.capacity + 16:  # drop stale items
+            self.heap = [item for item in self.heap
+                         if item[2] in self.entry and self.entry[item[2]][2] == item[1]]
+            heapq.heapify(self.heap)
+
+    def get(self, key):
+        e = self.entry.get(key)
+        if e is None:
+            return None
+        e[1] += 1
+        self._push(key)
+        return e[0]
+
+    def put(self, key, value):
+        if key in self.entry:
+            self.entry[key][0] = value
+            self.get(key)
+            return
+        if len(self.entry) == self.capacity:
+            while True:
+                priority, stamp, victim = heapq.heappop(self.heap)
+                if victim in self.entry and self.entry[victim][2] == stamp:
+                    break
+            self.L = priority            # newcomers now start at L + 1
+            del self.entry[victim]
+        self.entry[key] = [value, 1, None]
+        self._push(key)
+
+
+c = LFUDACache(2)
+c.put("a", 1)
+for _ in range(9):
+    c.get("a")                           # count 10, priority 10
+n = 0
+while "a" in c.entry:
+    n += 1
+    c.put(f"k{n}", n)
+assert n == 11 and c.L == 10
+```
+
+Each item carries a stamp, and an item is live only if its stamp matches the one stored in the entry, so stale items left by earlier hits are recognised and skipped. The stamp also breaks priority ties in favour of the item pushed earliest. A push is O(log n). The rebuild costs O(n), but it runs only after the heap has gained about n + 16 items since the last rebuild, so its amortized cost per push is O(1). Each pop is O(log n), and each item is popped at most once, so the skipping is paid for by the pushes. All operations are therefore O(log n) amortized, and the heap never holds more than 2n + 17 items.
+
+The trace: a has priority 10. k1 fills the free slot with priority 0 + 1 = 1. k2 evicts k1, so L = 1 and k2 gets 2; in general k_j evicts k_(j−1), sets L = j − 1 and enters with priority j. k10 enters with priority 10, tied with a. k11 must evict one of them, the tie goes to a, whose priority was set earlier, and a is gone after 11 newcomers. Plain LFU never evicts a in this trace: every newcomer has count 1 and is always the minimum, so a, hit 10 times long ago, stays forever.
+
+Run through the simulation in §29.6, LFU-DA scores 0.607, 0.502 and 0.582 on the three workloads, against LFU's 0.627, 0.615 and 0.434. Aging buys back most of the loss when the hot set shifts and costs some of LFU's scan resistance, because each eviction of a scan key raises L and lets newer scan keys outrank hot keys whose counts have not grown lately. A brute-force reference that recomputes the minimum (priority, time set) by scanning all entries agrees with this class on random operation sequences.
+
+</details>
+
 ---
 
 ## Where this connects
 
 - [Chapter 10: Multiway Search Trees and B-Trees](../volume-1/ch10-multiway-search-trees-and-b-trees.md). The B-trees inside every storage engine described here
+- [Chapter 12: Hash Tables](../volume-2/ch12-hash-tables.md). The hash map plus linked list that every LRU cache in §29.6 is built from
 - [Chapter 14: Probabilistic Data Structures](../volume-3/ch14-probabilistic-data-structures.md). The probabilistic structures these systems rely on
