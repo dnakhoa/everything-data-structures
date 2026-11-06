@@ -16,17 +16,27 @@
 
 **Time / Space Complexity**: How running time or memory grows with input size.
 
+**Word RAM**: A cost model in which memory holds w-bit words and arithmetic and bitwise operations on a word cost O(1). It is the model in which integer structures such as van Emde Boas trees beat the O(log n) comparison bound.
+
 **Worst case**: The maximum over all inputs, including adversarial ones. The bound that matters when input is untrusted.
 
 ## Structural Terms
 
+**Augmented Tree**: A tree whose nodes store extra summary data about their subtrees (sizes, sums, maximums) that is kept correct through inserts, deletes and rotations. Order-statistic trees and interval trees are examples.
+
 **Balanced Tree**: A tree whose subtree heights differ by at most a constant factor, guaranteeing O(log n) height.
 
+**Bulk Loading**: Building a B-tree or B+ tree bottom-up from sorted data instead of by repeated insertion. Much faster, and it lets you choose how full each node is.
+
 **Cursor**: A position indicator within a data structure.
+
+**Decrease-Key**: The priority-queue operation that lowers an existing element's priority. A binary heap needs a position map (an indexed heap) to find the element first.
 
 **Degenerate Tree**: A tree that has degraded to essentially a linked list, the worst case for an unbalanced BST.
 
 **Fan-out**: The number of children a node can have. High fan-out is what makes B-trees shallow.
+
+**Fill Factor**: How full a B-tree's nodes are allowed or chosen to be. Sorted inserts leave nodes about half full; bulk loading can pack them completely.
 
 **Heap Property**: Every parent compares greater (max-heap) or less (min-heap) than its children. Note this is a *weaker* invariant than sorted order.
 
@@ -34,7 +44,17 @@
 
 **Leaf**: A node with no children.
 
+**Minimum Degree (t)**: The B-tree parameter that bounds node size: every node except the root holds between t − 1 and 2t − 1 keys.
+
+**Order Statistic**: The k-th smallest element of a set. A BST augmented with subtree sizes answers select (k-th smallest) and rank (position of a key) in O(height).
+
+**Predecessor / Successor**: The largest key smaller than x, and the smallest key larger than x. The core query of ordered sets, and the problem van Emde Boas trees solve for integer keys.
+
+**Rope**: A balanced tree whose leaves hold chunks of text, giving O(log n) insert, delete and indexing anywhere in a large string. Used by several text editors.
+
 **Sentinel**: A dummy node that removes special cases (an empty-list check, a null-pointer test) by guaranteeing a node always exists.
+
+**Serialization**: Writing a structure to a flat sequence (bytes, text) from which it can be rebuilt. A binary tree needs either null markers or two traversals to be rebuilt exactly.
 
 **Tombstone**: A marker left in place of a deleted entry so that probe sequences in an open-addressed hash table are not broken.
 
@@ -52,17 +72,27 @@
 
 ## Memory and Storage
 
+**Bit-Packing**: Storing a block of small integers in exactly as many bits each as the largest needs. With delta encoding, the basis of posting-list compression in search engines.
+
 **Cache Line**: The unit of transfer between memory and cache, typically 64 bytes. Reading one byte costs the same as reading its whole line.
 
 **Cache-Oblivious**: Achieving optimal I/O performance without knowing the block size. By being well-organized at every scale simultaneously.
 
 **External Memory Model**: A cost model counting block transfers rather than operations. Predicts real disk performance where the RAM model does not.
 
+**Gap Buffer**: A text buffer that keeps one contiguous gap at the cursor, so typing is O(1) but moving the cursor far away costs a large copy. Used by Emacs.
+
 **Locality**: The tendency of an access pattern to touch nearby addresses. Sequential access has good locality; pointer chasing has none.
 
 **LSM Tree (Log-Structured Merge)**: A write-optimized structure that buffers writes in memory and flushes them as sorted immutable runs, converting random writes to sequential ones.
 
 **Page**: The unit of transfer between memory and disk, typically 4KB.
+
+**Piece Table**: A text representation made of an append-only original buffer, an append-only add buffer, and a list of pieces pointing into them. Edits never move text, and undo is cheap.
+
+**Segment (search index)**: An immutable chunk of an inverted index. New documents create new segments, deletions are marked in a bitset, and background merges combine segments, much like LSM-tree compaction.
+
+**Varint (Variable-Byte Encoding)**: Encoding an integer in 7-bit groups, one per byte, with the high bit marking that more bytes follow. Small numbers take one byte.
 
 **Write Amplification**: The ratio of bytes actually written to storage versus bytes logically written by the application.
 
@@ -80,13 +110,15 @@
 
 **MVCC (Multi-Version Concurrency Control)**: Keeping multiple versions of each row so readers see a consistent snapshot without blocking writers. Partial persistence, applied to databases.
 
-**Persistent**: Preserving previous versions after modification. *Partial* persistence allows querying old versions; *full* allows updating them; *confluent* allows merging them. Unrelated to durable storage.
-
 **Path Copying**: Achieving persistence by duplicating only the nodes on the path from root to the modification point, O(log n) per update in a balanced tree.
+
+**Persistent**: Preserving previous versions after modification. *Partial* persistence allows querying old versions; *full* allows updating them; *confluent* allows merging them. Unrelated to durable storage.
 
 **Structural Sharing**: Reusing unchanged subtrees between versions of an immutable structure. What makes persistence affordable.
 
 ## Distributed Systems
+
+**Admission Policy**: A cache's rule for whether a new item should enter at all, rather than which item to evict. W-TinyLFU admits a newcomer only if it is estimated to be more popular than the victim.
 
 **CAP Theorem**: During a network partition, a distributed system must sacrifice either consistency or availability. See [Appendix D](appendix-d-network-and-system-design-quick-reference.md) for why "CA" is not a third option.
 
@@ -100,7 +132,11 @@
 
 **Merkle Tree**: A tree of hashes where each node hashes its children, allowing two large datasets to be compared (and their differences located) in logarithmic work.
 
+**Power of Two Choices**: Sending each request to the less loaded of two randomly chosen servers. Cuts the maximum load from Θ(log n / log log n) to Θ(log log n) and avoids the herding that "least loaded" suffers with stale data.
+
 **Quorum**: A subset of replicas that must acknowledge an operation. Overlapping read and write quorums (R + W > N) give strong consistency.
+
+**Scan Resistance**: A cache policy's ability to survive a one-off sequential scan without evicting its genuinely popular items. LRU has none; LFU, ARC and W-TinyLFU do.
 
 **Vector Clock**: A per-replica counter vector that distinguishes causally-ordered updates from genuinely concurrent ones.
 
@@ -118,12 +154,62 @@
 
 ## Spatial and String
 
+**Border**: A string that is both a proper prefix and a suffix of another. The prefix function (KMP's failure function) records the longest border of each prefix of a pattern.
+
+**Inverted Index**: A map from each term to its posting list, the sorted list of documents containing it. The core structure of full-text search.
+
 **LCP Array**: Longest Common Prefix between each pair of adjacent suffixes in a suffix array. Together they encode a suffix tree implicitly.
 
 **MBR (Minimum Bounding Rectangle)**: The smallest axis-aligned rectangle enclosing a set of objects. The key type in an R-tree, and overlap between sibling MBRs is what degrades R-tree queries.
+
+**Posting List**: The sorted list of document IDs (plus frequencies or positions) for one term in an inverted index. Stored as compressed gaps between consecutive IDs.
+
+**Rolling Hash**: A hash of a sliding window that can be updated in O(1) as the window moves one character. The basis of Rabin-Karp matching and of content-defined chunking in rsync and backup tools.
 
 **Space-Filling Curve**: A mapping from multi-dimensional coordinates to one dimension that mostly preserves locality, Z-order and Hilbert being the common ones. The basis of geohashing.
 
 **Suffix Array**: The sorted list of a string's suffix starting positions. Suffix-tree power at about 4 bytes per character rather than 20.
 
 **Trie**: A tree keyed by character position, where lookup costs O(key length) independent of how many keys are stored.
+
+**Z-Array**: For each position i of a string, the length of the longest substring starting at i that matches a prefix of the string. Computed in O(n) and used for pattern matching.
+
+## Graphs
+
+**Adjacency List / Matrix**: The two standard graph representations. A list stores each vertex's neighbours (O(V + E) space); a matrix stores a V × V table of edges (O(V²) space, O(1) edge test).
+
+**Back Edge**: In a DFS, an edge to an ancestor still on the recursion stack. A directed graph has a cycle exactly when DFS finds one.
+
+**Bipartite**: A graph whose vertices split into two sides with every edge crossing between them. Equivalent to having no odd-length cycle.
+
+**CSR (Compressed Sparse Row)**: A static graph layout of two arrays, the concatenated neighbour lists and an offset per vertex. Compact and cache-friendly; adding an edge means rebuilding.
+
+**Cut Property**: For any split of a graph's vertices into two groups, the lightest edge crossing the split belongs to some minimum spanning tree. The reason Kruskal's and Prim's greedy choices are safe.
+
+**DAG (Directed Acyclic Graph)**: A directed graph with no cycles. Exactly the graphs that have a topological order.
+
+**Negative Cycle**: A cycle whose edge weights sum to less than zero. Shortest paths through it are undefined; Bellman-Ford detects one.
+
+**Relaxation**: Updating a vertex's tentative distance with dist[v] = min(dist[v], dist[u] + w(u, v)). Every shortest-path algorithm is a strategy for which edges to relax in which order.
+
+**Strongly Connected Component (SCC)**: A maximal set of vertices in a directed graph that can all reach one another. Collapsing each SCC to one vertex always leaves a DAG.
+
+**Topological Order**: An ordering of a DAG's vertices in which every edge points forward. Used for build systems, scheduling and dependency resolution.
+
+## Techniques
+
+**Binary Search on the Answer**: Binary searching over candidate answers rather than over an array, using a yes/no test that is monotone in the answer (for example, "can everything ship in d days with capacity c?").
+
+**Fast and Slow Pointers**: Walking two pointers through a sequence at different speeds. Finds the middle of a linked list in one pass, and detects cycles (Floyd's algorithm).
+
+**Half-Open Interval**: A range written [lo, hi) that includes lo and excludes hi. Using it consistently is the easiest way to write a correct binary search.
+
+**Lazy Deletion**: Leaving stale entries in a structure and skipping them when they surface, instead of removing them immediately. The usual way to get decrease-key behaviour from Python's heapq.
+
+**Lower Bound / Upper Bound**: In a sorted array, the first position whose value is ≥ x and the first whose value is > x. Python's bisect_left and bisect_right.
+
+**Prefix Sum**: An array whose i-th entry is the sum of the first i input values, making any range sum a single subtraction. The inverse of a difference array.
+
+**Sliding Window**: Maintaining an answer over a contiguous window as one end advances, so each element enters and leaves once and the whole scan is O(n).
+
+**Two Pointers**: Moving two indices through a sorted array (often from both ends) so that each step rules out a candidate, giving O(n) instead of O(n²).
