@@ -27,6 +27,207 @@ Inverted index (term → docs):
 
 **Posting list**: Each term points to a sorted list of document IDs.
 
+Real postings carry more than the ID: the term frequency in that document (BM25 needs it, below) and often the positions of each occurrence (for phrase queries). The ID part is the hard part to make small and fast, and the rest of this section is about it: how the lists are compressed, how two of them are intersected, how the best k documents are found without scoring every match, and how an index made of immutable compressed lists absorbs inserts and deletes.
+
+### Compressing Posting Lists
+
+A common term in a large index has a posting list of hundreds of millions of doc IDs, and a query reads every posting it touches. Stored as 32-bit integers, most of those bits are wasted, because the list is sorted: the information is in the distance from one ID to the next.
+
+**Step 1: d-gaps (delta encoding).** Replace each ID by its difference from the previous one, keeping the first as it is. The gaps of a list sum to its last ID, so a term that appears in a fraction f of the documents has an average gap of about 1/f: a term in 10% of documents has gaps around 10, which fit in 4 bits. Rare terms have large gaps, but their lists are short, so they cost little either way. Decoding is a running sum, which means a list can only be decoded forward from a known starting point (its beginning, or a block boundary recorded in the skip data below).
+
+**Step 2: variable-byte (varint) encoding.** Write each gap 7 bits at a time, lowest-order group first, and use the top bit of each byte as a continuation flag: 1 means another byte of this number follows, 0 means this is the last. Values below 128 take one byte, below 16,384 two, below 2,097,152 three. This is the layout of Lucene's VInt, the varint of Protocol Buffers, and LEB128 in DWARF and WebAssembly. (The variable-byte code in Manning, Raghavan and Schütze's *Introduction to Information Retrieval* puts the flag on the last byte instead and writes the high-order group first; the idea and the sizes are the same.)
+
+<figure>
+{{#include ../images/posting-list-compression.svg}}
+<figcaption>Delta encoding turns large sorted IDs into small gaps, and varint stores each gap in as few bytes as it needs: 9 bytes instead of 20.</figcaption>
+</figure>
+
+The worked example in the figure: the term "data" occurs in documents 70000, 70003, 70010, 70130 and 90000. The gaps are 70000, 3, 7, 120 and 19870. The first gap is 17 bits, `100 0100010 1110000` in binary, so it splits into three 7-bit groups; emitted lowest first with the flag prepended, they are `1·1110000` = F0, `1·0100010` = A2 and `0·0000100` = 04. The gaps 3, 7 and 120 are below 128 and take one byte each (03, 07, 78), and 19870 takes three (9E 9B 01). Total: 9 bytes, against 20 as 32-bit integers and 15 as varints of the raw IDs, since every raw ID here is at least 16,384.
+
+```python
+from itertools import accumulate
+
+
+def delta_encode(doc_ids, base=0):
+    """Sorted doc IDs -> d-gaps. The first gap is measured from `base`."""
+    return [d - p for p, d in zip([base] + doc_ids, doc_ids)]
+
+
+def delta_decode(gaps, base=0):
+    return list(accumulate(gaps, initial=base))[1:]
+
+
+def varint_encode(numbers):
+    """7 data bits per byte, low-order group first; a set high bit means 'more bytes follow'."""
+    out = bytearray()
+    for n in numbers:
+        while n >= 0x80:
+            out.append((n & 0x7F) | 0x80)
+            n >>= 7
+        out.append(n)
+    return bytes(out)
+
+
+def varint_decode(data):
+    numbers, n, shift = [], 0, 0
+    for byte in data:
+        n |= (byte & 0x7F) << shift
+        if byte & 0x80:
+            shift += 7
+        else:
+            numbers.append(n)
+            n, shift = 0, 0
+    return numbers
+
+
+postings = [70000, 70003, 70010, 70130, 90000]
+gaps = delta_encode(postings)
+assert gaps == [70000, 3, 7, 120, 19870]
+encoded = varint_encode(gaps)
+assert encoded.hex(" ") == "f0 a2 04 03 07 78 9e 9b 01"
+assert len(encoded) == 9 and len(varint_encode(postings)) == 15  # vs 20 bytes as int32
+assert delta_decode(varint_decode(encoded)) == postings
+```
+
+Encoding and decoding are O(total bytes), linear in the list. A 32-bit gap takes at most 5 bytes.
+
+**Bit-packing in blocks.** Varint has two weaknesses: it cannot use less than a byte (a gap of 3 still takes 8 bits), and its decoder takes a data-dependent branch on every byte, which the CPU mispredicts often when gap sizes vary. Modern engines instead cut the gap sequence into fixed-size blocks and pack each block at one bit width b, the width of the block's largest gap. A block of 128 gaps then takes exactly 16b bytes, and unpacking it is straight-line shifts and masks with no branches, which compilers unroll and vectorize with SIMD instructions. This is **frame-of-reference (FOR)** coding: each value is stored as a fixed-width offset from a per-block reference value; for d-gaps the reference is 0 and the choice of b is the whole scheme. Its weakness is outliers: one large gap forces every value in the block to the wide width. **PForDelta** ("patched" FOR, Zukowski, Héman, Nes and Boncz, 2006) picks b so that most of the block fits, say 90%, and stores the few values that do not fit as exceptions that are patched in after the fast unpacking pass. Lucene's postings format packs doc-ID gaps in blocks of 128 at one bit width per block, uses patched FOR for the term frequencies, and writes the final partial block of fewer than 128 entries as VInts.
+
+```python
+def for_pack(block):
+    """Frame of reference: every value in the block is stored in the same b bits."""
+    b = max(block).bit_length()
+    packed = 0
+    for i, v in enumerate(block):
+        packed |= v << (i * b)
+    return b, packed.to_bytes((len(block) * b + 7) // 8, "little")
+
+
+def for_unpack(b, data, count):
+    packed, mask = int.from_bytes(data, "little"), (1 << b) - 1
+    return [(packed >> (i * b)) & mask for i in range(count)]
+
+
+block = [3, 7, 1, 12, 5, 2, 9, 4] * 16          # 128 small gaps
+b, data = for_pack(block)
+assert (b, len(data)) == (4, 64)                # 4 bits each: 64 bytes
+assert for_unpack(b, data, len(block)) == block
+b, data = for_pack(block[:-1] + [19870])        # one outlier...
+assert (b, len(data)) == (15, 240)              # ...and all 128 values pay 15 bits
+```
+
+The Python uses one arbitrary-precision integer as the bit buffer to stay short; real implementations shift values into 64-bit words, and Lucene generates a specialized unpacking routine for each width b.
+
+**Why compression makes queries faster, not only smaller.** Intersecting or scoring a posting list does a few instructions per doc ID, so a scan over uncompressed IDs is limited by how fast bytes arrive from memory or disk, not by the CPU. Compression spends a few cheap instructions per ID to move several times fewer bytes, and lets more of the index stay in the CPU caches and in RAM (the operating system's page cache, for an index on disk). Block bit-packing decoders run at billions of integers per second per core (Lemire and Boytsov, "Decoding billions of integers per second through vectorization", 2015), so decoding costs less than the memory traffic it saves, and the smaller list is also the faster one. This is the memory-hierarchy argument of [Chapter 16](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) applied to lists of integers.
+
+### Intersecting Posting Lists
+
+An AND query ("fibonacci AND heap") needs the doc IDs that appear in every query term's list. Exercise 30.1 builds the **linear merge**: two pointers walk both sorted lists, always advancing the one at the smaller ID, for O(m + n) comparisons in the worst case. That is the right algorithm when the lists have similar lengths and the wrong one when they do not: for "fibonacci AND the", with m = 1,000 and n = 10,000,000 postings, the merge reads the entire long list to find at most 1,000 matches.
+
+**Galloping (exponential) search.** Walk the short list, and for each element x, search the long list forward from where the previous search stopped: probe positions lo, lo + 1, lo + 3, lo + 7, ..., doubling the step, until a probe reaches a value ≥ x, then binary-search the last interval (Bentley and Yao, 1976, proposed this doubling search for unbounded lists).
+
+```python
+from bisect import bisect_left
+
+
+def gallop_to(arr, target, lo=0):
+    """Smallest i >= lo with arr[i] >= target, or len(arr).
+    Probes lo, lo+1, lo+3, lo+7, ... then binary-searches the last gap."""
+    hi, step = lo, 1
+    while hi < len(arr) and arr[hi] < target:
+        lo = hi + 1             # everything before lo is < target
+        hi += step
+        step *= 2
+    return bisect_left(arr, target, lo, min(hi, len(arr)))
+
+
+def intersect_gallop(short, long):
+    """Each element of `short` gallops forward from where the last one stopped."""
+    out, pos = [], 0
+    for x in short:
+        pos = gallop_to(long, x, pos)
+        if pos == len(long):
+            break
+        if long[pos] == x:
+            out.append(x)
+    return out
+
+
+def intersect_all(lists):
+    """AND query: start from the rarest term; the candidate set only shrinks."""
+    lists = sorted(lists, key=len)
+    result = lists[0]
+    for other in lists[1:]:
+        if not result:
+            break
+        result = intersect_gallop(result, other)
+    return result
+
+
+long = [2, 5, 9, 12, 17, 21, 30, 44, 51, 63, 70, 88, 95, 120]
+assert gallop_to(long, 63) == 9    # probes 0, 1, 3, 7 (15 is past the end), then bisects [8, 14)
+assert intersect_all([long, [9, 63, 64], list(range(0, 100, 3))]) == [9, 63]
+```
+
+In the test, searching for 63 probes indices 0, 1, 3 and 7 (values 2, 5, 12, 44, all below 63), the next probe 15 is past the end, so it binary-searches indices 8 to 13 and stops at index 9.
+
+**Cost.** Say the search for the i-th element of the short list moves the long-list position forward by g_i. Doubling reaches past that distance in about log₂ g_i probes, and the binary search over the last interval, of length below g_i, takes about log₂ g_i more, so the search costs O(1 + log g_i). The g_i sum to at most n, and since log is concave, a sum of m logarithms with a fixed total is largest when all the terms are equal, at n/m. The total is O(m log(n/m) + m) comparisons in the worst case. For m = 1,000 and n = 10⁷ that is about 1,000 × 2 × log₂(10⁴) ≈ 27,000 comparisons instead of 10⁷. When m ≈ n the gaps are tiny, each search is a probe or two, and galloping costs O(n), within a small constant factor of the merge, so it never loses badly.
+
+**Shortest list first.** With more than two terms, `intersect_all` sorts the lists by length and folds the result through them. The running result can never be longer than the shortest list, so every step is a short list galloping through a longer one. The lengths are free: the term dictionary stores each term's document frequency, because BM25 needs it as n.
+
+**Skip pointers.** Galloping assumes random access, and a compressed list does not have it: varints have variable length, and d-gaps decode only as a running sum from a known starting point. The fix is **skip data**: for every block of B postings, record the block's last doc ID and the byte offset where the block starts. To advance to a target x, search the small, uncompressed array of skip entries, jump to the one block that can contain x, and decode only that block. Blocks with no candidate are never decoded at all. Moffat and Zobel (1996) placed skips every √n postings or so; in block-packed formats the skip interval is simply the block size, and Lucene interleaves skip data with its 128-posting blocks, with a second, coarser level above it.
+
+```python
+from bisect import bisect_left
+
+
+class CompressedPostings:
+    """Doc IDs as varint d-gaps in blocks of `block`, plus one skip entry per
+    block: the block's last doc ID and the byte offset where it starts."""
+
+    def __init__(self, doc_ids, block=128):
+        self.data, self.last_docs, self.offsets = bytearray(), [], []
+        prev = 0
+        for i in range(0, len(doc_ids), block):
+            chunk = doc_ids[i:i + block]
+            self.offsets.append(len(self.data))
+            self.data += varint_encode(delta_encode(chunk, base=prev))
+            prev = chunk[-1]
+            self.last_docs.append(prev)
+        self.offsets.append(len(self.data))
+        self.blocks_decoded = 0
+
+    def decode_block(self, k):
+        self.blocks_decoded += 1
+        base = self.last_docs[k - 1] if k else 0
+        raw = self.data[self.offsets[k]:self.offsets[k + 1]]
+        return delta_decode(varint_decode(raw), base)
+
+    def intersect(self, short):
+        """Decode only the blocks that could hold an element of `short`."""
+        out, k, block_no, docs = [], 0, -1, []
+        for x in short:
+            k = bisect_left(self.last_docs, x, k)    # skip whole blocks
+            if k == len(self.last_docs):
+                break
+            if k != block_no:
+                block_no, docs = k, self.decode_block(k)
+            i = bisect_left(docs, x)
+            if docs[i] == x:
+                out.append(x)
+        return out
+
+
+common = list(range(0, 1_000_000, 3))       # in a third of all documents
+rare = [7, 300_000, 300_003, 999_999]       # in four documents
+pl = CompressedPostings(common)
+assert pl.intersect(rare) == [300_000, 300_003, 999_999]
+assert len(pl.data) == 333_334            # 1 byte per gap, vs 1,333,336 as int32
+assert len(pl.last_docs) == 2605 and pl.blocks_decoded == 3
+```
+
+The rare term's four IDs cost four searches of the skip array and three block decodes out of 2,605 blocks (300,000 and 300,003 share a block); the other 2,602 blocks are never decoded. With m short-list elements, the cost is O(m log(n/B)) for the skip searches (less if they gallop over the skip array instead of calling `bisect`) plus O(B) for each decoded block, and at most min(m, n/B) blocks are decoded. The `len(pl.data)` assertion is the compression side of the same example: a term in every third document out of a million has gaps of 3, one byte each, so the list takes a quarter of its 32-bit size.
+
 ### BM25 Scoring
 
 Probabilistic relevance ranking:
@@ -41,6 +242,108 @@ Where:
 - b = length normalization (typically 0.75)
 - IDF = log((N - n + 0.5) / (n + 0.5))
 ```
+
+### Top-k Retrieval: WAND and Block-Max WAND
+
+A search page shows the k best documents by score, not every match, and for an OR query ("fibonacci heap data") nearly every document matches some term. Exhaustive evaluation scores every document in the union of the posting lists and keeps the best k in a size-k min-heap, the top-k pattern of [Chapter 9](../volume-1/ch09-heaps-and-priority-queues.md) §9.8. Its cost is proportional to the total length of all the lists, and that total is dominated by the common terms, which contribute least to any score.
+
+The heap supplies the key quantity: the score θ of the current k-th best document, at its root. A new document matters only if it scores more than θ. **WAND** ("weak AND", Broder, Carmel, Herscovici, Soffer and Zien, 2003) adds one number per term, computed at index time: the upper bound UB_t, the largest score contribution term t makes to any document. (BM25's contribution is bounded for each term; Exercise 30.2(a) computes the limit.) A document's score is at most the sum of UB_t over the terms whose lists contain it. WAND keeps one cursor per term, pointing at its current doc ID, and repeats:
+
+1. Sort the cursors by current doc ID.
+2. Add up UB_t in that order until the sum exceeds θ. The cursor where that happens is the pivot, and its doc ID is the pivot document p. If no prefix exceeds θ, stop: no remaining document can enter the top k.
+3. A document d < p can only appear in the lists of cursors before the pivot (every other cursor is already past d), and those bounds sum to at most θ. So no document before p can qualify. If some cursors are still before p, move them directly to p, using skip pointers, so the postings in between are never decoded.
+4. Otherwise every cursor up to the pivot is on p: score p in full, and push it into the heap if it beats θ.
+
+The answer is exactly the exhaustive top k, not an approximation, because WAND only skips documents it has proved cannot qualify. As the heap fills with good documents θ rises, and more is skipped.
+
+```python
+import heapq
+from bisect import bisect_left
+
+
+def wand_top_k(index, k):
+    """index: term -> (doc_ids, scores), the term's posting list with each
+    document's precomputed score contribution. Returns the top k (score, doc)."""
+    ub = {t: max(sc) for t, (_, sc) in index.items()}   # stored at index time
+    pos = {t: 0 for t in index}
+    heap = []                                             # min-heap of (score, doc)
+    fully_scored = 0
+
+    def cur(t):
+        docs = index[t][0]
+        return docs[pos[t]] if pos[t] < len(docs) else float("inf")
+
+    while True:
+        theta = heap[0][0] if len(heap) == k else float("-inf")
+        terms = sorted(index, key=cur)
+        pivot, bound = None, 0.0
+        for t in terms:                     # smallest prefix that could beat theta
+            if cur(t) == float("inf"):
+                break
+            bound += ub[t]
+            if bound > theta:
+                pivot = cur(t)
+                break
+        if pivot is None:
+            break                           # no remaining document can enter the top k
+        if cur(terms[0]) == pivot:          # every term up to the pivot is on it
+            score = 0.0
+            for t in terms:
+                if cur(t) == pivot:
+                    score += index[t][1][pos[t]]
+                    pos[t] += 1
+            fully_scored += 1
+            if len(heap) < k:
+                heapq.heappush(heap, (score, pivot))
+            elif score > theta:
+                heapq.heapreplace(heap, (score, pivot))
+        else:                               # nothing before the pivot can win: skip
+            for t in terms:
+                if cur(t) < pivot:
+                    pos[t] = bisect_left(index[t][0], pivot, pos[t])
+    return sorted(heap, reverse=True), fully_scored
+
+
+index = {
+    "fibonacci": ([3, 9], [4.0, 3.5]),
+    "heap": ([1, 3, 5, 7, 9, 11], [1.5, 2.0, 1.0, 1.8, 1.2, 2.0]),
+    "data": (list(range(1, 13)), [0.5] * 12),
+}
+top, fully_scored = wand_top_k(index, k=2)
+assert top == [(6.5, 3), (5.2, 9)] and fully_scored == 6   # docs 1, 2, 3, 5, 7, 9
+```
+
+The trace of that example, with k = 2:
+
+| term | doc IDs | score contribution | UB |
+|---|---|---|---|
+| fibonacci | 3, 9 | 4.0, 3.5 | 4.0 |
+| heap | 1, 3, 5, 7, 9, 11 | 1.5, 2.0, 1.0, 1.8, 1.2, 2.0 | 2.0 |
+| data | 1 to 12 | 0.5 each | 0.5 |
+
+Docs 1 (score 2.0) and 2 (0.5) fill the heap, so θ = 0.5. Doc 3 scores 6.5 and evicts doc 2: θ = 2.0. The cursors are now data at 4, heap at 5, fibonacci at 9. The bound of data alone is 0.5 ≤ 2.0, data plus heap is 2.5 > 2.0, so the pivot is heap's cursor and p = 5: data jumps from 4 to 5, and doc 4 is never scored (it contains only "data", worth at most 0.5). Doc 5 scores 1.5 and does not get in. Doc 6 is skipped the same way, doc 7 scores 2.3 and evicts doc 1 (θ = 2.3), doc 8 is skipped, and doc 9 scores 5.2 (θ = 5.2). Now fibonacci is exhausted and data plus heap is 2.5 ≤ 5.2: no remaining document can reach the top 2, so WAND stops. It fully scored 6 of the 12 matching documents; docs 10, 11 and 12 were never touched, although doc 11 matches two of the three terms.
+
+**Block-max WAND.** The weakness of WAND is that UB_t is a maximum over the whole list: if "heap" scores 2.0 in one document, every "heap" posting looks as if it could be worth 2.0. Block-max WAND (Ding and Suel, 2011) also stores the maximum score within each block of postings, next to that block's skip entry. After WAND picks a pivot with the global bounds, it adds up the block maxima of the blocks containing p in the pivot terms' lists. If that tighter bound is still ≤ θ, no document from p up to the nearest of those block ends (or up to the next cursor after the pivot, if that comes first) can qualify, so the cursors skip there without decoding anything. Lucene 8.0 (2019) added block-max WAND, storing per-block "impacts" in the skip data (the competitive pairs of term frequency and document length, from which a block's maximum BM25 score follows). The price of skipping is that the engine no longer knows the exact number of matching documents; Elasticsearch 7.0 changed its default to count hits exactly only up to 10,000 for this reason.
+
+WAND has no better worst-case bound than exhaustive evaluation: if every document scores close to θ, nothing can be skipped. Its gains depend on the score distribution, and on real queries, where a few documents score far above the rest, θ rises fast and most postings of the common terms are skipped.
+
+### Segments, Merging, and Deletes
+
+Everything so far describes a static index: sorted, compressed, block-packed lists with skip data and block maxima. That layout cannot absorb an insert in the middle of a packed block. Lucene's answer (and so that of Elasticsearch, OpenSearch and Solr, which are built on it) is the same as the LSM tree's in [Chapter 29](ch29-system-design-as-data-structure-composition.md) §29.4 and [Chapter 16](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md) §16.4: never modify anything in place; write new immutable pieces and merge them in the background.
+
+- **Segments.** A segment is a complete, self-contained inverted index over a subset of the documents: its own term dictionary, compressed posting lists and stored fields, with doc IDs 0 to n − 1 local to the segment. Dense local IDs are also what keeps the d-gaps small. New documents are buffered in memory and flushed as a new, small segment; in Elasticsearch this is the refresh, every second by default, which is what makes a new document searchable within a second ("near-real-time" search). A query runs against every segment and combines the per-segment results; a document's global ID is its segment's base offset plus its local ID.
+- **Deletes as bitsets.** A segment's files are never rewritten, so a delete cannot remove postings. Instead each segment has a live-docs bitset ([Chapter 3](../volume-1/ch03-arrays-the-foundation-of-contiguous-storage.md) §3.5) with one bit per document, written as a new generation of a small file when deletes arrive. Queries still decode the postings of deleted documents and drop them with one bit test each. An update is a delete of the old version plus an add of the new one, which lands in a new segment.
+- **Merging.** A background merge reads several segments and writes one. It merges their sorted term dictionaries (a k-way merge, [Chapter 9](../volume-1/ch09-heaps-and-priority-queues.md) §9.8), and for each term concatenates the posting lists while renumbering doc IDs: each source segment's documents get a new base offset, deleted documents are dropped, and later IDs shift down to fill the holes. Each source segment's documents become one contiguous range of IDs in the result, so the concatenated lists are already sorted and the merge is a single sequential pass, linear in the size of its input. Lucene's default `TieredMergePolicy` merges segments of similar size (by default it tolerates about 10 segments per size tier), so each document is rewritten a logarithmic number of times over the life of the index, as in a size-tiered LSM tree, and it favors segments with many deletions, because a merge is the only way to reclaim their space.
+
+| LSM tree (Chapter 29) | Lucene index |
+|---|---|
+| memtable | in-memory indexing buffer |
+| immutable SSTable | immutable segment |
+| compaction | segment merge |
+| delete = tombstone written to a newer run | delete = bit cleared in the live-docs bitset of the segment that holds the document |
+| point read checks runs newest first and can stop early | every query visits every segment |
+
+The last two rows differ because of the access pattern. A key-value read wants the newest version of one key, so an LSM tree records a delete as a tombstone in the newest run and resolves versions at read time. A search reads all the matching documents in all the segments anyway, so Lucene resolves the delete once, when the buffered deletes are applied, by finding the document in the older segments and clearing its bit; after that a query needs only a bit test and never compares versions across segments. The cost pressure differs too: an LSM point read can stop at the first run that holds the key (and skip most runs with Bloom filters), but a search pays for every segment on every query. Keeping the segment count small is therefore as much about query latency as about disk space, and an index that will not change again is often force-merged down to a single segment.
 
 ### Fenced and Sharded Indexes
 
@@ -519,6 +822,86 @@ Combined: 200 values, 198 at 10 ms and 2 at 300 ms. The ⌈0.99 × 200⌉ = 198t
 Average of the per-minute p99s: (300 + 10)/2 = 155 ms. Maximum: 300 ms. Both are wrong: the true answer is 10 ms. With other data the average of p99s can just as easily be far too low.
 
 Exact rollups: count, sum, min and max combine exactly (add, add, min, max), and the mean is sum/count, which needs both; averaging the per-minute averages is only correct when every minute has the same count. Percentiles do not combine from percentiles at all. To roll them up, store a mergeable summary per interval: a histogram with fixed bucket boundaries (merge by adding bucket counts, the Prometheus approach) or a mergeable sketch such as a t-digest or DDSketch. The percentile is then computed from the merged summary, with error set by the bucket or sketch resolution rather than by the rollup.
+
+</details>
+
+**30.8 ★ Compress a posting list by hand.** A term occurs in documents 5, 130, 131 and 16515. (a) Write the d-gaps and their varint bytes in hex, using the encoding of §30.1. How many bytes is that, against 32-bit integers and against varints of the raw IDs? (b) Pack the four gaps as one frame-of-reference block. What bit width does the block need, and how many bytes? (c) What would PForDelta do with this block?
+
+<details>
+<summary>Hint</summary>
+
+16,384 is 2¹⁴, the smallest number that needs a third varint byte.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) The gaps are 5, 125, 1 and 16384. 5, 125 and 1 are below 128, so they take one byte each: 05, 7D, 01. 16384 = 2¹⁴ is `1 0000000 0000000` in binary, three 7-bit groups; lowest first with continuation flags, that is 80 80 01. Total 6 bytes, against 16 as 32-bit integers. The raw IDs as varints are 05, 82 01, 83 01, 83 81 01, 8 bytes: 130 and 131 need two bytes and 16515 three.
+
+(b) The width is that of the largest gap: 16384 needs 15 bits, so 4 × 15 = 60 bits, 8 bytes, worse than varint. The other three gaps need at most 7 bits (125 < 128) but pay for the outlier.
+
+(c) PForDelta picks the width that fits most of the block, here 7 bits: 4 × 7 = 28 bits, 4 bytes, and records 16384 separately as an exception (its position in the block and its value), patched in after the block is unpacked. On a real block of 128 gaps a single exception costs a few bytes, while widening the whole block from 7 to 15 bits would cost 128 extra bytes.
+
+```python
+# Checked with the functions from §30.1
+assert varint_encode(delta_encode([5, 130, 131, 16515])).hex(" ") == "05 7d 01 80 80 01"
+assert len(varint_encode([5, 130, 131, 16515])) == 8
+assert for_pack([5, 125, 1, 16384])[0] == 15 and for_pack([5, 125, 1])[0] == 7
+```
+
+</details>
+
+**30.9 ★★ When does galloping pay?** (a) Intersect a list of m = 1,000 doc IDs with one of n = 10,000,000. Estimate the comparisons for the linear merge and for galloping. (b) Prove the O(m log(n/m) + m) bound from §30.1 for the case where every one of the m searches advances the long-list position by the same amount, and explain why unequal advances cannot cost more. (c) When the two lists have about the same length, which method is faster in practice, and how do implementations choose between them?
+
+<details>
+<summary>Solution</summary>
+
+(a) The merge advances one of the two pointers on every comparison and can end only when one list runs out, so it does up to m + n ≈ 10⁷ comparisons (it may stop early if the short list's last element is small, but in general it reads most of the long list). Galloping does about 2 log₂(n/m) = 2 log₂(10⁴) ≈ 27 comparisons per element of the short list, about 27,000 in total: a 370-fold reduction.
+
+(b) If every search advances the position by g = n/m, each search costs about log₂ g probes to overshoot and log₂ g more to binary-search the last interval, so the total is about 2m log₂(n/m), plus O(1) per element for the first probe. With unequal advances g₁, ..., g_m summing to at most n, the cost is Σ O(1 + log g_i). Since log is concave, Jensen's inequality gives (1/m) Σ log g_i ≤ log((1/m) Σ g_i) ≤ log(n/m), so Σ log g_i ≤ m log(n/m): spreading the same total distance unevenly can only lower the sum of logs.
+
+(c) The merge. When n ≈ m the gaps are about 1, so galloping does O(1) work per element and has the same O(n) bound, but each search still costs a probe or two plus the loop and `bisect` setup, while the merge does one comparison and one pointer increment per step. Both are linear, and the merge has the smaller constant. Implementations choose by the length ratio: merge when the lists are close in size, gallop when one is much shorter. (Python's `list.sort` uses the same idea in reverse: its merge switches into galloping mode once one run keeps winning.) Search engines rarely face this choice on raw arrays; they advance through compressed blocks with skip data, and the shortest-list-first rule keeps the driving list short.
+
+</details>
+
+**30.10 ★★ Merge two segments.** Represent a segment as `(postings, live)`, where `postings` maps each term to its sorted local doc IDs and `live` is a list of booleans, one per document (False means deleted). Write `merge_segments(segments)` that returns the postings of a single merged segment containing only live documents, with IDs renumbered 0, 1, 2, ... in segment order, plus the merged document count. Test it on segment A with `{"data": [0, 1, 2], "heap": [1]}`, live `[True, False, True]`, and segment B with `{"data": [1], "trie": [0, 1]}`, live `[True, True]`. Why does no posting list need re-sorting?
+
+<details>
+<summary>Solution</summary>
+
+```python
+def merge_segments(segments):
+    """segments: list of (postings, live) with postings: term -> sorted local
+    doc IDs and live: list of bools, one per document in the segment.
+    Returns the postings of one merged segment with no deleted documents."""
+    remaps, base = [], 0
+    for _, live in segments:
+        remap = {}
+        for local, alive in enumerate(live):
+            if alive:
+                remap[local] = base
+                base += 1
+        remaps.append(remap)
+    merged = {}
+    for (postings, _), remap in zip(segments, remaps):   # segment order = ID order
+        for term, docs in postings.items():
+            new_ids = [remap[d] for d in docs if d in remap]
+            if new_ids:
+                merged.setdefault(term, []).extend(new_ids)
+    return dict(sorted(merged.items())), base
+
+
+seg_a = ({"data": [0, 1, 2], "heap": [1]}, [True, False, True])
+seg_b = ({"data": [1], "trie": [0, 1]}, [True, True])
+merged, n_docs = merge_segments([seg_a, seg_b])
+assert n_docs == 4
+assert merged == {"data": [0, 1, 3], "trie": [2, 3]}       # "heap" only had a deleted doc
+```
+
+The remap gives A's live documents 0 and 2 the new IDs 0 and 1, and B's documents 0 and 1 the IDs 2 and 3. Deleted document A1 gets no new ID, so its postings disappear, and "heap", which occurred only there, disappears from the merged dictionary: this is how a merge reclaims the space of deletes.
+
+No list needs re-sorting because the renumbering preserves order twice over: within a segment, the remap is increasing (later live documents get larger IDs), and across segments, every ID from A is smaller than every ID from B. So appending each segment's remapped list in segment order produces a sorted list, and the whole merge is one sequential pass over the inputs, O(total postings + total documents). A real merge also streams the term dictionaries in sorted order (a k-way merge of the segments' sorted term lists) instead of building a dictionary and sorting it at the end, and writes the merged lists straight into compressed blocks.
 
 </details>
 
