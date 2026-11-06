@@ -21,7 +21,7 @@ Use data structures to divide problems:
 
 Divide and conquer splits a problem into independent subproblems, solves them recursively, and combines the results. Its bookkeeping need is **the recursion itself**, which is why the stack from [Chapter 5](../volume-1/ch05-stacks-and-queues-ordered-access-patterns.md) is the paradigm's implicit data structure. Every recursive call is a stack frame, and converting a recursive algorithm to an iterative one always means making that stack explicit.
 
-Cost follows the Master Theorem: for T(n) = a·T(n/b) + f(n), compare f(n) against n^(log_b a). The three sorts above are the three cases in miniature. Merge sort is T(n) = 2T(n/2) + O(n) = O(n log n), binary search is T(n) = T(n/2) + O(1) = O(log n).
+Cost follows the Master Theorem: for T(n) = a·T(n/b) + f(n), compare f(n) against n^(log_b a). Merge sort is T(n) = 2T(n/2) + O(n) = O(n log n), binary search is T(n) = T(n/2) + O(1) = O(log n). Both land in the middle case, where f(n) matches n^(log_b a) and the cost picks up a log factor.
 
 The structural insight worth carrying: **the split and the combine trade off against each other.** Merge sort splits trivially at the midpoint and pays in the merge. Quicksort pays in the partition and combines for free. Same total, different placement, and it is why quicksort sorts in place while merge sort needs O(n) scratch space.
 
@@ -173,6 +173,227 @@ The diagnostic question for each:
 | Adversarial input, or determinism too slow | Randomized | Depends, the randomness is the technique |
 
 And the thread running through all of them: **identify the question the algorithm asks over and over, then pick the structure that answers that question fastest.** Dijkstra asks "which is nearest." Kruskal asks "would this cycle." DP asks "have I computed this." Backtracking asks "can this branch still work." Get the question right and the structure is usually obvious; get it wrong and no amount of optimization will help.
+
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**21.1 ★ Master Theorem cases.** For T(n) = a·T(n/b) + f(n), compare f(n) with n^(log_b a) and solve each recurrence. Say which of the three cases applies.
+
+1. Karatsuba: T(n) = 3T(n/2) + O(n)
+2. Strassen: T(n) = 7T(n/2) + O(n²)
+3. Naive divide-and-conquer matrix multiplication: T(n) = 8T(n/2) + O(n²)
+4. T(n) = 2T(n/2) + O(n²)
+
+<details>
+<summary>Solution</summary>
+
+The three cases: if n^(log_b a) grows polynomially faster than f(n), the leaves dominate (case 1, T = Θ(n^(log_b a))). If they match, every level costs the same (case 2, an extra log factor). If f(n) grows polynomially faster and satisfies the regularity condition a·f(n/b) ≤ c·f(n) for some c < 1, the root dominates (case 3, T = Θ(f(n))).
+
+| Recurrence | n^(log_b a) | f(n) | Case | T(n) |
+|------------|-------------|------|------|------|
+| 3T(n/2) + n | n^(log₂ 3) ≈ n^1.585 | n | 1 | Θ(n^1.585) |
+| 7T(n/2) + n² | n^(log₂ 7) ≈ n^2.807 | n² | 1 | Θ(n^2.807) |
+| 8T(n/2) + n² | n^(log₂ 8) = n³ | n² | 1 | Θ(n³) |
+| 2T(n/2) + n² | n | n² | 3 | Θ(n²) |
+
+For the last row, regularity holds: 2·(n/2)² = n²/2, so c = 1/2 works.
+
+Rows 2 and 3 show the 21.1 point about Karatsuba and Strassen exactly: same f(n), but cutting a from 8 to 7 lowers the exponent from 3 to 2.807. Merge sort and binary search, from 21.1, are both case 2.
+
+</details>
+
+**21.2 ★ Pick Dijkstra's priority queue.** A graph has V = 10,000 vertices. Using the costs in the table at the start of this chapter (with log₂ V ≈ 13.3), estimate the work for an unsorted array and a binary heap when (a) the graph is nearly complete, E ≈ V² = 10⁸, and (b) the graph is sparse, E = 40,000. Which wins each time, and by roughly how much?
+
+<details>
+<summary>Solution</summary>
+
+| | Unsorted array, V² | Binary heap, (V + E) log V |
+|---|---|---|
+| (a) E = 10⁸ | 10⁸ | ≈ 10⁸ × 13.3 ≈ 1.3 × 10⁹ |
+| (b) E = 4 × 10⁴ | 10⁸ | 5 × 10⁴ × 13.3 ≈ 6.6 × 10⁵ |
+
+(a) The **array wins by about 13×**. With E ≈ V², every edge has to be examined anyway, and the heap adds a log V factor to each one. The array's V scans of V entries cost the same order as reading the edges.
+
+(b) The **heap wins by about 150×**. The array still pays V² regardless of how few edges exist.
+
+The crossover is around E ≈ V² / log V. Same algorithm, and the right structure depends on a property of the input (density) rather than of the algorithm.
+
+</details>
+
+**21.3 ★★ Rolling-row LCS by hand.** Run `lcs_table("AGGTAB", "GXTXAYB")` from 21.2. Note the swap at the top of the function. Write out `prev` after each iteration of the outer loop. What is the result? Then explain why this version cannot tell you *which* subsequence is common, and what it would take to recover it.
+
+<details>
+<summary>Hint</summary>
+
+After the swap, `a` is the longer string. Each row has `len(b) + 1` entries, and `cur[j]` depends only on `prev[j-1]`, `prev[j]`, and `cur[j-1]`.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+`len(b) > len(a)` (7 > 6), so the strings swap: `a = "GXTXAYB"` drives the outer loop and `b = "AGGTAB"` indexes the columns.
+
+| i | a[i−1] | prev after the iteration (columns: ∅ A G G T A B) |
+|---|--------|---------------------------------------------------|
+| 0 | | 0 0 0 0 0 0 0 |
+| 1 | G | 0 0 1 1 1 1 1 |
+| 2 | X | 0 0 1 1 1 1 1 |
+| 3 | T | 0 0 1 1 2 2 2 |
+| 4 | X | 0 0 1 1 2 2 2 |
+| 5 | A | 0 1 1 1 2 3 3 |
+| 6 | Y | 0 1 1 1 2 3 3 |
+| 7 | B | 0 1 1 1 2 3 4 |
+
+The result is `prev[6]` = **4**, for the subsequence GTAB.
+
+The function keeps only lengths, and only two rows of them. Recovering the subsequence means walking backwards from the bottom-right cell, at each step checking whether the characters matched (move diagonally) or which neighbor the max came from (move up or left). That walk needs every row, so the simple approach keeps the full O(m·n) table. Hirschberg's algorithm gets the subsequence in O(min(m, n)) space anyway: it runs the rolling-row computation forwards on the first half of one string and backwards on the second half to find where an optimal path crosses the middle row, then recurses on the two halves. That is divide and conquer (21.1) layered on top of DP (21.2), at roughly twice the time.
+
+</details>
+
+**21.4 ★★ Watch greedy fail.** 21.3 says greedy fails on 0/1 knapsack. (a) With capacity 10 and items (weight, value) = (6, 30), (5, 20), (5, 20), what does "take the best value-per-weight item that still fits" choose, and what is optimal? (b) Making change with coins {1, 3, 4}, what does "take the largest coin that fits" produce for 6, and what is optimal? (c) Write the DP that always gets (b) right, and state its complexity.
+
+<details>
+<summary>Solution</summary>
+
+(a) Ratios are 5, 4, 4. Greedy takes (6, 30), leaving capacity 4, so neither 5-weight item fits: **value 30**. The optimum skips the best-ratio item and takes both (5, 20) items: **value 40**. The first choice looked best locally and blocked a better combination.
+
+(b) Greedy: 4, then 1, then 1, which is **3 coins**. Optimal: 3 + 3, **2 coins**.
+
+(c) The subproblem is "fewest coins for amount x", and it overlaps heavily, so tabulate it in an array (21.2's dense case):
+
+```python
+def min_coins(coins, amount):
+    INF = float('inf')
+    best = [0] + [INF] * amount          # best[x] = fewest coins summing to x
+    for x in range(1, amount + 1):
+        for c in coins:
+            if c <= x and best[x - c] + 1 < best[x]:
+                best[x] = best[x - c] + 1
+    return best[amount]
+
+assert min_coins([1, 3, 4], 6) == 2
+assert min_coins([1, 5, 10, 25], 63) == 6      # 25 + 25 + 10 + 1 + 1 + 1
+```
+
+It runs in O(amount × number of coins) time and O(amount) space. For the US coin set the greedy answer happens to be optimal (such coin systems are called canonical), which is exactly why the greedy habit survives: it works on the examples people try first.
+
+</details>
+
+**21.5 ★★ Kruskal with union-find.** Run Kruskal's algorithm on this graph, processing edges in increasing weight. For each edge, say whether `find` puts its endpoints in the same set, and whether the edge is accepted or rejected.
+
+```
+Edges (weight: endpoints)
+1: A-B   2: B-C   3: A-C   4: C-D   5: B-D   6: D-E   7: C-E
+```
+
+What is the MST's total weight? How much work would the cycle check cost per edge without union-find?
+
+<details>
+<summary>Solution</summary>
+
+| Edge | Sets before | Same set? | Decision | Sets after |
+|------|-------------|-----------|----------|------------|
+| 1: A-B | {A} {B} {C} {D} {E} | no | accept | {A,B} {C} {D} {E} |
+| 2: B-C | {A,B} {C} {D} {E} | no | accept | {A,B,C} {D} {E} |
+| 3: A-C | {A,B,C} {D} {E} | yes | reject (cycle A-B-C) | unchanged |
+| 4: C-D | {A,B,C} {D} {E} | no | accept | {A,B,C,D} {E} |
+| 5: B-D | {A,B,C,D} {E} | yes | reject | unchanged |
+| 6: D-E | {A,B,C,D} {E} | no | accept | {A,B,C,D,E} |
+| 7: C-E | one set | yes | reject | unchanged |
+
+MST edges: A-B, B-C, C-D, D-E, total weight **1 + 2 + 4 + 6 = 13**. After the fourth acceptance (V − 1 = 4 edges) the algorithm could stop.
+
+Without union-find, each "would this create a cycle?" check is a traversal of the forest built so far, which has up to V − 1 edges: O(V) per edge, O(E·V) overall. With union-find (union by rank and path compression), each check is O(α(V)) amortized, so the sort, O(E log E), dominates.
+
+</details>
+
+**21.6 ★★ Sliding-window maximum.** 21.2 cites the monotonic deque. Implement `window_max(xs, k)`, which returns the maximum of every window of k consecutive elements in O(n) total. Trace it on `[1, 3, -1, -3, 5, 3, 6, 7]` with k = 3, showing the deque's values after each element. Then justify the O(n) bound.
+
+<details>
+<summary>Hint</summary>
+
+Store indices, not values, and keep their values decreasing from front to back. A new element makes every smaller element behind it useless forever.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+```python
+from collections import deque
+
+def window_max(xs, k):
+    dq = deque()                     # indices; their values decrease front to back
+    out = []
+    for i, x in enumerate(xs):
+        while dq and xs[dq[-1]] <= x:
+            dq.pop()                 # dominated: older and no larger than x
+        dq.append(i)
+        if dq[0] <= i - k:
+            dq.popleft()             # front has left the window
+        if i >= k - 1:
+            out.append(xs[dq[0]])
+    return out
+
+assert window_max([1, 3, -1, -3, 5, 3, 6, 7], 3) == [3, 3, 5, 5, 6, 7]
+```
+
+| i | x | Deque values after | Output |
+|---|---|--------------------|--------|
+| 0 | 1 | [1] | |
+| 1 | 3 | [3] (1 popped) | |
+| 2 | −1 | [3, −1] | 3 |
+| 3 | −3 | [3, −1, −3] | 3 |
+| 4 | 5 | [5] (−3, −1, 3 popped) | 5 |
+| 5 | 3 | [5, 3] | 5 |
+| 6 | 6 | [6] (3, 5 popped) | 6 |
+| 7 | 7 | [7] (6 popped) | 7 |
+
+**Why O(n):** each index is appended exactly once and removed at most once (from the back by a larger element, or from the front by leaving the window). So across the whole run there are at most n appends and n removals, even though a single step can pop many elements, as at i = 4. That is O(1) amortized per element. A popped element is safe to discard because the newer, larger x will be in every future window that the popped one would have been in.
+
+</details>
+
+**21.7 ★★★ Bitmask N-Queens.** 21.4 says bitmasks replace the three sets in `solve` for small n. Write `count_queens(n)` that counts *all* solutions using three integers: occupied columns, and the two diagonal directions shifted so that bit positions line up with the current row. Verify n = 8 gives 92. Explain why the diagonal masks shift by one bit per row.
+
+<details>
+<summary>Hint</summary>
+
+`free & -free` isolates the lowest set bit of `free`.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+```python
+def count_queens(n):
+    full = (1 << n) - 1                        # n ones: every column
+
+    def place(cols, d1, d2):
+        if cols == full:                       # one queen in every column: solved
+            return 1
+        total = 0
+        free = full & ~(cols | d1 | d2)        # columns not attacked in this row
+        while free:
+            bit = free & -free                 # lowest free column
+            free ^= bit                        # remove it from the candidates
+            total += place(cols | bit,
+                           ((d1 | bit) << 1) & full,
+                           (d2 | bit) >> 1)
+        return total
+
+    return place(0, 0, 0)
+
+assert [count_queens(n) for n in range(1, 11)] == [1, 0, 0, 2, 10, 4, 40, 92, 352, 724]
+```
+
+**Why the shifts.** A queen at column c attacks column c + 1 in the next row along one diagonal and column c − 1 along the other, then c + 2 and c − 2 a row later, and so on. Rather than store diagonal ids (`row − col`, `row + col` in the set version), the masks store *which columns in the current row* each diagonal family attacks. Moving down one row moves every attack one column over, which is a shift left by one for one family and right by one for the other. `& full` drops attacks that slide off the board; the right shift drops them automatically.
+
+**Why it is faster.** The conflict check that took three hash lookups per candidate column is one `~(cols | d1 | d2)` for the whole row, and the loop visits only the free columns instead of testing all n. Undo is free: each recursive call receives new integers, so there is nothing to remove afterwards. This is the 21.4 principle taken to its limit, where state is cheap enough to pass by value, so undo disappears.
+
+</details>
 
 ---
 

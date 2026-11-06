@@ -76,9 +76,9 @@ The **van Emde Boas layout** is the foundational trick. Take a complete binary t
 
 ```
 Tree:              Layout in memory:
-      1            [1 | 2 3 | 4 5 | 6 7 ...]
-     / \             ↑    ↑     ↑
-    2   3          top  sub1  sub2   ← each recursively vEB-laid-out
+      1            [1 | 2 4 5 | 3 6 7]
+     / \            ↑     ↑       ↑
+    2   3          top   sub1    sub2   ← each recursively vEB-laid-out
    /|   |\
   4 5   6 7
 ```
@@ -130,6 +130,168 @@ Alok Aggarwal and Jeffrey Vitter formalized the external memory model in their 1
 Cache-oblivious algorithms arrived much later. Harald Prokop's 1999 MIT master's thesis, supervised by Charles Leiserson, introduced the model and the van Emde Boas layout application, with the fuller treatment in Frigo, Leiserson, Prokop, and Ramachandran's FOCS 1999 paper. The layout itself is named for Peter van Emde Boas, who used the recursive halving idea in his 1975 priority queue: a structure solving an entirely different problem.
 
 The LSM tree came from Patrick O'Neil and colleagues in 1996, and sat relatively unused until Google's Bigtable (2006) made it the default architecture for write-heavy distributed storage.
+
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**16.1 ★ Count the I/Os.** An index holds n = 2³⁰ keys (about a billion) on disk, and a 4 KB page holds B = 256 keys. Using the table in Section 16.2, how many page reads does a lookup cost with (a) a balanced BST, one node per page; (b) binary search over a sorted array; (c) a B-tree with fanout 256? (d) How much memory would it take to cache the B-tree's top two levels, and how many reads does a lookup cost then?
+
+<details>
+<summary>Solution</summary>
+
+(a) A balanced BST has height log₂ 2³⁰ = **30**, and each level is a separate page: 30 reads.
+
+(b) Binary search narrows the range by half per probe, but once it is down to B keys the remaining probes stay in one page: about log₂(n/B) = log₂ 2²² = **22** reads.
+
+(c) log₂₅₆ 2³⁰ = 30/8 = 3.75, so the tree has **4** levels (256³ = 2²⁴ keys is too few; 256⁴ = 2³² is enough): 4 reads.
+
+(d) The top two levels are 1 + 256 = 257 pages, about **1 MB**. With them in memory, a lookup reads only the bottom two levels: **2** reads. This is why B-tree databases are fast in practice: the upper levels of every hot index sit in the buffer pool, and the cost of a lookup is one or two real I/Os. The same 257 pages would cache only the top 8 levels of the one-node-per-page BST (2⁸ − 1 = 255 pages), leaving 22 reads.
+
+</details>
+
+**16.2 ★★ External merge sort.** Sort N = 100 GB with M = 1 GB of memory and 1 MB blocks. (a) How many sorted runs does the first pass create? (b) How many merge passes does a multiway merge with fanout M/B need, and how many does a binary (two-way) merge need? (c) Compare the total data read and written. (d) Roughly how large could N be while still finishing in two passes?
+
+<details>
+<summary>Solution</summary>
+
+(a) Read 1 GB at a time, sort it in memory, write it out: **100 runs** of 1 GB.
+
+(b) Memory holds M/B = 1,000 one-block buffers. Keep one for output and the other 999 can each hold the current block of one run, so all 100 runs merge in **one pass**. A two-way merge halves the number of runs per pass: 100 → 50 → 25 → 13 → 7 → 4 → 2 → 1, which is ⌈log₂ 100⌉ = **7 passes**.
+
+(c) Every pass reads and writes all 100 GB, so it moves 200 GB.
+
+| Strategy | Passes (run formation + merges) | Data moved |
+|----------|----------------------------------|------------|
+| Multiway, fanout ~1,000 | 1 + 1 = 2 | 400 GB |
+| Two-way | 1 + 7 = 8 | 1.6 TB |
+
+At 500 MB/s of sequential throughput, that is about 13 minutes against about 53. The comparison counts are similar; the difference is entirely passes over the data, which is the point of the O((n/B) · log_(M/B)(n/B)) bound: here n/B = 100,000 blocks and log₁₀₀₀ 100,000 ≈ 1.7, so two passes.
+
+(d) One merge pass can combine up to about 999 runs of 1 GB, so N up to roughly **1 TB** sorts in two passes. A third pass multiplies that by another ~1,000, to about 1 PB. With a reasonable amount of memory, external sorting almost never needs more than three passes.
+
+</details>
+
+**16.3 ★★ The van Emde Boas layout by hand.** Number a complete binary tree of height 4 in level order (root 1, children of i are 2i and 2i + 1, leaves 8 to 15). (a) Write out its van Emde Boas layout, cutting so the top tree has height 2. (b) Memory is read in aligned blocks of 3 nodes. How many blocks does the search path 1 → 2 → 5 → 11 touch in the vEB layout, and how many in the plain level-order layout 1, 2, ..., 15?
+
+<details>
+<summary>Solution</summary>
+
+(a) The top tree is {1, 2, 3}. Below its leaves hang four bottom trees of height 2, rooted at 4, 5, 6 and 7, each stored as root then children:
+
+```
+[1 2 3 | 4 8 9 | 5 10 11 | 6 12 13 | 7 14 15]
+```
+
+(Each piece has height at most 2, so the recursion stops there.)
+
+(b) With blocks of 3 the vEB layout splits exactly into those five pieces:
+
+- vEB blocks: `[1 2 3] [4 8 9] [5 10 11] [6 12 13] [7 14 15]`. The path 1, 2, 5, 11 touches `[1 2 3]` and `[5 10 11]`: **2 blocks**.
+- Level-order blocks: `[1 2 3] [4 5 6] [7 8 9] [10 11 12] [13 14 15]`. The path touches `[1 2 3]`, `[4 5 6]` and `[10 11 12]`: **3 blocks**.
+
+Every root-to-leaf path costs 2 blocks in the vEB layout and 3 in level order. The difference is small at this size, but it is structural: in level order, the nodes on a path near the bottom are far apart because each level is twice as wide as the last, while the vEB layout keeps each small subtree, and therefore each short stretch of path, together.
+
+</details>
+
+**16.4 ★★ Predict the cache misses.** A 16384 × 16384 matrix of 8-byte doubles is stored row-major. A cache line holds 8 doubles, and the cache is an ideal fully associative LRU cache of 256 KB (4,096 lines). Count the misses for summing the matrix (a) row by row and (b) column by column. (c) Repeat (b) for a 2048 × 2048 matrix. What general rule does this show?
+
+<details>
+<summary>Hint</summary>
+
+In (b), the next column wants the neighbouring double in each line you just loaded. Is that line still in the cache when you come back for it?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) Row by row reads memory sequentially. Each line is loaded once and all 8 doubles in it are used: n²/8 = 2²⁸/8 = 2²⁵ ≈ **33.6 million misses**.
+
+(b) Walking down a column touches one double in each of 16,384 different lines (consecutive rows are 128 KB apart). The cache holds only 4,096 lines, so by the time the walk returns to the top for the next column, the line holding its neighbour was evicted long ago. Every access misses: n² = 2²⁸ ≈ **268 million misses**, 8 times as many as (a).
+
+(c) A 2048 × 2048 column walk touches 2,048 lines, which fits in the 4,096-line cache. They survive until the next 7 columns reuse them, so the column-wise sum also costs only n²/8 = 2¹⁹ ≈ 0.5 million misses, the same as row-wise.
+
+The rule: a traversal is cheap as long as its working set of blocks fits in memory, and falls off a cliff (here a factor of B = 8) the moment it does not. The RAM model sees both loop orders as identical O(n²). The I/O model predicts both the gap and where it starts. (Real caches are set-associative, and power-of-two strides map many rows to the same sets, so the cliff on actual hardware usually comes earlier than this ideal-cache count suggests. That is one more reason to traverse in storage order.)
+
+</details>
+
+**16.5 ★★ Design: B-tree or LSM tree?** Choose a storage engine for each workload and justify it. (a) An IoT platform ingesting 500,000 sensor readings per second, queried mostly as "the last hour of readings for device X". (b) A bank's account-balance table: small, frequent updates to existing rows, and point reads that must have predictable latency. (c) For workload (a), the per-run Bloom filters from Chapter 14 do almost nothing for the "last hour" query. Why?
+
+<details>
+<summary>Solution</summary>
+
+(a) **LSM tree.** The workload is overwhelmingly writes, and an LSM tree turns every write into a sequential append to a memtable flush, where a B-tree would pay a random page write for each one. Reads are recent and keyed by (device, time), so they mostly hit the newest runs, which are small and likely cached. The price is background compaction (write amplification and I/O you do not directly control) and higher space amplification, both acceptable for append-mostly data.
+
+(b) **B-tree.** Updates modify existing keys in place, and a point read is one root-to-leaf path, a predictable 1 to 2 I/Os with the upper levels cached. An LSM tree would leave several versions of hot accounts spread across runs until compaction, and a read may have to check several runs; compaction also introduces latency spikes. When predictable read latency matters more than write throughput, the B-tree's in-place update is the right trade.
+
+(c) A Bloom filter answers "is this exact key in this run?". A range query asks "does this run hold *any* key between t₁ and t₂ for device X?", which a membership filter cannot answer without testing every possible key in the range. So a range scan must consult every run whose key range overlaps the query. What helps instead is each run's min/max key metadata (skip runs whose range does not overlap) and, if keys share a prefix such as the device ID, a filter built on that prefix rather than on the full key, which is what RocksDB's prefix Bloom filters do.
+
+</details>
+
+**16.6 ★★★ Measure the vEB layout.** Write `veb_order(height)`, returning the level-order node numbers of a complete binary tree in van Emde Boas order (give the top tree the smaller half of the height). Then, for a tree of height 20 (about a million nodes) and aligned blocks of B = 16, 64 and 512 nodes, find the worst-case number of blocks on any root-to-leaf path, for both the vEB layout and the level-order layout. Compare with log_B n and explain the results.
+
+<details>
+<summary>Hint</summary>
+
+In level-order numbering, the leaves of a top tree of height t rooted at r are r · 2^(t−1) up to r · 2^(t−1) + 2^(t−1) − 1, and the bottom trees hang from their children. To find a path, walk up from a leaf with `node //= 2`.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+```python
+def veb_order(height, root=1):
+    """Level-order numbers (root = 1, children 2i and 2i+1) of a complete
+    binary tree of the given height, listed in van Emde Boas order."""
+    if height == 1:
+        return [root]
+    top_h = height // 2                   # top gets the smaller half
+    bottom_h = height - top_h
+    order = veb_order(top_h, root)
+    # The bottom subtrees hang below the top tree's leaves, left to right.
+    first_leaf = root << (top_h - 1)
+    for leaf in range(first_leaf, first_leaf + (1 << (top_h - 1))):
+        for child in (2 * leaf, 2 * leaf + 1):
+            order.extend(veb_order(bottom_h, child))
+    return order
+
+def blocks_on_path(position, leaf, block):
+    """Distinct blocks touched by the root-to-leaf path ending at `leaf`."""
+    seen = set()
+    node = leaf
+    while node >= 1:
+        seen.add(position[node] // block)
+        node //= 2
+    return len(seen)
+
+def worst_case(height, block, layout):
+    if layout == "veb":
+        order = veb_order(height)
+    else:
+        order = list(range(1, 2 ** height))   # level order
+    position = {node: i for i, node in enumerate(order)}
+    leaves = range(2 ** (height - 1), 2 ** height)
+    return max(blocks_on_path(position, leaf, block) for leaf in leaves)
+
+assert veb_order(3) == [1, 2, 4, 5, 3, 6, 7]
+assert veb_order(4) == [1, 2, 3, 4, 8, 9, 5, 10, 11, 6, 12, 13, 7, 14, 15]
+```
+
+Running `worst_case(20, B, layout)` (a few seconds in CPython):
+
+| B | log_B n (n ≈ 2²⁰) | vEB layout | Level order |
+|---|-------------------|------------|-------------|
+| 16 | 5.0 | 11 | 17 |
+| 64 | 3.3 | 6 | 15 |
+| 512 | 2.2 | 5 | 12 |
+
+**Level order** costs h − log₂ B + 1 blocks: the top log₂ B levels share the first block, and then every level below costs a new block, because level d occupies 2^d consecutive slots and the path jumps further each time. That is Θ(log(n/B)), the same as binary search on a sorted array; for n much larger than B it is close to log₂ n, which is why Section 16.3's table lists it as O(log n). Larger blocks barely help it: going from B = 16 to B = 512 saves only 5 blocks.
+
+**The vEB layout** tracks log_B n within a small constant factor, and it improves steadily as B grows, without the code ever being told B. The constant comes from the argument in Section 16.3: the path crosses subtrees whose height is between ½ log₂ B and log₂ B, so it crosses at most about 2 log_B n of them, and an unaligned subtree of at most B nodes can straddle 2 blocks. A B-tree with node size exactly B would do better on its one tuned level (5, 4 and 3 levels here), which is the practical case for B-trees made in Section 16.3: the oblivious layout is within a constant of optimal at every level of the hierarchy at once, but on any single level a tuned structure beats it.
+
+</details>
 
 ---
 

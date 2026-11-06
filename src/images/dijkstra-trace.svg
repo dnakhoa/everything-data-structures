@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 360" role="img" aria-label="Dijkstra worked example: a weighted directed graph with the shortest-path tree from S highlighted" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .n    { fill: none; stroke: currentColor; stroke-width: 2; }
+    .src  { fill: none; stroke: #3b82f6; stroke-width: 2.5; }
+    .t    { fill: currentColor; font: 600 15px system-ui, sans-serif; text-anchor: middle; }
+    .d    { fill: #3b82f6; font: 600 12px system-ui, sans-serif; text-anchor: middle; }
+    .w    { fill: currentColor; font: 13px system-ui, sans-serif; text-anchor: middle; }
+    .tree { stroke: #3b82f6; stroke-width: 2.6; fill: none; }
+    .off  { stroke: currentColor; stroke-width: 1.6; fill: none; opacity: .45; stroke-dasharray: 6 5; }
+    .note { fill: currentColor; font: 12px system-ui, sans-serif; opacity: .75; }
+  </style>
+  <defs>
+    <marker id="dj-tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="currentColor" opacity=".55"/></marker>
+    <marker id="dj-tip-tree" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3b82f6"/></marker>
+  </defs>
+  <line class="off" x1="89.2" y1="159.3" x2="228.1" y2="82.1" marker-end="url(#dj-tip)"/>
+  <text class="w" x="166.8" y="136.2">4</text>
+  <line class="tree" x1="89.2" y1="180.7" x2="228.1" y2="257.9" marker-end="url(#dj-tip-tree)"/>
+  <text class="w" x="153.2" y="236.2">1</text>
+  <line class="tree" x1="250.0" y1="248.0" x2="250.0" y2="95.0" marker-end="url(#dj-tip-tree)"/>
+  <text class="w" x="264.0" y="174.0">2</text>
+  <line class="tree" x1="269.2" y1="80.7" x2="408.1" y2="157.9" marker-end="url(#dj-tip-tree)"/>
+  <text class="w" x="333.2" y="136.2">1</text>
+  <line class="off" x1="269.2" y1="259.3" x2="408.1" y2="182.1" marker-end="url(#dj-tip)"/>
+  <text class="w" x="346.8" y="236.2">5</text>
+  <line class="tree" x1="452.0" y1="170.0" x2="585.0" y2="170.0" marker-end="url(#dj-tip-tree)"/>
+  <text class="w" x="520.0" y="188.0">3</text>
+  <circle class="src" cx="70" cy="170" r="22"/><text class="t" x="70" y="175">S</text>
+  <text class="d" x="70" y="210">dist 0</text>
+  <circle class="n" cx="250" cy="70" r="22"/><text class="t" x="250" y="75">A</text>
+  <text class="d" x="250" y="38">dist 3</text>
+  <circle class="n" cx="250" cy="270" r="22"/><text class="t" x="250" y="275">B</text>
+  <text class="d" x="250" y="310">dist 1</text>
+  <circle class="n" cx="430" cy="170" r="22"/><text class="t" x="430" y="175">C</text>
+  <text class="d" x="430" y="210">dist 4</text>
+  <circle class="n" cx="610" cy="170" r="22"/><text class="t" x="610" y="175">D</text>
+  <text class="d" x="610" y="210">dist 7</text>
+  <line class="tree" x1="40" y1="335" x2="80" y2="335"/><text class="note" x="90" y="339">shortest-path tree (parent pointers)</text>
+  <line class="off" x1="360" y1="335" x2="400" y2="335"/><text class="note" x="410" y="339">relaxed, but not on a shortest path</text>
+</svg>

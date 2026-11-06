@@ -9,7 +9,7 @@ A complete, free course on data structures, from asymptotic analysis and pointer
 
 **📖 Read it online: [dnakhoa.github.io/everything-data-structures](https://dnakhoa.github.io/everything-data-structures/)**
 
-Five volumes · 31 chapters · 4 appendices · ~55,000 words · Python, C, C++, Java and Go examples.
+Five volumes · 31 chapters · 4 appendices · ~155,000 words · 225 exercises with worked solutions · Python, C, C++, Java and Go examples.
 
 Written by [Ngoc Anh Khoa Doan](https://github.com/dnakhoa), with the editorial help of Claude.
 
@@ -21,7 +21,7 @@ Also by the author: **[Frontier LLM Engineering](https://github.com/dnakhoa/fron
 
 Most data structure resources stop at red-black trees. This one keeps going, through competitive-programming machinery (link-cut trees, wavelet trees, Mo's algorithm), through research-grade structures (FM-indexes, succinct trees, fractional cascading), and out the other side into system design, where the central claim of Volume V is that **a routing table is a trie, consistent hashing is a hash ring, and a message queue is a persistent FIFO**. Systems are data structures composed at scale.
 
-Every chapter covers the same ground: the idea, the invariants, the operations with complexity analysis, working code, real-world usage, and the historical context of who invented it and why.
+Every chapter covers the same ground: the idea, the invariants, the operations with complexity analysis, working code, real-world usage, and the historical context of who invented it and why. Every chapter then ends with an exercise set (★ check your understanding, ★★ apply it, ★★★ stretch), each with a folded worked solution and, for the harder ones, a hint.
 
 ---
 
@@ -54,7 +54,7 @@ The structures that actually come up, plus the judgment to pick between them.
 Track 1, then:
 
 - [Chapter 8: Self-Balancing Trees](src/volume-1/ch08-self-balancing-trees.md). AVL, red-black, splay, treaps
-- [Chapter 11: Graphs](src/volume-2/ch11-graphs-modeling-relationships.md). BFS/DFS, topological sort, MST, shortest paths, union-find
+- [Chapter 11: Graphs](src/volume-2/ch11-graphs-modeling-relationships.md). BFS/DFS, cycle detection, topological sort, strongly connected components, union-find, MST, Dijkstra, Bellman-Ford and Floyd-Warshall
 - [Chapter 13: String Data Structures](src/volume-2/ch13-string-data-structures.md). Tries, suffix arrays
 - [Chapter 14: Probabilistic Data Structures](src/volume-3/ch14-probabilistic-data-structures.md). Bloom filters come up constantly
 - [Chapter 25: Complete Selection Guide](src/volume-4/ch25-complete-selection-guide-and-complexity-reference.md). The decision matrix

@@ -14,6 +14,8 @@ Every page on [the site](https://dnakhoa.github.io/everything-data-structures/) 
 
 **Worked examples.** Concrete traces through an algorithm, with real numbers, tend to teach better than prose.
 
+**Exercises.** Every chapter ends with a `## Exercises` section. New exercises should follow the existing format: a bold number and difficulty (`**12.8 ★★ Title.**`), the question, then a `<details>` block with `<summary>Solution</summary>` (and optionally one for a hint before it). Leave a blank line after `<summary>...</summary>` and before `</details>`, or the Markdown inside won't render; CI checks this, and checks that exercises are numbered in order. Solutions should show the working, not just the answer, and any code in them should actually run.
+
 **Real-world usage.** If you know a production system that uses a structure in a way the book doesn't mention, that's worth adding, especially with a link to source or a design doc.
 
 ## What to check before submitting

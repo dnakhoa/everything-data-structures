@@ -158,6 +158,226 @@ Herlihy's 1991 paper "Wait-Free Synchronization" is the theoretical foundation: 
 
 Maged Michael and Michael Scott published their queue in 1996; it went into `java.util.concurrent` and has been the reference lock-free FIFO ever since. Michael followed with hazard pointers in 2004, addressing the reclamation problem. Paul McKenney's RCU work brought the read-mostly approach into the Linux kernel from 2002 onward, where it is now used in tens of thousands of places.
 
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**18.1 ★ Classify the progress guarantee.** For each, say whether it is blocking, lock-free (but not wait-free), or wait-free, using the table in 18.1.
+
+1. A counter protected by a mutex.
+2. `lock_free_push` from 18.2.
+3. A spinlock built from CAS: `int zero = 0; while (!atomic_compare_exchange_weak(&lock, &zero, 1)) { zero = 0; }`, followed by a critical section and `atomic_store(&lock, 0)`.
+4. An RCU reader that loads the current pointer and reads through it.
+
+<details>
+<summary>Solution</summary>
+
+1. **Blocking.** If the holder is descheduled inside the critical section, every other thread waits.
+2. **Lock-free, not wait-free.** A failed CAS means another thread's push succeeded, so the system as a whole progresses. But a single thread can lose the race on every attempt, so its own step count is unbounded.
+3. **Blocking.** Using CAS does not make an algorithm lock-free. A thread that acquires the spinlock and is then preempted stalls every other thread, which spins forever. The progress guarantee is a property of the algorithm, not of the instructions it uses.
+4. **Wait-free.** The reader performs a fixed number of its own steps (a load and a dereference) and never retries or waits, regardless of what writers do. Writers are a different story: they wait for a grace period.
+
+</details>
+
+**18.2 ★ Lost update, then fixed.** The stack is `head → X → Y`. Thread A calls `push(P)` and thread B calls `push(Q)` using the unsynchronized `push` from 18.1. They interleave as A(1), B(1), B(2), A(2). Draw the final list. Then replay the same scheduling idea with `lock_free_push` from 18.2: A loads `old_head` and sets `P->next`, B runs its whole push, then A attempts its CAS. What happens, and what is the final list?
+
+<details>
+<summary>Solution</summary>
+
+Unsynchronized:
+
+| Step | Effect | State |
+|------|--------|-------|
+| A(1) | `P->next = head` (X) | P → X |
+| B(1) | `Q->next = head` (X) | Q → X |
+| B(2) | `head = Q` | head → Q → X → Y |
+| A(2) | `head = P` | head → P → X → Y |
+
+Final list: **P → X → Y**. Q still points at X but nothing points at Q, so B's push is lost.
+
+With `lock_free_push`: A loads `old_head = X` and sets `P->next = X`. B completes its push, so `head = Q`. A's CAS compares `head` (Q) with `old_head` (X), fails, and writes Q into `old_head`. A loops: `P->next = Q`, and the CAS now succeeds. Final list: **P → Q → X → Y**. Both pushes survive, and A paid one extra loop iteration.
+
+</details>
+
+**18.3 ★★ ABA, step by step.** Here is the matching lock-free pop (C11, ignoring memory reclamation):
+
+```c
+Node *pop(_Atomic(Node*) *head) {
+    Node *old = atomic_load(head);
+    while (old && !atomic_compare_exchange_weak(head, &old, old->next))
+        ;
+    return old;
+}
+```
+
+The stack is `A → B → C`. Thread 1 calls `pop`, loads `old = A`, evaluates `old->next` (B) as the CAS argument, and is preempted just before the CAS executes. Thread 2 then pops A, pops B and frees B, and pushes A back (reusing the node). (a) What does the stack look like after thread 2? (b) What happens when thread 1's CAS runs? (c) Show how a tagged pointer, where the tag increments on every successful CAS, changes the outcome. (d) Is there a problem tagging does *not* fix?
+
+<details>
+<summary>Hint</summary>
+
+The CAS compares only the pointer value. After thread 2 finishes, is `head` equal to A?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) After thread 2: popping A leaves `B → C`, popping B leaves `C`, pushing A sets `A->next = C`. The stack is **A → C**, and B's memory has been freed.
+
+(b) Thread 1's CAS compares `head` (A) with `old` (A). They match, so it installs its stale argument B: **head now points at freed memory**, and C has dropped out of the stack. The next pop dereferences a dangling pointer.
+
+(c) With tags, `head` is a (pointer, tag) pair swapped by a double-width CAS:
+
+| Event | head |
+|-------|------|
+| Initial | (A, 0) |
+| Thread 1 reads | (A, 0) |
+| Thread 2 pops A | (B, 1) |
+| Thread 2 pops B | (C, 2) |
+| Thread 2 pushes A | (A, 3) |
+| Thread 1 CAS expects (A, 0) | fails, reloads (A, 3) |
+| Thread 1 retries with next = C | (C, 4), returns A |
+
+The final stack is **C**, which is correct: A was popped twice and pushed once, B was popped once.
+
+(d) Tagging prevents the wrong CAS, but thread 1 still read `old->next` from a node that another thread could have freed. If A itself had been freed and returned to the operating system, that read is a use-after-free even though the CAS would later fail. Preventing that requires a reclamation scheme (hazard pointers, epochs, or a garbage collector), which is why 18.2 calls reclamation the hard part.
+
+</details>
+
+**18.4 ★★ Helping in the Michael–Scott queue.** The queue holds only its dummy node D: `D->next == NULL` and `head == tail == D`. Thread A calls `enqueue(X)`. Its CAS on `D->next` succeeds, and A is preempted before its final CAS on `q->tail`. Thread B now calls `enqueue(Y)` and runs to completion. Trace each iteration of B's loop, then say what happens when A resumes. What is the final state? Why must B help rather than wait for A?
+
+<details>
+<summary>Solution</summary>
+
+State when A stops: `D → X`, `tail == D` (lagging by one).
+
+**B, iteration 1:** `tail = D`, `next = D->next = X`. The tail re-check passes. Since `next != NULL`, B performs A's unfinished step: `CAS(&q->tail, D, X)` succeeds, `tail == X`. `continue`.
+
+**B, iteration 2:** `tail = X`, `next = NULL`. B's `CAS(&X->next, NULL, Y)` succeeds, linking Y. B's `CAS(&q->tail, X, Y)` succeeds. B returns.
+
+**A resumes:** it executes `CAS(&q->tail, D, X)`. `q->tail` is Y, not D, so the CAS fails, and A returns. That failure is harmless because the work it would have done was already done by B.
+
+Final state: `D → X → Y`, `head == D`, `tail == Y`. The FIFO order is X then Y, matching the order in which the linking CASes succeeded.
+
+If B waited for A to advance the tail, then a preempted, page-faulting, or crashed A would stall B indefinitely, and the queue would be blocking: exactly the failure mode lock-freedom exists to rule out. Helping means any thread can finish any other thread's half-done operation, so no thread ever depends on another being scheduled. (`compare_exchange_weak` may also fail spuriously; in every branch a failure just leads to a retry or leaves the tail lagging for the next operation to repair, so the algorithm stays correct.)
+
+</details>
+
+**18.5 ★★ Lock striping by the numbers.** A hash map has 256 buckets guarded by 16 locks, with bucket i under lock `i mod 16`, as in 18.3.
+
+1. Which buckets share a lock with bucket 37?
+2. Two threads each write one key at the same moment, with keys hashing uniformly. What is the probability they contend for a lock, under a global lock, under 16-way striping, and under per-bucket locking?
+3. With 8 threads writing simultaneously, what is the probability that at least two of them contend under 16-way striping?
+4. Why must a resize from 256 to 512 buckets acquire all 16 locks?
+
+<details>
+<summary>Solution</summary>
+
+1. 37 mod 16 = 5, so lock 5 guards buckets 5, 21, 37, 53, ..., 245: the 16 buckets congruent to 5 mod 16.
+2. Global lock: 1 (they always contend). Striping: 1/16 ≈ 6%. Per-bucket: 1/256 ≈ 0.4%.
+3. This is the birthday problem. The chance all 8 land on distinct stripes is (16 × 15 × 14 × 13 × 12 × 11 × 10 × 9) / 16⁸ ≈ 0.121, so the chance of at least one collision is about **0.88**. Sixteen stripes sounds like a lot until eight writers are active. In practice contention also depends on how long the lock is held, which is why short critical sections matter as much as stripe count.
+4. A resize reads every bucket and moves entries to buckets that are guarded by different stripes. If it held only some locks, a writer holding another stripe could insert into a bucket the resize has already copied, and that write would be lost when the old table is discarded. Holding all 16 stops the world for the duration of the resize, which is exactly the problem split-ordered lists were invented to avoid.
+
+</details>
+
+**18.6 ★★ Design: a read-mostly configuration map.** A service has 32 worker threads that look up configuration values about a million times per second in total. One background thread reloads the whole configuration once a minute. Choose among a single mutex around a hash map, `ConcurrentHashMap`, and an immutable map published through an atomic pointer (the RCU style from 18.3, using the persistent structures from Chapter 17). Justify the choice and state when it would be wrong.
+
+<details>
+<summary>Solution</summary>
+
+Use the **immutable map behind an atomic pointer**. Readers do one acquire load of the pointer and then read an ordinary immutable map with no locks, no CAS, and no shared writes, so the 32 threads never touch a common cache line except the pointer itself, which is read-only between reloads. The writer builds a complete new map off to the side and publishes it with one release store. Old maps are reclaimed by the garbage collector or after an RCU grace period.
+
+It also gives a property the other two lack: a reader that loads the pointer once sees a **consistent snapshot** of every key. With `ConcurrentHashMap`, a reader looking up two related keys during a reload can see one old value and one new.
+
+The cost is on the write side: each update copies the map (O(n), or O(log n) per changed key with a HAMT). Once a minute, that is negligible.
+
+- A **single mutex** serializes every lookup across 32 threads. Correct, and the worst option here.
+- **`ConcurrentHashMap`** works and has lock-free reads, but buys fine-grained write concurrency this workload never uses, and loses snapshot consistency.
+
+The choice flips if writes become frequent, for example a per-request counter in the same map. Copying the whole map on every write would then dominate, and `ConcurrentHashMap` (or sharding the counters per thread) is the right answer.
+
+</details>
+
+**18.7 ★★★ A tiny model checker.** 18.4 says reasoning alone is not enough; model checking explores every interleaving. Write `outcomes(n_threads, increments)` that returns every possible final value of a shared counter when each thread performs `increments` non-atomic increments, each made of two steps: `r = counter` (load) then `counter = r + 1` (store). Report the results for (2, 1), (2, 2), and (2, 3). Explain why 1 is impossible with two increments per thread. Then change the increment to a CAS retry loop (load r, then `CAS(counter, r, r + 1)`, retry on failure) and confirm only the correct total is reachable.
+
+<details>
+<summary>Hint</summary>
+
+Recursively try every runnable thread as the next one to take a step. The state is the counter, each thread's program counter, and each thread's register.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+```python
+def outcomes(n_threads, increments):
+    """Every final counter value reachable when each thread runs
+    `increments` copies of: r = counter (load), counter = r + 1 (store)."""
+    results = set()
+
+    def explore(counter, pcs, regs):
+        # pcs[t] counts thread t's steps: even = about to load, odd = about to store
+        if all(pc == 2 * increments for pc in pcs):
+            results.add(counter)
+            return
+        for t in range(n_threads):
+            pc = pcs[t]
+            if pc == 2 * increments:
+                continue                                   # thread t is done
+            new_pcs = pcs[:t] + (pc + 1,) + pcs[t + 1:]
+            if pc % 2 == 0:                                # load
+                explore(counter, new_pcs, regs[:t] + (counter,) + regs[t + 1:])
+            else:                                          # store
+                explore(regs[t] + 1, new_pcs, regs)
+
+    explore(0, (0,) * n_threads, (0,) * n_threads)
+    return sorted(results)
+
+assert outcomes(2, 1) == [1, 2]
+assert outcomes(2, 2) == [2, 3, 4]
+assert outcomes(2, 3) == [2, 3, 4, 5, 6]
+```
+
+For two threads with 2 or 3 increments each, every value from 2 up to the correct total is reachable. The low end is the surprising part: six increments can produce 2.
+
+**Why not 1 with two increments each?** The final value is whatever the last store wrote, which is one more than some value loaded by the thread that made it. Suppose thread T makes the last store. That is T's second store, and T's second load happened after T's first store had written a value of at least 1. Every store writes at least 1, so the counter is never 0 again after that point, and T's second load returns at least 1. The last store therefore writes at least 2.
+
+The CAS version: the store step only succeeds if the counter still holds the loaded value, and a failure sends the thread back to load.
+
+```python
+def outcomes_cas(n_threads, increments):
+    results = set()
+
+    def explore(counter, pcs, regs, done):
+        if all(d == increments for d in done):
+            results.add(counter)
+            return
+        for t in range(n_threads):
+            if done[t] == increments:
+                continue
+            if pcs[t] == 0:                                # load
+                explore(counter, pcs[:t] + (1,) + pcs[t + 1:],
+                        regs[:t] + (counter,) + regs[t + 1:], done)
+            elif counter == regs[t]:                       # CAS succeeds
+                explore(counter + 1, pcs[:t] + (0,) + pcs[t + 1:], regs,
+                        done[:t] + (done[t] + 1,) + done[t + 1:])
+            else:                                          # CAS fails: retry
+                explore(counter, pcs[:t] + (0,) + pcs[t + 1:], regs, done)
+
+    explore(0, (0,) * n_threads, (0,) * n_threads, (0,) * n_threads)
+    return sorted(results)
+
+assert outcomes_cas(2, 2) == [4]
+assert outcomes_cas(3, 1) == [3]
+```
+
+Every interleaving now ends at n × k. The search also terminates, even though a CAS loop can retry: a CAS fails only when some other thread's CAS succeeded since the load, and the total number of successes is bounded. That is lock-freedom in miniature: retries happen, but only because the system made progress.
+
+Real model checkers such as `loom` and JCStress do this same exhaustive (or systematically sampled) exploration, plus the reorderings that weak memory models allow, which this sketch ignores.
+
+</details>
+
 ---
 
 ## Where this connects

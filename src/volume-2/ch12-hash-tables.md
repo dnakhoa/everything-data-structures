@@ -281,6 +281,272 @@ The first published description is Arnold Dumey's in 1956, though Hans Peter Luh
 
 Donald Knuth's analysis in *The Art of Computer Programming* Volume 3 (1973) established the mathematics of both methods and remains the standard reference. Carter and Wegman introduced universal hashing in 1979, which turned adversarial resistance from a hope into a theorem, and Fredman, Komlós, and Szemerédi gave the first O(1) worst-case scheme in 1984. Pagh and Rodler's cuckoo hashing (2001) achieved the same worst-case guarantee with a far simpler structure.
 
+## Exercises
+
+Difficulty: ★ check your understanding · ★★ apply it · ★★★ stretch.
+
+**12.1 ★ Trace linear probing.** A table has m = 11 slots, h(k) = k mod 11, and uses linear probing. Insert the keys 22, 1, 13, 11, 24, 33 in that order. Show the final table and the number of probes each insertion took. Then count the probes for an unsuccessful search for 44. For comparison, how many key comparisons would the same search cost in a chained table with the same hash function?
+
+<details>
+<summary>Solution</summary>
+
+| Key | h(k) | Slots probed | Lands in | Probes |
+|-----|------|--------------|----------|--------|
+| 22 | 0 | 0 | 0 | 1 |
+| 1 | 1 | 1 | 1 | 1 |
+| 13 | 2 | 2 | 2 | 1 |
+| 11 | 0 | 0, 1, 2, 3 | 3 | 4 |
+| 24 | 2 | 2, 3, 4 | 4 | 3 |
+| 33 | 0 | 0, 1, 2, 3, 4, 5 | 5 | 6 |
+
+Final table: `[22, 1, 13, 11, 24, 33, _, _, _, _, _]`.
+
+Searching for 44 starts at 44 mod 11 = 0 and must walk the whole run 0..5 before reaching the empty slot 6: **7 probes**, to learn that the key is absent.
+
+With chaining, bucket 0 holds only the keys that hash to 0 (22, 11, 33), so the search costs 3 comparisons. The difference is primary clustering: keys hashing to 0, 1 and 2 merged into a single run, and every search that lands anywhere in that run pays for all of it. Only 6 of 11 slots are full (α ≈ 0.55), yet this search already costs 7 probes.
+
+</details>
+
+**12.2 ★ Why not a power of two?** The keys are 16 aligned addresses: 4096, 4160, 4224, ..., 4096 + 64 × 15 (consecutive multiples of 64). (a) How many distinct buckets does h(k) = k mod 16 use? (b) How many does h(k) = k mod 17 use? (c) Java's `HashMap` computes `h ^ (h >>> 16)` before masking to a power-of-two size. Does that rescue these keys in a 16-slot table?
+
+<details>
+<summary>Hint</summary>
+
+Write 64 in binary. For (b), ask whether 64 mod 17 shares a factor with 17.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) **One.** Every key is a multiple of 64, so its low 6 bits are zero, and `k mod 16` reads only the low 4 bits. All 16 keys land in bucket 0, and every operation is a scan of one 16-long chain.
+
+(b) **Sixteen, all different.** The keys are 4096 + 64i. Modulo 17, the step 64 is 13, and since 17 is prime, multiples of 13 cycle through every residue before repeating. Sixteen consecutive steps therefore hit sixteen distinct buckets (in fact every residue except 3).
+
+(c) **No.** The spreader XORs the high 16 bits into the low 16, but every key here is below 2¹⁶, so `h >>> 16` is 0 and the XOR changes nothing. The keys still differ only in bits 6 to 9, and a 16-slot mask reads bits 0 to 3. The spreader helps keys that differ in their *high* half; it does nothing for keys that differ only in middle bits. (Java's fallback for this case is the one described in Section 12.3: the overlong chain becomes a red-black tree.)
+
+</details>
+
+**12.3 ★★ Tombstones by hand.** Using the `HashTable` from Section 12.4 with capacity 8 and integer keys (in CPython, `hash(k) == k` for small non-negative integers), run:
+
+```python
+t = HashTable(8)
+t[3] = "a"
+t[11] = "b"
+t[19] = "c"
+del t[11]
+t[27] = "d"
+```
+
+(a) Show the key array after the three inserts. (b) Show it after the delete, and what `t[19]` would do if `__delitem__` wrote `_EMPTY` instead of `_DELETED`. (c) Where does 27 go, and what are `_count` and `_used` at the end?
+
+<details>
+<summary>Hint</summary>
+
+3, 11, 19 and 27 all hash to slot 3. Follow `first_tombstone` through `__setitem__`.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) All three keys hash to 3 mod 8 = 3, so linear probing places them in slots 3, 4, 5:
+
+```
+slot:  0  1  2  3  4   5   6  7
+keys:  E  E  E  3  11  19  E  E      E = _EMPTY
+```
+
+(b) Deleting 11 writes a tombstone into slot 4:
+
+```
+slot:  0  1  2  3  4  5   6  7
+keys:  E  E  E  3  T  19  E  E       T = _DELETED
+```
+
+`t[19]` probes 3 (key 3, not a match), 4 (tombstone, keep going), 5 (match). If the delete had written `_EMPTY`, the probe would stop at slot 4 and raise `KeyError(19)` even though 19 is sitting in slot 5. That is the bug the tombstone exists to prevent.
+
+(c) Inserting 27 probes slot 3 (key 3, no match), slot 4 (tombstone: `first_tombstone = 4`), slot 5 (key 19, no match), slot 6 (`_EMPTY`). It stops there because it has now proven 27 is not already present, then writes 27 into the remembered tombstone at slot 4, not into slot 6:
+
+```
+slot:  0  1  2  3  4   5   6  7
+keys:  E  E  E  3  27  19  E  E
+```
+
+`_count` is 3 (live keys 3, 27, 19). `_used` is also 3: it went to 3 after the inserts, stayed at 3 on the delete (the tombstone still occupies a slot), and stayed at 3 on the final insert because it reused a slot that was already counted.
+
+</details>
+
+**12.4 ★★ Find the bug.** This class is meant to make usernames case-insensitive. What does the snippet print, and why? Fix it.
+
+```python
+class Username:
+    def __init__(self, name):
+        self.name = name
+
+    def __eq__(self, other):
+        return self.name.lower() == other.name.lower()
+
+    def __hash__(self):
+        return hash(self.name)
+
+users = {Username("Alice"): 1}
+print(Username("alice") in users)
+```
+
+<details>
+<summary>Solution</summary>
+
+It prints `False`, even though `Username("Alice") == Username("alice")` is `True`.
+
+This is the "equal keys must hash equally" rule from Section 12.2. `__hash__` uses the raw name, so `"Alice"` and `"alice"` get unrelated hashes and the lookup goes to a different slot from the one the entry was stored in. The dictionary never gets as far as calling `__eq__`. (CPython also compares stored full hash values before calling `__eq__`, so even an accidental slot collision would not save it.)
+
+The fix is to hash exactly what equality compares:
+
+```python
+class Username:
+    def __init__(self, name):
+        self.name = name
+
+    def __eq__(self, other):
+        return self.name.lower() == other.name.lower()
+
+    def __hash__(self):
+        return hash(self.name.lower())
+```
+
+The general rule: `__hash__` may use *less* information than `__eq__` (that only adds collisions), but never information that `__eq__` ignores. Python partly enforces this by setting `__hash__ = None` when a class defines `__eq__` alone, which makes instances unhashable rather than silently wrong; overriding both, as here, bypasses that safety net.
+
+</details>
+
+**12.5 ★★ Clusters feed on themselves.** A linear-probing table has m = 10 slots, of which slots 2, 3, 4, 5 and 8 are occupied. The next key's hash is uniform over 0..9. For each empty slot, what is the probability that the new key ends up there? What does this say about the claim that "longer runs are more likely to be extended"?
+
+<details>
+<summary>Hint</summary>
+
+A key lands in the first empty slot at or after its hash position. Which hash values lead to slot 6?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+A key with hash h goes to the first empty slot at or after h (wrapping around).
+
+| Empty slot | Hash values that land there | Probability |
+|------------|-----------------------------|-------------|
+| 0 | 0 | 1/10 |
+| 1 | 1 | 1/10 |
+| 6 | 2, 3, 4, 5, 6 | 5/10 |
+| 7 | 7 | 1/10 |
+| 9 | 8, 9 | 2/10 |
+
+The probabilities sum to 1. The slot just past the run of length 4 catches half of all insertions, because every key that hashes anywhere into the run slides to its end. In general, the empty slot after a run of length L is hit with probability (L + 1)/m. Once slot 6 fills, the run becomes 2..6 and slot 7 catches 6/10 of the next insertions, so the run's capture probability grows with every key it absorbs. That positive feedback is primary clustering, and it is why probe counts rise non-linearly as α grows.
+
+</details>
+
+**12.6 ★★ Build the LRU cache.** Section 12.6 describes an LRU cache as a hash table pointing into a doubly linked list. Implement `LRUCache(capacity)` with `get(key)` (return the value or `None`, and mark the key most recently used) and `put(key, value)` (insert or update, evicting the least recently used key when full). Both must be O(1). Do not use `OrderedDict`.
+
+<details>
+<summary>Hint</summary>
+
+Sentinel head and tail nodes remove every special case for an empty list. When you evict the tail node you must also delete it from the dictionary, so the node has to remember its key.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+```python
+class _Node:
+    __slots__ = ("key", "value", "prev", "next")
+
+    def __init__(self, key=None, value=None):
+        self.key, self.value = key, value
+        self.prev = self.next = None
+
+class LRUCache:
+    def __init__(self, capacity):
+        self.capacity = capacity
+        self.map = {}                      # key -> _Node
+        self.head = _Node()                # sentinel: most recent side
+        self.tail = _Node()                # sentinel: least recent side
+        self.head.next, self.tail.prev = self.tail, self.head
+
+    def _unlink(self, node):
+        node.prev.next, node.next.prev = node.next, node.prev
+
+    def _push_front(self, node):
+        node.prev, node.next = self.head, self.head.next
+        self.head.next.prev = node
+        self.head.next = node
+
+    def get(self, key):
+        node = self.map.get(key)
+        if node is None:
+            return None
+        self._unlink(node)                 # O(1): the hash gave us the node
+        self._push_front(node)
+        return node.value
+
+    def put(self, key, value):
+        node = self.map.get(key)
+        if node is not None:
+            node.value = value
+            self._unlink(node)
+            self._push_front(node)
+            return
+        if len(self.map) == self.capacity:
+            lru = self.tail.prev           # least recently used
+            self._unlink(lru)
+            del self.map[lru.key]          # why the node stores its key
+        node = _Node(key, value)
+        self.map[key] = node
+        self._push_front(node)
+
+c = LRUCache(2)
+c.put("a", 1)
+c.put("b", 2)
+assert c.get("a") == 1          # order now: a, b
+c.put("c", 3)                   # evicts b
+assert c.get("b") is None
+assert c.get("a") == 1 and c.get("c") == 3
+```
+
+Every operation is one dictionary operation (O(1) average) plus a constant number of pointer updates. Neither structure alone could do this: the dictionary cannot find the oldest entry without a scan, and the list cannot find a key without a scan. The list must be *doubly* linked because `_unlink` needs the predecessor, and the only handle we have is the node itself.
+
+</details>
+
+**12.7 ★★★ Why FKS fits in O(n) space.** Assume a universal family: for any two distinct keys, a randomly chosen function into m slots makes them collide with probability at most 1/m. (a) Show that hashing a bucket's b keys into a table of size b² is collision-free with probability greater than ½. (b) The first level hashes all n keys into m = n buckets, giving bucket sizes b₁, ..., bₙ. Show that E[Σ bᵢ²] < 2n, and explain how this yields O(n) total space with an expected constant number of retries.
+
+<details>
+<summary>Hint</summary>
+
+Count colliding *pairs* and use Markov's inequality, Pr[X ≥ t] ≤ E[X]/t for non-negative X. For (b), note that b² = b + 2 · C(b, 2).
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) Let X be the number of pairs of keys that collide. There are C(b, 2) = b(b − 1)/2 pairs, each colliding with probability at most 1/b², so
+
+E[X] ≤ b(b − 1) / (2b²) = (b − 1) / (2b) < ½.
+
+X is a non-negative integer, so by Markov, Pr[X ≥ 1] ≤ E[X] < ½. The table is collision-free with probability greater than ½, and the expected number of random functions tried before finding a good one is less than 2.
+
+(b) For each bucket, bᵢ² = bᵢ + 2 · C(bᵢ, 2), and C(bᵢ, 2) counts the pairs that collided into bucket i. Summing over buckets:
+
+Σ bᵢ² = n + 2C, where C is the total number of colliding pairs at the first level.
+
+There are C(n, 2) pairs, each colliding with probability at most 1/n, so E[C] ≤ (n − 1)/2 and
+
+E[Σ bᵢ²] ≤ n + (n − 1) < 2n.
+
+By Markov again, Pr[Σ bᵢ² ≥ 4n] < ½. So the construction picks a first-level function, checks whether Σ bᵢ² < 4n, and retries if not (expected fewer than 2 attempts); then builds each second-level table (expected fewer than 2 attempts each). Total space is n first-level slots plus Σ bᵢ² < 4n second-level slots, which is O(n), and a lookup is exactly two hash evaluations, which is O(1) worst case. Squaring each bucket's size looks extravagant, but the squares are small because large buckets are rare.
+
+</details>
+
 ---
 
 ## Where this connects

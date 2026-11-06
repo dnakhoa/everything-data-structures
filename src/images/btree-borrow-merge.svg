@@ -1,0 +1,72 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 360" role="img" aria-label="B-tree deletion fix-ups with minimum degree 2: borrowing a key from a sibling by rotating through the parent, and merging two minimal siblings around their separator" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .cell { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .thin { fill: #ef4444; fill-opacity: .12; stroke: #ef4444; stroke-width: 1.8; }
+    .mov  { fill: #f59e0b; fill-opacity: .22; stroke: #f59e0b; stroke-width: 2; }
+    .new  { fill: #10b981; fill-opacity: .14; stroke: #10b981; stroke-width: 1.8; }
+    .k    { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
+    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .e    { stroke: currentColor; stroke-width: 1.5; opacity: .65; fill: none; }
+    .arw  { stroke: #10b981; stroke-width: 2.5; fill: none; }
+  </style>
+  <!-- BORROW -->
+  <text class="cap" x="16" y="22">Borrow (rotation): delete 30. The child [30] has only t − 1 = 1 key.</text>
+  <g>
+    <rect class="cell" x="110" y="40" width="40" height="28"/><text class="k" x="130" y="59">20</text>
+    <rect class="mov"  x="150" y="40" width="40" height="28"/><text class="k" x="170" y="59">40</text>
+  </g>
+  <line class="e" x1="112" y1="68" x2="50"  y2="104"/>
+  <line class="e" x1="150" y1="68" x2="150" y2="104"/>
+  <line class="e" x1="188" y1="68" x2="250" y2="104"/>
+  <rect class="cell" x="30"  y="104" width="40" height="28"/><text class="k" x="50"  y="123">10</text>
+  <rect class="thin" x="130" y="104" width="40" height="28"/><text class="k" x="150" y="123">30</text>
+  <g>
+    <rect class="mov"  x="210" y="104" width="40" height="28"/><text class="k" x="230" y="123">50</text>
+    <rect class="cell" x="250" y="104" width="40" height="28"/><text class="k" x="270" y="123">60</text>
+  </g>
+  <text class="note" x="30" y="152">Right sibling [50 60] can spare a key.</text>
+  <path class="arw" d="M318,86 L368,86"/>
+  <path class="arw" d="M356,77 L368,86 L356,95"/>
+  <g>
+    <rect class="cell" x="480" y="40" width="40" height="28"/><text class="k" x="500" y="59">20</text>
+    <rect class="mov"  x="520" y="40" width="40" height="28"/><text class="k" x="540" y="59">50</text>
+  </g>
+  <line class="e" x1="482" y1="68" x2="420" y2="104"/>
+  <line class="e" x1="520" y1="68" x2="530" y2="104"/>
+  <line class="e" x1="558" y1="68" x2="630" y2="104"/>
+  <rect class="cell" x="400" y="104" width="40" height="28"/><text class="k" x="420" y="123">10</text>
+  <g>
+    <rect class="new"  x="490" y="104" width="40" height="28"/><text class="k" x="510" y="123">30</text>
+    <rect class="mov"  x="530" y="104" width="40" height="28"/><text class="k" x="550" y="123">40</text>
+  </g>
+  <rect class="cell" x="610" y="104" width="40" height="28"/><text class="k" x="630" y="123">60</text>
+  <text class="note" x="400" y="152">40 rotates down, 50 rotates up. Then delete 30</text>
+  <text class="note" x="400" y="166">from the leaf, which now has a key to spare.</text>
+  <!-- MERGE -->
+  <text class="cap" x="16" y="206">Merge: then delete 10. The child [10] and its only sibling [40] are minimal.</text>
+  <g>
+    <rect class="mov"  x="110" y="224" width="40" height="28"/><text class="k" x="130" y="243">20</text>
+    <rect class="cell" x="150" y="224" width="40" height="28"/><text class="k" x="170" y="243">50</text>
+  </g>
+  <line class="e" x1="112" y1="252" x2="50"  y2="288"/>
+  <line class="e" x1="150" y1="252" x2="150" y2="288"/>
+  <line class="e" x1="188" y1="252" x2="250" y2="288"/>
+  <rect class="thin" x="30"  y="288" width="40" height="28"/><text class="k" x="50"  y="307">10</text>
+  <rect class="cell" x="130" y="288" width="40" height="28"/><text class="k" x="150" y="307">40</text>
+  <rect class="cell" x="230" y="288" width="40" height="28"/><text class="k" x="250" y="307">60</text>
+  <text class="note" x="30" y="336">No sibling can spare a key.</text>
+  <path class="arw" d="M318,270 L368,270"/>
+  <path class="arw" d="M356,261 L368,270 L356,279"/>
+  <rect class="cell" x="520" y="224" width="40" height="28"/><text class="k" x="540" y="243">50</text>
+  <line class="e" x1="522" y1="252" x2="460" y2="288"/>
+  <line class="e" x1="558" y1="252" x2="620" y2="288"/>
+  <g>
+    <rect class="new"  x="400" y="288" width="40" height="28"/><text class="k" x="420" y="307">10</text>
+    <rect class="mov"  x="440" y="288" width="40" height="28"/><text class="k" x="460" y="307">20</text>
+    <rect class="new"  x="480" y="288" width="40" height="28"/><text class="k" x="500" y="307">40</text>
+  </g>
+  <rect class="cell" x="600" y="288" width="40" height="28"/><text class="k" x="620" y="307">60</text>
+  <text class="note" x="400" y="336">The separator 20 comes down between them:</text>
+  <text class="note" x="400" y="350">(t − 1) + 1 + (t − 1) = 2t − 1 keys, a full node.</text>
+</svg>

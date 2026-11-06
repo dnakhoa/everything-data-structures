@@ -6,6 +6,9 @@
 3. Every chapter page starts with a single H1.
 4. Code fences are balanced.
 5. SVG files contain no blank lines (a blank line ends the raw-HTML block in Markdown).
+6. Every chapter has an Exercises section, numbered for that chapter, and every
+   <details> hint/solution block is balanced and padded with the blank lines
+   mdBook needs to render the Markdown inside it.
 """
 import ast
 import glob
@@ -100,6 +103,51 @@ def check_svgs():
     print("  svgs checked")
 
 
+def check_exercises():
+    chapters = [p for p in iter_md() if re.match(r"ch\d+-", os.path.basename(p))]
+    total = 0
+    for path in chapters:
+        num = int(re.match(r"ch(\d+)-", os.path.basename(path)).group(1))
+        lines = open(path, encoding="utf-8").read().split("\n")
+        if "## Exercises" not in lines:
+            fail("%s: no '## Exercises' section" % path)
+            continue
+        found = re.findall(r"^\*\*(\d+)\.(\d+) ", "\n".join(lines), re.M)
+        if not found:
+            fail("%s: Exercises section has no numbered exercises" % path)
+        for ch, n in found:
+            if int(ch) != num:
+                fail("%s: exercise %s.%s is misnumbered (chapter %d)" % (path, ch, n, num))
+        nums = [int(n) for _, n in found]
+        if nums != list(range(1, len(nums) + 1)):
+            fail("%s: exercises are not numbered 1..%d in order" % (path, len(nums)))
+        total += len(found)
+
+        depth, in_code = 0, False
+        for i, ln in enumerate(lines):
+            if ln.lstrip().startswith("```"):
+                in_code = not in_code
+            if in_code:
+                continue
+            s = ln.strip()
+            if s == "<details>":
+                depth += 1
+                if depth > 1:
+                    fail("%s:%d nested <details>" % (path, i + 1))
+            elif s == "</details>":
+                depth -= 1
+                if depth < 0:
+                    fail("%s:%d </details> without <details>" % (path, i + 1))
+                if i > 0 and lines[i - 1].strip():
+                    fail("%s:%d needs a blank line before </details>" % (path, i + 1))
+            elif s.startswith("<summary>"):
+                if i + 1 < len(lines) and lines[i + 1].strip():
+                    fail("%s:%d needs a blank line after <summary>" % (path, i + 1))
+        if depth != 0:
+            fail("%s: unbalanced <details> blocks" % path)
+    print("  %d exercises in %d chapters checked" % (total, len(chapters)))
+
+
 if __name__ == "__main__":
     print("Checking book integrity...")
     check_python_blocks()
@@ -107,6 +155,7 @@ if __name__ == "__main__":
     check_headings()
     check_internal_links()
     check_svgs()
+    check_exercises()
 
     if errors:
         print("\n%d problem(s) found:\n" % len(errors))
