@@ -11,6 +11,7 @@ create-missing = false
 
 [output.html]
 additional-css = ["theme/custom.css"]
+additional-js = ["theme/print-details.js"]
 default-theme = "rust"
 preferred-dark-theme = "navy"
 git-repository-url = "https://github.com/dnakhoa/everything-data-structures"

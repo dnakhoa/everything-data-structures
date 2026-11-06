@@ -2,7 +2,7 @@
 
 **A complete course on data structures: from asymptotic analysis to the storage engines behind Spanner and Kafka.**
 
-Five volumes · 31 chapters · 4 appendices · ~55,000 words · Python, C, C++, Java, and Go
+Five volumes · 31 chapters · 4 appendices · ~125,000 words · 207 exercises with worked solutions · Python, C, C++, Java, and Go
 
 By **Ngoc Anh Khoa Doan**, with the editorial help of Claude.
 
@@ -26,11 +26,13 @@ The full syllabus with chapter-by-chapter reading lists is in the [repository RE
 
 ## What makes this different
 
-**It doesn't stop at red-black trees.** Most treatments end where the undergraduate syllabus ends. This one continues through competitive-programming machinery (link-cut trees, wavelet trees, Mo's algorithm)into research-grade structures like FM-indexes and succinct trees, and then out the other side into distributed systems.
+**It doesn't stop at red-black trees.** Most treatments end where the undergraduate syllabus ends. This one continues through competitive-programming machinery (link-cut trees, wavelet trees, Mo's algorithm) into research-grade structures like FM-indexes and succinct trees, and then out the other side into distributed systems.
 
 **Volume V argues something specific.** That network topologies and system designs *are* data structures, composed at scale. A routing table is a trie. Consistent hashing is a hash ring. A message queue is a persistent FIFO with durability guarantees. Once you see systems this way, system design stops being a separate discipline you memorize and starts being a subject you can reason about from first principles.
 
 **Every chapter answers the same questions.** What is the idea? What invariant holds? What do the operations cost, and why? What does the code look like? Where is this actually used? Who invented it, and what problem forced them to?
+
+**Every chapter ends with exercises.** Hand traces on concrete numbers, proofs, find-the-bug snippets, short implementations and design questions, marked ★ (check your understanding), ★★ (apply it) and ★★★ (stretch). Each has a worked solution folded away beneath it, and many have a hint, so you can try first and check after.
 
 **Tradeoffs are stated plainly.** Fibonacci heaps have the best asymptotic bounds on the page and lose to binary heaps in practice, and this book says so, and explains why. Asymptotic superiority is a claim about a limit, and the limit may sit far beyond any input you will ever see.
 

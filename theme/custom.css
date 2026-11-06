@@ -43,9 +43,11 @@ figure svg {
   }
 }
 
+/* Font sizes use em, not rem: mdBook sets the root font size to 62.5%, so
+   1rem is only 10px. */
 figcaption {
   margin-top: 0.6rem;
-  font-size: 0.875rem;
+  font-size: 0.875em;
   line-height: 1.5;
   opacity: 0.72;
   font-style: italic;
@@ -54,12 +56,12 @@ figcaption {
 
 /* "Where this connects" footers */
 h2#where-this-connects {
-  font-size: 1.1rem;
+  font-size: 1.1em;
   opacity: 0.85;
 }
 
 h2#where-this-connects + ul {
-  font-size: 0.925rem;
+  font-size: 0.925em;
 }
 
 /* Wide reference tables should scroll rather than overflow the page */
@@ -75,3 +77,30 @@ h2#where-this-connects + ul {
 .content pre > code {
   overflow-x: auto;
 }
+
+/* Exercise hints and solutions: folded by default, clearly clickable */
+.content details {
+  margin: 0.4rem 0 1.4rem;
+  padding: 0.5rem 0.9rem;
+  border-left: 3px solid var(--links);
+  background: var(--quote-bg);
+  border-radius: 0 4px 4px 0;
+}
+
+.content details > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.925em;
+  opacity: 0.85;
+}
+
+.content details[open] > summary {
+  margin-bottom: 0.6rem;
+}
+
+.content details + details {
+  margin-top: -0.8rem;
+}
+
+/* Printing: theme/print-details.js opens every <details> before printing,
+   so hints and solutions appear in the PDF. */
