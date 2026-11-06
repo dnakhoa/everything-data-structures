@@ -365,6 +365,7 @@ int pop_back(Deque *d);
 
 **Applications:**
 - Implementing both stacks and queues
+- Sliding window maximum and minimum (Section 5.9)
 - Palindrome checking
 - A-Steal algorithm (parallel task scheduling)
 - Text editor undo/redo (two deques)
@@ -453,13 +454,184 @@ threading.Thread(target=producer, args=(queue,)).start()
 threading.Thread(target=consumer, args=(queue,)).start()
 ```
 
-## 5.9 Historical Context
+## 5.9 Monotonic Stacks and Queues
+
+A monotonic stack is an ordinary stack with one extra rule: before pushing x, pop every element on top that would break sorted order. The contents stay sorted, but that is a side effect. What matters is the pops: when x pops an element, x is the answer to a question about that element, such as "what is the first larger value to my right?" Any problem that asks, for every position, about the nearest larger or smaller element falls to this pattern in O(n).
+
+### Next Greater Element
+
+For each index i, find the first j > i with a[j] > a[i], or −1 if there is none. Scanning forward from every i is O(n²) in the worst case (a decreasing array, where every scan runs to the end).
+
+Instead, scan left to right and keep on a stack the indices that have not found their answer yet.
+
+**Invariant:** the values at the stacked indices are non-increasing from bottom to top. A smaller value cannot sit below a larger one that came after it, because the larger one would have answered it and popped it on arrival.
+
+When x = a[j] arrives, the waiting elements it answers are exactly those with values smaller than x, and the invariant puts all of them at the top. Pop them, record j for each, then push j. Everything left below j is ≥ x, so the invariant still holds.
+
+```python
+def next_greater(a):
+    """ans[i] = index of the first j > i with a[j] > a[i], or -1 if none."""
+    ans = [-1] * len(a)
+    stack = []                       # indices still waiting for an answer
+    for j, x in enumerate(a):
+        while stack and a[stack[-1]] < x:
+            ans[stack.pop()] = j     # x is the first larger value after it
+        stack.append(j)
+    return ans
+
+
+assert next_greater([2, 7, 3, 5, 4, 6, 8]) == [1, 6, 3, 5, 5, 6, -1]
+```
+
+Trace on `a = [2, 7, 3, 5, 4, 6, 8]`, with the stack shown as values:
+
+| j | a[j] | Popped (index: value), answered by j | Stack after |
+|---|------|--------------------------------------|-------------|
+| 0 | 2 | | [2] |
+| 1 | 7 | 0: 2 | [7] |
+| 2 | 3 | | [7, 3] |
+| 3 | 5 | 2: 3 | [7, 5] |
+| 4 | 4 | | [7, 5, 4] |
+| 5 | 6 | 4: 4, then 3: 5 | [7, 6] |
+| 6 | 8 | 5: 6, then 1: 7 | [8] |
+
+The next greater values are 7, 8, 5, 6, 6, 8 and none. Whatever is still on the stack when the scan ends (here the 8) has no greater element to its right.
+
+The same loop answers related questions. Flipping the comparison gives the next *smaller* element. After the pops at step j, the new top of the stack is the nearest earlier element that is ≥ x, so one pass also yields every element's *previous* greater-or-equal element; stock span below uses exactly that. With duplicate values, decide deliberately whether equal elements pop (`<=`) or stay (`<`). It changes the answers, and Exercise 5.8 is a problem where getting it wrong double-counts.
+
+### Why It Is O(n): Amortized Analysis Again
+
+A single step can pop many elements. Step 6 above pops two, and on `[5, 4, 3, 2, 1, 9]` the last step pops five, so one step is O(n) in the worst case. But each index is pushed exactly once and popped at most once, so the `while` loop runs at most n times over the whole scan. The total is O(n) in the worst case, which is amortized O(1) per element: the aggregate method of Section 1.5 ([Chapter 1](ch01-the-philosophy-and-mathematics-of-data-structures.md)).
+
+The potential method makes the bookkeeping explicit. Let Φ be the number of elements on the stack: it starts at 0 and is never negative. A step that pops k elements and pushes one does k + 1 units of real work and changes Φ by 1 − k, so its amortized cost is (k + 1) + (1 − k) = 2, whatever k is. Each push prepays its own future pop. The dynamic array ([Chapter 3](ch03-arrays-the-foundation-of-contiguous-storage.md), Section 3.4) and the queue built from two stacks (Exercise 5.5) are paid for the same way: every element is moved a constant number of times over its lifetime, however those moves bunch together.
+
+### Stock Span
+
+The span of a stock's price on day i is the number of consecutive days, ending with day i, on which the price was at most the price on day i. It equals i minus the index of the most recent earlier day with a strictly higher price. That is the "previous greater" variant, and it works online: each span is known as soon as that day's price arrives.
+
+```python
+def stock_spans(prices):
+    """span[i] = number of consecutive days ending at day i with price <= prices[i]."""
+    spans = []
+    stack = []                       # indices; prices strictly decreasing
+    for i, p in enumerate(prices):
+        while stack and prices[stack[-1]] <= p:
+            stack.pop()              # can never stop a later span that p doesn't
+        spans.append(i - stack[-1] if stack else i + 1)
+        stack.append(i)
+    return spans
+
+
+assert stock_spans([100, 80, 60, 70, 60, 75, 85]) == [1, 1, 1, 2, 1, 4, 6]
+```
+
+On day 5 (price 75) the stack holds the prices 100, 80, 70, 60. The 60 and the 70 are popped, 80 at index 1 is left on top, and the span is 5 − 1 = 4 (days 2 to 5: 60, 70, 60, 75). Day 2's 60 is not on the stack at all: day 3's 70 popped it, and rightly so, because any later price that 60 would stop, 70 stops too, and 70 is nearer.
+
+### Largest Rectangle in a Histogram
+
+Bars of width 1 and heights h[0], ..., h[n − 1] stand side by side. Find the area of the largest axis-aligned rectangle that fits under them. Trying every start and extending to the right while tracking the minimum height is O(n²).
+
+The largest rectangle is as tall as its shortest bar, say bar i, and at that height it extends as far as it can: left until the nearest bar lower than h[i], right until the nearest bar lower than h[i]. So the answer is the maximum over i of h[i] × (right − left − 1), where left and right are the indices of those two lower bars (−1 and n when there is none). A single monotonic stack pass finds both for every bar. Keep indices whose heights are strictly increasing from bottom to top. When bar j pops bar i, j is the first bar to the right of i that is not taller than h[i], and the index just below i on the stack is the nearest bar to the left that is strictly lower (everything that stood between them was popped by i or by something that i later popped, so it was at least as tall as h[i]).
+
+```python
+def largest_rectangle(h):
+    """Area of the largest rectangle under a histogram of bar heights h."""
+    best = 0
+    stack = []                       # indices; heights strictly increasing
+    for j, x in enumerate(h + [0]):  # a height-0 bar at the end flushes the stack
+        while stack and h[stack[-1]] >= x:
+            i = stack.pop()          # bar j is the first one right of i not taller than h[i]
+            left = stack[-1] if stack else -1   # nearest bar left of i lower than h[i]
+            best = max(best, h[i] * (j - left - 1))
+        stack.append(j)
+    return best
+
+
+assert largest_rectangle([2, 1, 5, 6, 2, 3]) == 10
+```
+
+Equal heights need one remark. With `>=`, a bar is popped by the next bar of the same height, so its rectangle is cut short at that bar. Nothing is lost: the later bar has the same height, inherits the same left boundary (the index below), and computes the full rectangle when it is popped in turn.
+
+Trace on `h = [2, 1, 5, 6, 2, 3]`:
+
+| j | h[j] | Popped bar i (height): left, width, area | Stack after (heights) | Best |
+|---|------|------------------------------------------|-----------------------|------|
+| 0 | 2 | | [2] | 0 |
+| 1 | 1 | 0 (2): left −1, width 1, area 2 | [1] | 2 |
+| 2 | 5 | | [1, 5] | 2 |
+| 3 | 6 | | [1, 5, 6] | 2 |
+| 4 | 2 | 3 (6): left 2, width 1, area 6; 2 (5): left 1, width 2, area 10 | [1, 2] | 10 |
+| 5 | 3 | | [1, 2, 3] | 10 |
+| 6 | 0 (sentinel) | 5 (3): left 4, width 1, area 3; 4 (2): left 1, width 4, area 8; 1 (1): left −1, width 6, area 6 | [0] | 10 |
+
+The answer is the 5 × 2 rectangle over bars 2 and 3. Each bar is pushed once and popped once, so the pass is O(n) in the worst case with O(n) extra space. The same pass applied row by row finds the largest all-1 rectangle in a 0/1 matrix (Exercise 5.9), and the same stack builds a Cartesian tree in O(n) ([Chapter 23](../volume-4/ch23-advanced-competitive-programming-data-structures.md)).
+
+### Monotonic Deque: Sliding Window Maximum
+
+Given an array `a` and a window size k, output the maximum of every window `a[i : i + k]`. Recomputing each window is O(nk). A heap (Chapter 9) with lazy deletion of expired entries gets O(n log n). A monotonic deque gets O(n).
+
+A stack is not enough here, because elements also leave the window at the old end. A deque (Section 5.6) provides both ends: the back behaves exactly like a monotonic stack, and the front lets expired indices out.
+
+**Invariant:** the deque holds indices in increasing order, oldest at the front, and their values are strictly decreasing from front to back. These are exactly the elements that could still be the maximum of the current window or a later one. An element is useless as soon as a newer element at least as large arrives, because the newer one stays in every future window the older one is in. The front is therefore the maximum of the current window.
+
+For each new index i:
+
+1. Pop from the back every index whose value is ≤ `a[i]`.
+2. Push i at the back.
+3. If the front index has slid out of the window (≤ i − k), pop it from the front.
+4. Once the first full window is reached (i ≥ k − 1), output `a[front]`.
+
+```python
+from collections import deque
+
+
+def window_max(a, k):
+    dq = deque()      # indices; their values are strictly decreasing
+    out = []
+    for i, x in enumerate(a):
+        while dq and a[dq[-1]] <= x:   # x dominates these: drop them
+            dq.pop()
+        dq.append(i)
+        if dq[0] <= i - k:             # front index has left the window
+            dq.popleft()
+        if i >= k - 1:
+            out.append(a[dq[0]])
+    return out
+
+
+assert window_max([1, 3, -1, -3, 5, 3, 6, 7], 3) == [3, 3, 5, 5, 6, 7]
+assert window_max([5, 4, 3, 2, 1], 2) == [5, 4, 3, 2]
+assert window_max([2, 2, 2], 1) == [2, 2, 2]
+```
+
+Trace on `a = [1, 3, -1, -3, 5, 3, 6, 7]` with k = 3 (deque shown as values):
+
+| i | a[i] | Deque after step | Output |
+|---|------|------------------|--------|
+| 0 | 1 | [1] | |
+| 1 | 3 | [3] | |
+| 2 | −1 | [3, −1] | 3 |
+| 3 | −3 | [3, −1, −3] | 3 |
+| 4 | 5 | [5] | 5 |
+| 5 | 3 | [5, 3] | 5 |
+| 6 | 6 | [6] | 6 |
+| 7 | 7 | [7] | 7 |
+
+At i = 4 the front, 3 at index 1, has just expired, but the 5 had already cleared the whole deque from the back. Expiry from the front only matters when the maximum is old and nothing larger has arrived since: on `[5, 4, 3, 2, 1]` with k = 2, every step from i = 2 on pops the front.
+
+**Why O(n):** each index is pushed onto the deque once and popped at most once, from one end or the other, so all the `while` loops together do at most n pops, and every deque operation is O(1). At most one front pop is needed per step, because the window advances one index at a time. The bound is O(n) worst case for the whole array and amortized O(1) per element, by the same potential argument as for the stack. Reversing the comparison gives the sliding window minimum. The pattern turns up wherever a rolling maximum or minimum is needed over a stream, and in the dynamic-programming optimization that [Chapter 21](../volume-3/ch21-algorithm-design-using-data-structures.md) calls the monotonic deque. Exercise 5.7 runs a maximum deque and a minimum deque together inside the variable-size sliding window of Chapter 3.
+
+The test for whether a problem fits: the brute force, for each position, scans outward until it meets something larger (or smaller), and once an element is beaten by a nearer one it can never be the answer for anything further away. Then a monotonic stack does the whole job in one pass, or a monotonic deque if old elements must also expire.
+
+## 5.10 Historical Context
 
 The stack and queue concepts emerged in the 1950s as programmers recognized common access patterns. Alan Turing's 1949 work on subroutine linkage predated formal stack concepts, the call stack was an informal but essential mechanism.
 
 The term "stack" became standard in the 1960s, replacing earlier terms like "pushdown list." The queue concept was formalized alongside it.
 
 Edsger Dijkstra's 1968 paper on " cooperating sequential processes" introduced semaphores and discussed bounded buffers (producer-consumer) as fundamental synchronization problems.
+
+Robert Hood and Robert Melville (1981) showed how to make the two-stack queue of Exercise 5.5 run in O(1) worst-case time per operation in pure Lisp, by spreading the reversal over many operations instead of doing it all at once. The problem a monotonic stack solves, finding for every element the nearest smaller value on each side, was named "all nearest smaller values" by Omer Berkman, Baruch Schieber and Uzi Vishkin (1993), who used it as a building block for fast parallel algorithms; the sequential stack algorithm was already standard by then.
 
 ## Exercises
 
@@ -698,66 +870,152 @@ The redo stack needs no cap: it can never hold more than the undo history did, a
 
 </details>
 
-**5.7 ★★★ Sliding window maximum.** Given an array `a` of n numbers and a window size k, output the maximum of every window `a[i : i + k]`. The obvious approach is O(nk). Use a deque to do it in O(n) total.
-
-For example, `a = [1, 3, -1, -3, 5, 3, 6, 7]` and k = 3 gives `[3, 3, 5, 5, 6, 7]`.
+**5.7 ★★★ Longest run with bounded spread.** Given an array `a` and a number `limit` ≥ 0, find the length of the longest contiguous run `a[lo : hi + 1]` whose maximum minus minimum is at most `limit`, in O(n). For example, `a = [10, 1, 2, 4, 7, 2]` with limit 5 gives 4, for the run `[2, 4, 7, 2]`.
 
 <details>
 <summary>Hint</summary>
 
-Store indices in the deque. If a newer element is at least as large as an older one, the older one can never be the maximum of any future window, so it can be thrown away.
+Combine the variable-size sliding window of [Chapter 3](ch03-arrays-the-foundation-of-contiguous-storage.md) (Section 3.7) with the monotonic deque of Section 5.9. The window needs both its maximum and its minimum.
 
 </details>
 
 <details>
 <summary>Solution</summary>
 
-Keep a deque of indices whose values are strictly decreasing from front to back. The front is always the maximum of the current window.
+**Why a sliding window works.** Shrinking a run cannot increase its spread and growing it cannot decrease it. So for each right end `hi` the valid left ends form a range ending at `hi`, and the smallest valid left end never moves left as `hi` grows. That is the same monotonicity `shortest_at_least` relies on in Chapter 3: grow on the right, and shrink from the left only while the window is invalid.
 
-For each new index i:
-
-1. Pop from the back every index whose value is ≤ `a[i]`: those elements are older and no larger, so they can never be a window maximum again.
-2. Push i at the back.
-3. If the front index has slid out of the window (≤ i − k), pop it from the front.
-4. Once the first full window is reached (i ≥ k − 1), output `a[front]`.
+**Maintaining max and min.** Keep two monotonic deques of indices: `maxq` with values strictly decreasing (its front is the window maximum, exactly as in `window_max`) and `minq` with values strictly increasing (its front is the minimum). When `lo` advances past a deque's front index, pop that front.
 
 ```python
 from collections import deque
 
 
-def window_max(a, k):
-    dq = deque()      # indices; their values are strictly decreasing
-    out = []
-    for i, x in enumerate(a):
-        while dq and a[dq[-1]] <= x:   # x dominates these: drop them
-            dq.pop()
-        dq.append(i)
-        if dq[0] <= i - k:             # front index has left the window
-            dq.popleft()
-        if i >= k - 1:
-            out.append(a[dq[0]])
-    return out
+def longest_bounded(a, limit):
+    """Length of the longest run a[lo:hi+1] with max - min <= limit."""
+    maxq, minq = deque(), deque()    # indices; values decreasing / increasing
+    best = lo = 0
+    for hi, x in enumerate(a):
+        while maxq and a[maxq[-1]] <= x:
+            maxq.pop()
+        maxq.append(hi)
+        while minq and a[minq[-1]] >= x:
+            minq.pop()
+        minq.append(hi)
+        while a[maxq[0]] - a[minq[0]] > limit:   # shrink from the left
+            lo += 1
+            if maxq[0] < lo:
+                maxq.popleft()
+            if minq[0] < lo:
+                minq.popleft()
+        best = max(best, hi - lo + 1)
+    return best
 
 
-assert window_max([1, 3, -1, -3, 5, 3, 6, 7], 3) == [3, 3, 5, 5, 6, 7]
-assert window_max([5, 4, 3, 2, 1], 2) == [5, 4, 3, 2]
-assert window_max([2, 2, 2], 1) == [2, 2, 2]
+assert longest_bounded([10, 1, 2, 4, 7, 2], 5) == 4
+assert longest_bounded([8, 2, 4, 7], 4) == 2
+assert longest_bounded([], 3) == 0
 ```
 
-Trace of the example (deque shown as values):
+The shrink loop never empties a deque: both always contain `hi`, and once `lo` reaches `hi` the spread is 0.
 
-| i | a[i] | Deque after step | Output |
-|---|------|------------------|--------|
-| 0 | 1 | [1] | |
-| 1 | 3 | [3] | |
-| 2 | −1 | [3, −1] | 3 |
-| 3 | −3 | [3, −1, −3] | 3 |
-| 4 | 5 | [5] | 5 |
-| 5 | 3 | [5, 3] | 5 |
-| 6 | 6 | [6] | 6 |
-| 7 | 7 | [7] | 7 |
+Trace for the example (deques shown as values):
 
-**Why O(n):** each index is pushed onto the deque once and popped at most once (from one end or the other), so all the `while` loops together do at most n pops. Each deque operation is O(1) at either end, which is what a deque (Section 5.6) is for. At most one front pop is needed per step, because the window advances by one index at a time. This is one of the standard uses of a deque that is neither a stack nor a queue: elements leave from both ends.
+| hi | a[hi] | maxq | minq | lo | best |
+|----|-------|------|------|----|------|
+| 0 | 10 | [10] | [10] | 0 | 1 |
+| 1 | 1 | [1] | [1] | 1 | 1 |
+| 2 | 2 | [2] | [1, 2] | 1 | 2 |
+| 3 | 4 | [4] | [1, 2, 4] | 1 | 3 |
+| 4 | 7 | [7] | [2, 4, 7] | 2 | 3 |
+| 5 | 2 | [7, 2] | [2] | 2 | 4 |
+
+At hi = 1 the spread 10 − 1 = 9 is too large, so `lo` moves to 1 and the 10 leaves `maxq`. At hi = 4 the spread 7 − 1 = 6 is too large, so `lo` moves to 2 and the 1 leaves `minq`.
+
+**Cost.** Each index enters and leaves each deque at most once, and `lo` advances at most n times in total, so the whole run is O(n) in the worst case, amortized O(1) per element. A brute force over all O(n²) runs, each scanned for its spread, is O(n³).
+
+</details>
+
+**5.8 ★★ Sum of subarray minimums.** The array `[3, 1, 2, 4]` has 10 contiguous subarrays, and the sum of their minimums is 17. Compute this sum for any array in O(n). Be careful with duplicate values: check your method on `[2, 2]`, whose answer is 6.
+
+<details>
+<summary>Hint</summary>
+
+Turn it around: for each i, count the subarrays whose minimum is `a[i]`. They can stretch left and right until they meet a smaller value.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+Let `left[i]` be the nearest index before i with a smaller value (or −1) and `right[i]` the nearest index after i with a smaller value (or n). Then `a[i]` is the minimum of every subarray `a[l : r + 1]` with `left[i] < l ≤ i ≤ r < right[i]`, and there are `(i − left[i]) × (right[i] − i)` of them. The answer is the sum of `a[i]` times that count.
+
+**Duplicates.** If both boundaries stop only at strictly smaller values, a subarray whose minimum appears twice is counted once for each copy. On `[2, 2]` that gives 2 × 1 × 2 + 2 × 2 × 1 = 8, because `[2, 2]` is counted twice. The fix is to make one side non-strict: `left[i]` stops at a value < `a[i]`, but `right[i]` stops at a value ≤ `a[i]`. Each subarray is then credited to the rightmost position of its minimum only, and `[2, 2]` gives 2 × 1 × 1 + 2 × 2 × 1 = 6.
+
+One monotonic stack pass computes both arrays: when j pops i (because `a[i] ≥ a[j]`), j is i's next index with a value ≤ `a[i]`; after the pops, the top of the stack is j's previous index with a strictly smaller value.
+
+```python
+def sum_subarray_mins(a):
+    n = len(a)
+    left, right = [-1] * n, [n] * n
+    stack = []                                # indices; values strictly increasing
+    for j, x in enumerate(a):
+        while stack and a[stack[-1]] >= x:    # j is the next index with a value <= a[i]
+            right[stack.pop()] = j
+        left[j] = stack[-1] if stack else -1  # last index with a value < a[j]
+        stack.append(j)
+    return sum(a[i] * (i - left[i]) * (right[i] - i) for i in range(n))
+
+
+assert sum_subarray_mins([3, 1, 2, 4]) == 17
+assert sum_subarray_mins([2, 2]) == 6
+```
+
+For `[3, 1, 2, 4]`: `left = [-1, -1, 1, 2]` and `right = [1, 4, 4, 4]`, so the contributions are 3 × 1 × 1 = 3, 1 × 2 × 3 = 6, 2 × 1 × 2 = 4 and 4 × 1 × 1 = 4, which sum to 17. The pass is O(n) worst case by the argument of Section 5.9; summing the minimums of all O(n²) subarrays directly, extending each start to the right while tracking the minimum, is O(n²).
+
+</details>
+
+**5.9 ★★ Largest rectangle of 1s.** Given a 0/1 matrix with R rows and C columns, find the area of the largest rectangle that contains only 1s, in O(RC) time. Apply it to:
+
+```
+1 0 1 0 0
+1 0 1 1 1
+1 1 1 1 1
+1 0 0 1 0
+```
+
+<details>
+<summary>Hint</summary>
+
+Fix the row that the rectangle's bottom edge sits on. What does the matrix above that row look like, column by column?
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+For row r, let `heights[c]` be the number of consecutive 1s in column c ending at row r (0 if the cell is 0). An all-1 rectangle whose bottom edge is on row r is exactly a rectangle under the histogram `heights`, so the answer is the largest result of `largest_rectangle` (Section 5.9) over all rows. Each row updates `heights` in O(C) (add 1, or reset to 0) and runs one O(C) histogram pass, for O(RC) in total, with O(C) extra space.
+
+```python
+def maximal_rectangle(grid):
+    """Area of the largest all-1 rectangle in a 0/1 matrix."""
+    if not grid:
+        return 0
+    heights = [0] * len(grid[0])
+    best = 0
+    for row in grid:
+        heights = [h + 1 if cell else 0 for h, cell in zip(heights, row)]
+        best = max(best, largest_rectangle(heights))
+    return best
+```
+
+| Row | heights | Largest rectangle under it |
+|-----|---------|----------------------------|
+| 0 | [1, 0, 1, 0, 0] | 1 |
+| 1 | [2, 0, 2, 1, 1] | 3 |
+| 2 | [3, 1, 3, 2, 2] | 6 |
+| 3 | [4, 0, 0, 3, 0] | 4 |
+
+The answer is 6: rows 1 and 2, columns 2 to 4. At row 2 the best histogram rectangle has height 2 and spans the last three bars (heights 3, 2, 2). Checking every rectangle directly would take O(R²C²) candidates, each needing a check of its cells (or O(1) each with the 2-D prefix sums of Chapter 3).
 
 </details>
 
@@ -767,3 +1025,4 @@ Trace of the example (deque shown as values):
 
 - [Chapter 9: Heaps and Priority Queues](ch09-heaps-and-priority-queues.md). The priority queue, when FIFO and LIFO are both the wrong order
 - [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md). The stack as the implicit structure behind all recursion
+- [Chapter 23: Advanced Competitive Programming Data Structures](../volume-4/ch23-advanced-competitive-programming-data-structures.md). Cartesian trees, built in O(n) with the monotonic stack of Section 5.9
