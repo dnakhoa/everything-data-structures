@@ -11,7 +11,7 @@ Volume I organised data by position (arrays, lists) and by order (search trees, 
 | Chapter | After it you can |
 |---------|------------------|
 | [11: Graphs: Modeling Relationships](ch11-graphs-modeling-relationships.md) | Choose a graph representation, run BFS and DFS, detect cycles, order a DAG, find strongly connected components and MSTs, and pick the right shortest-path algorithm for the edge weights you have |
-| [12: Hash Tables](ch12-hash-tables.md) | Explain chaining versus open addressing, reason about load factor and resizing, choose a hash function, and build an LRU cache from a hash table and a linked list |
-| [13: String Data Structures](ch13-string-data-structures.md) | Build tries and radix trees, explain suffix trees and suffix arrays, and search for many patterns at once with Aho-Corasick |
+| [12: Hash Tables](ch12-hash-tables.md) | Explain chaining versus open addressing, reason about load factor and resizing, choose a hash function, explain why Robin Hood hashing and Swiss tables are what modern hash maps use, defend against hash flooding, and build an LRU cache |
+| [13: String Data Structures](ch13-string-data-structures.md) | Build tries and radix trees, explain suffix trees and suffix arrays, match patterns with KMP, the Z-array and rolling hashes, search for many patterns at once with Aho-Corasick, and choose between a gap buffer, rope and piece table for a text editor |
 
 The three chapters are independent, so read them in any order. If you are preparing for interviews, Chapters 11 and 12 are the most frequently tested material in the whole book.

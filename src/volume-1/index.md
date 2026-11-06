@@ -17,9 +17,9 @@ The volume moves from the language of cost (Chapter 1) and how memory really wor
 
 | Chapter | After it you can |
 |---------|------------------|
-| [3: Arrays: The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md) | Implement a growable array, address multi-dimensional data, use binary search, two pointers, sliding windows and prefix sums |
+| [3: Arrays: The Foundation of Contiguous Storage](ch03-arrays-the-foundation-of-contiguous-storage.md) | Implement a growable array, address multi-dimensional data, use binary search, two pointers, sliding windows and prefix sums, and explain how Roaring bitmaps compress sets |
 | [4: Linked Lists: The Art of Distributed Storage](ch04-linked-lists-the-art-of-distributed-storage.md) | Manipulate pointers safely with sentinels, reverse and merge lists in place, detect cycles, and know when a list loses to an array |
-| [5: Stacks and Queues: Ordered Access Patterns](ch05-stacks-and-queues-ordered-access-patterns.md) | Build both on arrays or lists, evaluate expressions with a stack, and use circular buffers and deques |
+| [5: Stacks and Queues: Ordered Access Patterns](ch05-stacks-and-queues-ordered-access-patterns.md) | Build both on arrays or lists, evaluate expressions with a stack, use circular buffers and deques, and solve next-greater and sliding-window problems with monotonic stacks and queues |
 
 ## Part 3: Hierarchical Structures and Trees
 

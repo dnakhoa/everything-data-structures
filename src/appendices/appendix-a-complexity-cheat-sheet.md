@@ -19,6 +19,9 @@ Two conventions for reading these tables:
 | Deque | O(1) | O(n) | O(1)★ at either end | O(1)★ at either end | O(n) |
 | Circular buffer (fixed capacity) | O(1) | O(n) | O(1) at the rear | O(1) at the front | O(capacity) |
 | Bit array | O(1) | O(n/w) | O(1) set a bit | O(1) clear a bit | n bits |
+| Gap buffer (text) | O(1) | O(n) | O(1) at the cursor, O(distance) to move it | O(1) at the cursor | O(n) |
+| Rope (text) | O(log n) | O(n) | O(log n) anywhere | O(log n) anywhere | O(n) |
+| Piece table (text, list of k pieces) | O(k) | O(n) | O(k), text itself never moves | O(k) | O(n + k) |
 
 Where **w** = machine word size in bits.
 
@@ -36,6 +39,8 @@ The linked-list rows come with the caveat that makes them much less useful than 
 | Skip list | O(log n) expected | O(n) | O(log n) expected | O(log n) expected | **O(n) expected** |
 | B-tree / B+ tree | O(log_B n) I/Os | O(log_B n) I/Os | O(log_B n) | O(log_B n) | O(n) |
 | Order-statistic tree (size-augmented balanced BST) | O(log n) select / rank | O(log n) | O(log n) | O(log n) | O(n) |
+| van Emde Boas tree (integer keys < u) | O(log log u) | O(log log u) | O(log log u) | O(log log u) | O(u), or O(n log log u) hashed |
+| y-fast trie (integer keys < u) | O(log log u) | O(log log u) | O(log log u)★ | O(log log u)★ | O(n) |
 | Trie | O(L) | O(L) | O(L) | O(L) | O(N·A) |
 | Radix / Patricia trie | O(L) | O(L) | O(L) | O(L) | O(N) |
 
@@ -51,10 +56,14 @@ Two rows worth reading carefully. **Skip list space is O(n) expected**, not O(n 
 |-----------|-------------|----------------|--------|--------|-------|
 | Hash table (chaining) | O(1) | O(n) | O(1)★ | O(1) | O(n + m) |
 | Hash table (open addressing) | O(1) | O(n) | O(1)★ | O(1) | O(m) |
+| Robin Hood hashing | O(1) | O(n) | O(1)★ | O(1), backward shift | O(m) |
+| Swiss table | O(1) | O(n) | O(1)★ | O(1) | O(m) plus 1 control byte per slot |
 | Cuckoo hashing | O(1) | **O(1) worst case** | O(1)★ expected | O(1) | O(n) |
 | Perfect hashing (static) | O(1) | O(1) | n/a | n/a | O(n) |
 
 Where **m** = number of buckets. Cuckoo hashing is the notable row: it is one of the few hash schemes with a genuine O(1) *worst-case* lookup, because a key can only live in one of two positions. Insertion pays for it, and can fail and require a full rehash.
+
+Robin Hood hashing has the same *average* probe length as plain linear probing; what it improves is the variance, so the longest probe sequence and the cost of an unsuccessful lookup (which can stop early) drop sharply at high load. ([Chapter 12](../volume-2/ch12-hash-tables.md))
 
 Java's `HashMap` converts a bucket to a red-black tree past 8 entries, giving O(log n) rather than O(n) in the worst case: a defense against deliberate collision flooding.
 
@@ -118,8 +127,11 @@ That last row is a common trap. Rollback requires undoing parent changes, which 
 | Counting Bloom filter | O(k) | O(k) | 4× a Bloom filter | False positives only |
 | Cuckoo filter | O(1) | O(1)★ | ~(log₂(1/ε) + 3)·n bits | False positives; supports delete |
 | HyperLogLog | O(1) | O(1) | O(log log n) bits per register; 12 KB in the standard configuration | ~0.81% standard error with 16,384 registers (1.04/√m) |
+| Roaring bitmap | O(log c) to find the container, then O(1) or O(log 4096) | O(log c), plus up to 4,096 shifted values in an array container | ≤ 16 bits per value within a container | None, exact |
 | Count-Min Sketch | O(k) | O(k) | O((1/ε)·log(1/δ)) | Overestimates only |
 | Skip list | O(log n) expected | O(log n) expected | O(n) expected | None, exact |
+
+Where **c** = number of non-empty Roaring containers (at most 65,536 for 32-bit values).
 
 A Bloom filter with 1% false-positive rate needs about 9.6 bits per element regardless of how large the elements are, which is the property that makes it useful.
 
@@ -165,6 +177,20 @@ Mo's algorithm is offline and processes q queries in O((n + q)√n) *total*; the
 | Merge sort on a linked list | O(n log n) | O(log n) stack, O(1) bottom-up | n/a |
 
 Where **μ** = distance to the cycle and **λ** = cycle length.
+
+| String matching | Preprocess | Search a text of length n | Notes |
+|-----------------|-----------|---------------------------|-------|
+| KMP (prefix function) | O(m) | O(n) worst case | Never backs up in the text |
+| Z-algorithm | O(n + m) total | O(n + m) worst case | Search P + separator + T |
+| Rabin-Karp (rolling hash) | O(m) | O(n + m) expected | Random base and a large prime; verify matches to make it exact |
+| Aho-Corasick (many patterns) | O(total pattern length) | O(n + number of matches) | One pass for every pattern |
+| Suffix array (search) | O(n) to O(n log n) build | O(m log n) per query | Index the text once, query many patterns |
+
+| Posting-list intersection (lists of length m ≤ n) | Time |
+|---------------------------------------------------|------|
+| Linear merge | O(m + n) |
+| Galloping (exponential) search | O(m log(n/m)) |
+| Skip pointers | Between the two, depending on skip spacing |
 
 ## A.9 Caches and Load Balancing
 

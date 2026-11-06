@@ -58,15 +58,29 @@
 
 **Tombstone**: A marker left in place of a deleted entry so that probe sequences in an open-addressed hash table are not broken.
 
+**van Emde Boas Tree**: A recursive structure for integer keys below u that splits each key into high and low halves, answering predecessor and successor queries in O(log log u).
+
 ## Hashing
 
 **Collision**: When two distinct keys hash to the same index. Unavoidable whenever the key space exceeds the table size.
+
+**Control Byte**: In a Swiss table, one byte of metadata per slot recording empty, deleted, or full plus 7 bits of the key's hash. A lookup compares a whole group of control bytes at once before touching any keys.
+
+**Hash Flooding**: A denial-of-service attack that sends many keys known to collide, turning a hash table's O(1) operations into O(n). Defended against with seeded, keyed hash functions such as SipHash.
 
 **Load Factor (α)**: Ratio of stored elements to capacity. Open addressing degrades sharply above ~0.7; chaining tolerates α > 1.
 
 **Open Addressing**: Resolving collisions by probing for another slot within the table itself, rather than chaining externally.
 
 **Perfect Hashing**: A collision-free hash for a known, fixed key set. *Minimal* perfect hashing maps n keys onto exactly n slots.
+
+**Probe Sequence Length (PSL)**: How far an entry in an open-addressed table sits from its home slot. Robin Hood hashing keeps PSLs even by letting an inserted key take the slot of any entry closer to home.
+
+**Robin Hood Hashing**: Linear probing where an inserted key displaces any entry with a shorter probe sequence length. Average cost is unchanged, but the variance and the cost of misses drop sharply.
+
+**SipHash**: A fast keyed hash function designed to resist hash flooding. The default string hash in Python, Ruby and Rust.
+
+**Swiss Table**: An open-addressing hash table that stores a control byte per slot and probes 16-slot groups with SIMD instructions. Abseil's flat_hash_map, Rust's HashMap and Go's maps since 1.24 use the design.
 
 **Universal Hashing**: Choosing a hash function at random from a family, so that no fixed input is reliably bad. The defense against collision-flooding attacks.
 
@@ -150,6 +164,8 @@
 
 **Rank / Select**: The two primitives underlying succinct structures. `rank(i)` counts 1-bits before position i; `select(k)` finds the position of the k-th 1-bit.
 
+**Roaring Bitmap**: A compressed bitmap that splits 32-bit values into 65,536 chunks and stores each chunk as a sorted array, a plain bitmap or a list of runs, whichever is smallest. Used by Lucene, Druid, ClickHouse and many others.
+
 **Succinct**: Using space within a lower-order term of the information-theoretic minimum, while still supporting queries *without decompressing*.
 
 ## Spatial and String
@@ -207,6 +223,8 @@
 **Lazy Deletion**: Leaving stale entries in a structure and skipping them when they surface, instead of removing them immediately. The usual way to get decrease-key behaviour from Python's heapq.
 
 **Lower Bound / Upper Bound**: In a sorted array, the first position whose value is ≥ x and the first whose value is > x. Python's bisect_left and bisect_right.
+
+**Monotonic Stack**: A stack kept in increasing or decreasing order by popping everything that would break the order before each push. Finds the next greater or smaller element for every position in O(n) total.
 
 **Prefix Sum**: An array whose i-th entry is the sum of the first i input values, making any range sum a single subtraction. The inverse of a difference array.
 
