@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 540" role="img" aria-label="Flowchart for choosing a structure to store and look up keys" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .q    { fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .l    { fill: none; stroke: #3b82f6; stroke-width: 2.4; }
+    .qt   { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
+    .qs   { fill: currentColor; font: 11.5px system-ui, sans-serif; text-anchor: middle; opacity: .7; }
+    .lt   { fill: #3b82f6; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
+    .e    { stroke: currentColor; stroke-width: 1.5; fill: none; opacity: .6; }
+    .yn   { fill: currentColor; font: italic 12px system-ui, sans-serif; opacity: .75; }
+    .cap  { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
+  </style>
+  <defs>
+    <marker id="sf-tip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="currentColor" opacity=".6"/></marker>
+  </defs>
+  <text class="cap" x="450" y="30">Storing keys and looking them up</text>
+  <path class="e" d="M450,104.0 L450,132.5 L215,132.5 L215,161.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="324.5" y="126.5">no</text>
+  <path class="e" d="M450,104.0 L450,132.5 L610,132.5 L610,161.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="522.0" y="126.5">yes</text>
+  <path class="e" d="M215,200.0 L215,233.5 L110,233.5 L110,267.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="154.5" y="227.5">no</text>
+  <path class="e" d="M215,200.0 L215,235.5 L340,235.5 L340,271.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="269.5" y="229.5">yes</text>
+  <path class="e" d="M340,310.0 L340,345.5 L260,345.5 L260,381.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="292.0" y="339.5">yes</text>
+  <path class="e" d="M340,310.0 L340,345.5 L420,345.5 L420,381.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="372.0" y="339.5">no</text>
+  <line class="e" x1="710.0" y1="182" x2="727.0" y2="182" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="708.5" y="176">yes</text>
+  <line class="e" x1="610" y1="200.0" x2="610" y2="271.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="618" y="239.5">no</text>
+  <line class="e" x1="710.0" y1="292" x2="727.0" y2="292" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="708.5" y="286">yes</text>
+  <line class="e" x1="610" y1="310.0" x2="610" y2="381.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="618" y="349.5">no</text>
+  <line class="e" x1="710.0" y1="402" x2="727.0" y2="402" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="708.5" y="396">yes</text>
+  <line class="e" x1="610" y1="420.0" x2="610" y2="481.0" marker-end="url(#sf-tip)"/>
+  <text class="yn" x="618" y="454.5">no</text>
+  <rect class="q" x="270.0" y="60.0" width="360" height="44" rx="6"/>
+  <text class="qt" x="450" y="79">Does any query need order?</text>
+  <text class="qs" x="450" y="96">range, next key, minimum, top k</text>
+  <rect class="q" x="105.0" y="164.0" width="220" height="36" rx="6"/>
+  <text class="qt" x="215" y="186.5">Must answers be exact?</text>
+  <rect class="q" x="510.0" y="164.0" width="200" height="36" rx="6"/>
+  <text class="qt" x="610" y="186.5">Is the data static?</text>
+  <rect class="l" x="10.0" y="270.0" width="200" height="44" rx="18"/>
+  <text class="lt" x="110" y="289">Bloom or cuckoo filter,</text>
+  <text class="lt" x="110" y="306">HyperLogLog, Count-Min</text>
+  <rect class="q" x="235.0" y="274.0" width="210" height="36" rx="6"/>
+  <text class="qt" x="340" y="296.5">Small, dense integer keys?</text>
+  <rect class="l" x="190.0" y="384.0" width="140" height="36" rx="18"/>
+  <text class="lt" x="260" y="406.5">Array or bitset</text>
+  <rect class="l" x="350.0" y="384.0" width="140" height="36" rx="18"/>
+  <text class="lt" x="420" y="406.5">Hash table</text>
+  <rect class="l" x="730.0" y="160.0" width="160" height="44" rx="18"/>
+  <text class="lt" x="810" y="179">Sorted array +</text>
+  <text class="lt" x="810" y="196">binary search</text>
+  <rect class="q" x="510.0" y="274.0" width="200" height="36" rx="6"/>
+  <text class="qt" x="610" y="296.5">Only the min or max?</text>
+  <rect class="l" x="730.0" y="274.0" width="160" height="36" rx="18"/>
+  <text class="lt" x="810" y="296.5">Binary heap</text>
+  <rect class="q" x="510.0" y="384.0" width="200" height="36" rx="6"/>
+  <text class="qt" x="610" y="406.5">Fits in memory?</text>
+  <rect class="l" x="730.0" y="380.0" width="160" height="44" rx="18"/>
+  <text class="lt" x="810" y="399">Balanced BST</text>
+  <text class="lt" x="810" y="416">or skip list</text>
+  <rect class="l" x="510.0" y="484.0" width="200" height="36" rx="18"/>
+  <text class="lt" x="610" y="506.5">B+ tree or LSM tree</text>
+</svg>
