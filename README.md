@@ -9,7 +9,7 @@ A complete, free course on data structures, from asymptotic analysis and pointer
 
 **📖 Read it online: [dnakhoa.github.io/everything-data-structures](https://dnakhoa.github.io/everything-data-structures/)**
 
-Five volumes · 31 chapters · 4 appendices · ~185,000 words · 241 exercises with worked solutions · Python, C, C++, Java and Go examples.
+Five volumes · 31 chapters · 4 appendices · ~220,000 words · 258 exercises with worked solutions · Python, C, C++, Java and Go examples.
 
 Written by [Ngoc Anh Khoa Doan](https://github.com/dnakhoa), with the editorial help of Claude.
 

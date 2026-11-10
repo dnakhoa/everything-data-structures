@@ -34,7 +34,7 @@ cargo install mdbook && mdbook serve --open
 
 Live-reloads at `http://localhost:3000`. Chapters live in `src/`, diagrams in `src/images/`, and the sidebar is generated from `src/SUMMARY.md`, so a new chapter needs an entry there or it won't appear.
 
-Diagrams are inline SVG using `currentColor` for strokes and text so they work in both light and dark themes. They're pulled in with `{{#include ../images/name.svg}}` inside a `<figure>`. Two constraints: no blank lines inside an SVG file (a blank line ends the raw-HTML block in Markdown), and don't hard-code black or white.
+Diagrams are inline SVG using `currentColor` for strokes and text so they work in both light and dark themes. They're pulled in with `{{#include ../images/name.svg}}` inside a `<figure>`. Three constraints: no blank lines inside an SVG file (a blank line ends the raw-HTML block in Markdown); don't hard-code black or white; and prefix every CSS class and element id with the file's name (`.btree-split-node`, not `.node`), because inline `<style>` rules apply to the whole page and two figures on one page would otherwise restyle each other. CI checks all three.
 
 ## Scope
 

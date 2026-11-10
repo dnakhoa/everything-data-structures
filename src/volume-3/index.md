@@ -7,7 +7,7 @@ The structures in Volumes I and II assume a single machine, a single thread, exa
 | Answers must be exact | [14: Probabilistic Data Structures](ch14-probabilistic-data-structures.md) | Bloom filters, cuckoo filters, HyperLogLog and Count-Min trade a controlled error rate for huge savings in memory |
 | Keys are one-dimensional | [15: Spatial and Geometric Data Structures](ch15-spatial-and-geometric-data-structures.md) | KD-trees, quadtrees, R-trees and geohashes answer "what is near this point?" |
 | Memory access is uniform | [16: External Memory and Cache-Oblivious Structures](ch16-external-memory-and-cache-oblivious-structures.md) | Count block transfers instead of operations, and design layouts that are fast at every level of the memory hierarchy |
-| Updates destroy the old version | [17: Persistent Data Structures](ch17-persistent-data-structures.md) | Path copying and structural sharing keep every version alive cheaply, the basis of functional languages and MVCC |
+| Updates destroy the old version | [17: Persistent Data Structures](ch17-persistent-data-structures.md) | Path copying, fat nodes and structural sharing keep every version alive cheaply; persistent vectors, queues and finger trees; the basis of functional languages, Git and MVCC |
 | One thread at a time | [18: Concurrent Data Structures](ch18-concurrent-data-structures.md) | Locks, compare-and-swap, the ABA problem, and when lock-free is worth its complexity |
 | The textbook is the state of the art | [19: Emerging and Specialized Structures](ch19-emerging-and-specialized-structures.md) | Succinct structures, learned indexes, vector search, and why some theoretical winners lose in practice |
 

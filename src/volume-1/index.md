@@ -11,7 +11,7 @@ The volume moves from the language of cost (Chapter 1) and how memory really wor
 | Chapter | After it you can |
 |---------|------------------|
 | [1: The Philosophy and Mathematics of Data Structures](ch01-the-philosophy-and-mathematics-of-data-structures.md) | Read and reason with O, Ω and Θ; tell worst-case, average and amortized cost apart; explain why a dynamic array's append is O(1) amortized |
-| [2: Primitive Types and Memory Organization](ch02-primitive-types-and-memory-organization.md) | Explain what a pointer is, why integers overflow, how structs are padded, and why memory layout affects speed |
+| [2: Primitive Types and Memory Organization](ch02-primitive-types-and-memory-organization.md) | Explain what a pointer is, why integers overflow, how structs are padded, how malloc manages the heap (free lists, buddy and slab allocators), and why memory layout affects speed |
 
 ## Part 2: Fundamental Linear Structures
 
@@ -27,7 +27,7 @@ The volume moves from the language of cost (Chapter 1) and how memory really wor
 |---------|------------------|
 | [6: Tree Fundamentals and Binary Trees](ch06-tree-fundamentals-and-binary-trees.md) | Use tree vocabulary precisely, traverse a tree four ways (recursively and with an explicit stack), and write recursive tree functions |
 | [7: Binary Search Trees](ch07-binary-search-trees.md) | Search, insert and delete in a BST, answer successor, range and rank queries, and explain why insertion order can ruin it |
-| [8: Self-Balancing Trees](ch08-self-balancing-trees.md) | Perform rotations, state the AVL and red-black invariants, and choose between AVL, red-black, splay trees and treaps |
+| [8: Self-Balancing Trees](ch08-self-balancing-trees.md) | Perform rotations, insert into and delete from AVL and red-black trees, see a red-black tree as a 2-3-4 tree, and choose between AVL, red-black, splay trees and treaps |
 | [9: Heaps and Priority Queues](ch09-heaps-and-priority-queues.md) | Implement a binary heap, build one in O(n), support decrease-key, and solve top-k and running-median problems |
 | [10: Multiway Search Trees and B-Trees](ch10-multiway-search-trees-and-b-trees.md) | Insert into and delete from a B-tree, explain why databases use B+ trees, and estimate how many disk reads a lookup costs |
 
