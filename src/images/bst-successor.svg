@@ -1,59 +1,59 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 370" role="img" aria-label="Inorder successor in the example BST. Left: 3 has a right subtree, so its successor 4 is found by one step right then left as far as possible. Right: 7 has no right subtree, so climb while coming from a right child; the first ancestor reached from a left child, 8, is the successor." style="max-width:100%;height:auto;color:inherit">
   <style>
-    .n    { fill: none; stroke: currentColor; stroke-width: 1.8; }
-    .e    { stroke: currentColor; stroke-width: 1.6; opacity: .45; }
-    .t    { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
-    .cap  { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
-    .note { fill: currentColor; font: 12px system-ui, sans-serif; opacity: .8; text-anchor: middle; }
-    .dn   { stroke: #3b82f6; stroke-width: 3; fill: none; }
-    .up   { stroke: #f59e0b; stroke-width: 3; fill: none; }
-    .sb   { fill: #3b82f6; fill-opacity: .18; stroke: #3b82f6; stroke-width: 2.5; }
-    .so   { fill: #f59e0b; fill-opacity: .18; stroke: #f59e0b; stroke-width: 2.5; }
-    .st   { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-dasharray: 4 3; }
+    .bst-successor-n    { fill: none; stroke: currentColor; stroke-width: 1.8; }
+    .bst-successor-e    { stroke: currentColor; stroke-width: 1.6; opacity: .45; }
+    .bst-successor-t    { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
+    .bst-successor-cap  { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
+    .bst-successor-note { fill: currentColor; font: 12px system-ui, sans-serif; opacity: .8; text-anchor: middle; }
+    .bst-successor-dn   { stroke: #3b82f6; stroke-width: 3; fill: none; }
+    .bst-successor-up   { stroke: #f59e0b; stroke-width: 3; fill: none; }
+    .bst-successor-sb   { fill: #3b82f6; fill-opacity: .18; stroke: #3b82f6; stroke-width: 2.5; }
+    .bst-successor-so   { fill: #f59e0b; fill-opacity: .18; stroke: #f59e0b; stroke-width: 2.5; }
+    .bst-successor-st   { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-dasharray: 4 3; }
   </style>
   <defs>
     <marker id="bstsucc-b" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#3b82f6"/></marker>
     <marker id="bstsucc-o" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 Z" fill="#f59e0b"/></marker>
   </defs>
-  <text class="cap" x="160" y="30">Case 1: right subtree exists</text>
-  <line class="e" x1="147" y1="89" x2="103" y2="127"/>
-  <line class="e" x1="173" y1="89" x2="217" y2="127"/>
-  <line class="e" x1="81" y1="152" x2="59" y2="184"/>
-  <line class="e" x1="239" y1="152" x2="261" y2="184"/>
-  <line class="e" x1="137" y1="214" x2="148" y2="242"/>
-  <line class="e" x1="263" y1="214" x2="252" y2="242"/>
-  <line class="dn" x1="101" y1="155" x2="119" y2="181" marker-end="url(#bstsucc-b)"/>
-  <line class="dn" x1="122" y1="216" x2="113" y2="240" marker-end="url(#bstsucc-b)"/>
-  <circle class="n" cx="160" cy="78" r="17"/><text class="t" x="160" y="83">8</text>
-  <circle class="st" cx="90" cy="138" r="17"/><text class="t" x="90" y="143">3</text>
-  <circle class="n" cx="230" cy="138" r="17"/><text class="t" x="230" y="143">10</text>
-  <circle class="n" cx="50" cy="198" r="17"/><text class="t" x="50" y="203">1</text>
-  <circle class="n" cx="130" cy="198" r="17"/><text class="t" x="130" y="203">6</text>
-  <circle class="n" cx="270" cy="198" r="17"/><text class="t" x="270" y="203">14</text>
-  <circle class="sb" cx="105" cy="258" r="17"/><text class="t" x="105" y="263">4</text>
-  <circle class="n" cx="155" cy="258" r="17"/><text class="t" x="155" y="263">7</text>
-  <circle class="n" cx="245" cy="258" r="17"/><text class="t" x="245" y="263">13</text>
-  <text class="note" x="160" y="312">succ(3): step right to 6, then left</text>
-  <text class="note" x="160" y="330">as far as possible. Answer: 4.</text>
-  <text class="cap" x="500" y="30">Case 2: no right subtree, walk up</text>
-  <line class="e" x1="513" y1="89" x2="557" y2="127"/>
-  <line class="e" x1="421" y1="152" x2="399" y2="184"/>
-  <line class="e" x1="579" y1="152" x2="601" y2="184"/>
-  <line class="e" x1="463" y1="214" x2="452" y2="242"/>
-  <line class="e" x1="603" y1="214" x2="592" y2="242"/>
-  <line class="up" x1="487" y1="240" x2="478" y2="216" marker-end="url(#bstsucc-o)"/>
-  <line class="up" x1="459" y1="181" x2="441" y2="155" marker-end="url(#bstsucc-o)"/>
-  <line class="up" x1="445" y1="125" x2="485" y2="91" marker-end="url(#bstsucc-o)"/>
-  <circle class="so" cx="500" cy="78" r="17"/><text class="t" x="500" y="83">8</text>
-  <circle class="n" cx="430" cy="138" r="17"/><text class="t" x="430" y="143">3</text>
-  <circle class="n" cx="570" cy="138" r="17"/><text class="t" x="570" y="143">10</text>
-  <circle class="n" cx="390" cy="198" r="17"/><text class="t" x="390" y="203">1</text>
-  <circle class="n" cx="470" cy="198" r="17"/><text class="t" x="470" y="203">6</text>
-  <circle class="n" cx="610" cy="198" r="17"/><text class="t" x="610" y="203">14</text>
-  <circle class="n" cx="445" cy="258" r="17"/><text class="t" x="445" y="263">4</text>
-  <circle class="st" cx="495" cy="258" r="17"/><text class="t" x="495" y="263">7</text>
-  <circle class="n" cx="585" cy="258" r="17"/><text class="t" x="585" y="263">13</text>
-  <text class="note" x="500" y="312">succ(7): climb while arriving from a right</text>
-  <text class="note" x="500" y="330">child (7→6→3); 3 is a left child, so stop at 8.</text>
-  <text class="note" x="340" y="360">Dashed: the node whose successor we want. Filled: the successor. Predecessor is the mirror image.</text>
+  <text class="bst-successor-cap" x="160" y="30">Case 1: right subtree exists</text>
+  <line class="bst-successor-e" x1="147" y1="89" x2="103" y2="127"/>
+  <line class="bst-successor-e" x1="173" y1="89" x2="217" y2="127"/>
+  <line class="bst-successor-e" x1="81" y1="152" x2="59" y2="184"/>
+  <line class="bst-successor-e" x1="239" y1="152" x2="261" y2="184"/>
+  <line class="bst-successor-e" x1="137" y1="214" x2="148" y2="242"/>
+  <line class="bst-successor-e" x1="263" y1="214" x2="252" y2="242"/>
+  <line class="bst-successor-dn" x1="101" y1="155" x2="119" y2="181" marker-end="url(#bstsucc-b)"/>
+  <line class="bst-successor-dn" x1="122" y1="216" x2="113" y2="240" marker-end="url(#bstsucc-b)"/>
+  <circle class="bst-successor-n" cx="160" cy="78" r="17"/><text class="bst-successor-t" x="160" y="83">8</text>
+  <circle class="bst-successor-st" cx="90" cy="138" r="17"/><text class="bst-successor-t" x="90" y="143">3</text>
+  <circle class="bst-successor-n" cx="230" cy="138" r="17"/><text class="bst-successor-t" x="230" y="143">10</text>
+  <circle class="bst-successor-n" cx="50" cy="198" r="17"/><text class="bst-successor-t" x="50" y="203">1</text>
+  <circle class="bst-successor-n" cx="130" cy="198" r="17"/><text class="bst-successor-t" x="130" y="203">6</text>
+  <circle class="bst-successor-n" cx="270" cy="198" r="17"/><text class="bst-successor-t" x="270" y="203">14</text>
+  <circle class="bst-successor-sb" cx="105" cy="258" r="17"/><text class="bst-successor-t" x="105" y="263">4</text>
+  <circle class="bst-successor-n" cx="155" cy="258" r="17"/><text class="bst-successor-t" x="155" y="263">7</text>
+  <circle class="bst-successor-n" cx="245" cy="258" r="17"/><text class="bst-successor-t" x="245" y="263">13</text>
+  <text class="bst-successor-note" x="160" y="312">succ(3): step right to 6, then left</text>
+  <text class="bst-successor-note" x="160" y="330">as far as possible. Answer: 4.</text>
+  <text class="bst-successor-cap" x="500" y="30">Case 2: no right subtree, walk up</text>
+  <line class="bst-successor-e" x1="513" y1="89" x2="557" y2="127"/>
+  <line class="bst-successor-e" x1="421" y1="152" x2="399" y2="184"/>
+  <line class="bst-successor-e" x1="579" y1="152" x2="601" y2="184"/>
+  <line class="bst-successor-e" x1="463" y1="214" x2="452" y2="242"/>
+  <line class="bst-successor-e" x1="603" y1="214" x2="592" y2="242"/>
+  <line class="bst-successor-up" x1="487" y1="240" x2="478" y2="216" marker-end="url(#bstsucc-o)"/>
+  <line class="bst-successor-up" x1="459" y1="181" x2="441" y2="155" marker-end="url(#bstsucc-o)"/>
+  <line class="bst-successor-up" x1="445" y1="125" x2="485" y2="91" marker-end="url(#bstsucc-o)"/>
+  <circle class="bst-successor-so" cx="500" cy="78" r="17"/><text class="bst-successor-t" x="500" y="83">8</text>
+  <circle class="bst-successor-n" cx="430" cy="138" r="17"/><text class="bst-successor-t" x="430" y="143">3</text>
+  <circle class="bst-successor-n" cx="570" cy="138" r="17"/><text class="bst-successor-t" x="570" y="143">10</text>
+  <circle class="bst-successor-n" cx="390" cy="198" r="17"/><text class="bst-successor-t" x="390" y="203">1</text>
+  <circle class="bst-successor-n" cx="470" cy="198" r="17"/><text class="bst-successor-t" x="470" y="203">6</text>
+  <circle class="bst-successor-n" cx="610" cy="198" r="17"/><text class="bst-successor-t" x="610" y="203">14</text>
+  <circle class="bst-successor-n" cx="445" cy="258" r="17"/><text class="bst-successor-t" x="445" y="263">4</text>
+  <circle class="bst-successor-st" cx="495" cy="258" r="17"/><text class="bst-successor-t" x="495" y="263">7</text>
+  <circle class="bst-successor-n" cx="585" cy="258" r="17"/><text class="bst-successor-t" x="585" y="263">13</text>
+  <text class="bst-successor-note" x="500" y="312">succ(7): climb while arriving from a right</text>
+  <text class="bst-successor-note" x="500" y="330">child (7→6→3); 3 is a left child, so stop at 8.</text>
+  <text class="bst-successor-note" x="340" y="360">Dashed: the node whose successor we want. Filled: the successor. Predecessor is the mirror image.</text>
 </svg>

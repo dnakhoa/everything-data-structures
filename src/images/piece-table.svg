@@ -1,95 +1,95 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 400" role="img" aria-label="A piece table for the text the quick brown fox jumps: four pieces pointing into a read-only original buffer and an append-only add buffer" style="max-width:100%;height:auto;color:inherit">
   <style>
-    .cell { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: .55; }
-    .o    { fill: #3b82f6; fill-opacity: .16; stroke: #3b82f6; stroke-width: 1.8; }
-    .a    { fill: #10b981; fill-opacity: .16; stroke: #10b981; stroke-width: 1.8; }
-    .dead { fill: #ef4444; fill-opacity: .10; stroke: #ef4444; stroke-width: 1.6; stroke-dasharray: 4 3; }
-    .k    { fill: currentColor; font: 600 14px ui-monospace, monospace; text-anchor: middle; }
-    .ix   { fill: currentColor; font: 10px ui-monospace, monospace; text-anchor: middle; opacity: .6; }
-    .pc   { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
-    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
-    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
-    .ao   { stroke: #3b82f6; stroke-width: 1.8; fill: none; }
-    .aa   { stroke: #10b981; stroke-width: 1.8; fill: none; }
+    .piece-table-cell { fill: none; stroke: currentColor; stroke-width: 1.2; opacity: .55; }
+    .piece-table-o    { fill: #3b82f6; fill-opacity: .16; stroke: #3b82f6; stroke-width: 1.8; }
+    .piece-table-a    { fill: #10b981; fill-opacity: .16; stroke: #10b981; stroke-width: 1.8; }
+    .piece-table-dead { fill: #ef4444; fill-opacity: .10; stroke: #ef4444; stroke-width: 1.6; stroke-dasharray: 4 3; }
+    .piece-table-k    { fill: currentColor; font: 600 14px ui-monospace, monospace; text-anchor: middle; }
+    .piece-table-ix   { fill: currentColor; font: 10px ui-monospace, monospace; text-anchor: middle; opacity: .6; }
+    .piece-table-pc   { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
+    .piece-table-cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .piece-table-note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .piece-table-ao   { stroke: #3b82f6; stroke-width: 1.8; fill: none; }
+    .piece-table-aa   { stroke: #10b981; stroke-width: 1.8; fill: none; }
   </style>
-  <text class="cap" x="16" y="28">Original buffer (read-only: the file as loaded)</text>
-  <rect class="cell" x="130" y="40" width="24" height="28"/><text class="k" x="142.0" y="59">t</text><text class="ix" x="142.0" y="37">0</text>
-  <rect class="cell" x="154" y="40" width="24" height="28"/><text class="k" x="166.0" y="59">h</text><text class="ix" x="166.0" y="37">1</text>
-  <rect class="cell" x="178" y="40" width="24" height="28"/><text class="k" x="190.0" y="59">e</text><text class="ix" x="190.0" y="37">2</text>
-  <rect class="cell" x="202" y="40" width="24" height="28"/><text class="k" x="214.0" y="59">␣</text><text class="ix" x="214.0" y="37">3</text>
-  <rect class="cell" x="226" y="40" width="24" height="28"/><text class="k" x="238.0" y="59">f</text><text class="ix" x="238.0" y="37">4</text>
-  <rect class="cell" x="250" y="40" width="24" height="28"/><text class="k" x="262.0" y="59">o</text><text class="ix" x="262.0" y="37">5</text>
-  <rect class="cell" x="274" y="40" width="24" height="28"/><text class="k" x="286.0" y="59">x</text><text class="ix" x="286.0" y="37">6</text>
-  <rect class="cell" x="298" y="40" width="24" height="28"/><text class="k" x="310.0" y="59">␣</text><text class="ix" x="310.0" y="37">7</text>
-  <rect class="cell" x="322" y="40" width="24" height="28"/><text class="k" x="334.0" y="59">j</text><text class="ix" x="334.0" y="37">8</text>
-  <rect class="cell" x="346" y="40" width="24" height="28"/><text class="k" x="358.0" y="59">u</text><text class="ix" x="358.0" y="37">9</text>
-  <rect class="cell" x="370" y="40" width="24" height="28"/><text class="k" x="382.0" y="59">m</text><text class="ix" x="382.0" y="37">10</text>
-  <rect class="cell" x="394" y="40" width="24" height="28"/><text class="k" x="406.0" y="59">p</text><text class="ix" x="406.0" y="37">11</text>
-  <rect class="cell" x="418" y="40" width="24" height="28"/><text class="k" x="430.0" y="59">e</text><text class="ix" x="430.0" y="37">12</text>
-  <rect class="cell" x="442" y="40" width="24" height="28"/><text class="k" x="454.0" y="59">d</text><text class="ix" x="454.0" y="37">13</text>
-  <rect class="o" x="130" y="40" width="96" height="28"/>
-  <rect class="o" x="226" y="40" width="192" height="28"/>
-  <rect class="dead" x="418" y="40" width="48" height="28"/>
-  <text class="note" x="476" y="52" fill="#ef4444">"ed" was deleted, but the</text>
-  <text class="note" x="476" y="66">bytes stay: no piece points here</text>
-  <text class="cap" x="16" y="206">Pieces, in text order:</text>
-  <text class="note" x="16" y="222">(buffer, start, length)</text>
-  <rect class="o" x="64" y="150" width="128" height="34" rx="4"/><text class="pc" x="128.0" y="172">(orig, 0, 4)</text>
-  <rect class="a" x="210" y="150" width="128" height="34" rx="4"/><text class="pc" x="274.0" y="172">(add, 0, 12)</text>
-  <rect class="o" x="356" y="150" width="128" height="34" rx="4"/><text class="pc" x="420.0" y="172">(orig, 4, 8)</text>
-  <rect class="a" x="502" y="150" width="128" height="34" rx="4"/><text class="pc" x="566.0" y="172">(add, 12, 1)</text>
-  <text class="cap" x="16" y="314">Add buffer (append-only: everything ever typed)</text>
-  <rect class="cell" x="130" y="262" width="24" height="28"/><text class="k" x="142.0" y="281">q</text><text class="ix" x="142.0" y="302">0</text>
-  <rect class="cell" x="154" y="262" width="24" height="28"/><text class="k" x="166.0" y="281">u</text><text class="ix" x="166.0" y="302">1</text>
-  <rect class="cell" x="178" y="262" width="24" height="28"/><text class="k" x="190.0" y="281">i</text><text class="ix" x="190.0" y="302">2</text>
-  <rect class="cell" x="202" y="262" width="24" height="28"/><text class="k" x="214.0" y="281">c</text><text class="ix" x="214.0" y="302">3</text>
-  <rect class="cell" x="226" y="262" width="24" height="28"/><text class="k" x="238.0" y="281">k</text><text class="ix" x="238.0" y="302">4</text>
-  <rect class="cell" x="250" y="262" width="24" height="28"/><text class="k" x="262.0" y="281">␣</text><text class="ix" x="262.0" y="302">5</text>
-  <rect class="cell" x="274" y="262" width="24" height="28"/><text class="k" x="286.0" y="281">b</text><text class="ix" x="286.0" y="302">6</text>
-  <rect class="cell" x="298" y="262" width="24" height="28"/><text class="k" x="310.0" y="281">r</text><text class="ix" x="310.0" y="302">7</text>
-  <rect class="cell" x="322" y="262" width="24" height="28"/><text class="k" x="334.0" y="281">o</text><text class="ix" x="334.0" y="302">8</text>
-  <rect class="cell" x="346" y="262" width="24" height="28"/><text class="k" x="358.0" y="281">w</text><text class="ix" x="358.0" y="302">9</text>
-  <rect class="cell" x="370" y="262" width="24" height="28"/><text class="k" x="382.0" y="281">n</text><text class="ix" x="382.0" y="302">10</text>
-  <rect class="cell" x="394" y="262" width="24" height="28"/><text class="k" x="406.0" y="281">␣</text><text class="ix" x="406.0" y="302">11</text>
-  <rect class="cell" x="418" y="262" width="24" height="28"/><text class="k" x="430.0" y="281">s</text><text class="ix" x="430.0" y="302">12</text>
-  <rect class="a" x="130" y="262" width="288" height="28"/>
-  <rect class="a" x="418" y="262" width="24" height="28"/>
-  <path class="ao" d="M128.0,150 L178,70"/>
-  <path class="ao" d="M177.7,79.0 L178,70 L170.1,74.2"/>
-  <path class="ao" d="M420.0,150 L322,70"/>
-  <path class="ao" d="M330.9,71.4 L322,70 L325.2,78.4"/>
-  <path class="aa" d="M274.0,184 L274,248"/>
-  <path class="aa" d="M269.5,240.2 L274,248 L278.5,240.2"/>
-  <path class="aa" d="M566.0,184 L430.0,248"/>
-  <path class="aa" d="M435.1,240.6 L430.0,248 L439.0,248.8"/>
-  <text class="cap" x="16" y="368">Text:</text>
-  <rect class="o" x="70" y="348" width="68" height="30" rx="3"/>
-  <text class="k" x="78.5" y="368">t</text>
-  <text class="k" x="95.5" y="368">h</text>
-  <text class="k" x="112.5" y="368">e</text>
-  <text class="k" x="129.5" y="368">␣</text>
-  <rect class="a" x="142" y="348" width="204" height="30" rx="3"/>
-  <text class="k" x="150.5" y="368">q</text>
-  <text class="k" x="167.5" y="368">u</text>
-  <text class="k" x="184.5" y="368">i</text>
-  <text class="k" x="201.5" y="368">c</text>
-  <text class="k" x="218.5" y="368">k</text>
-  <text class="k" x="235.5" y="368">␣</text>
-  <text class="k" x="252.5" y="368">b</text>
-  <text class="k" x="269.5" y="368">r</text>
-  <text class="k" x="286.5" y="368">o</text>
-  <text class="k" x="303.5" y="368">w</text>
-  <text class="k" x="320.5" y="368">n</text>
-  <text class="k" x="337.5" y="368">␣</text>
-  <rect class="o" x="350" y="348" width="136" height="30" rx="3"/>
-  <text class="k" x="358.5" y="368">f</text>
-  <text class="k" x="375.5" y="368">o</text>
-  <text class="k" x="392.5" y="368">x</text>
-  <text class="k" x="409.5" y="368">␣</text>
-  <text class="k" x="426.5" y="368">j</text>
-  <text class="k" x="443.5" y="368">u</text>
-  <text class="k" x="460.5" y="368">m</text>
-  <text class="k" x="477.5" y="368">p</text>
-  <rect class="a" x="490" y="348" width="17" height="30" rx="3"/>
-  <text class="k" x="498.5" y="368">s</text>
+  <text class="piece-table-cap" x="16" y="28">Original buffer (read-only: the file as loaded)</text>
+  <rect class="piece-table-cell" x="130" y="40" width="24" height="28"/><text class="piece-table-k" x="142.0" y="59">t</text><text class="piece-table-ix" x="142.0" y="37">0</text>
+  <rect class="piece-table-cell" x="154" y="40" width="24" height="28"/><text class="piece-table-k" x="166.0" y="59">h</text><text class="piece-table-ix" x="166.0" y="37">1</text>
+  <rect class="piece-table-cell" x="178" y="40" width="24" height="28"/><text class="piece-table-k" x="190.0" y="59">e</text><text class="piece-table-ix" x="190.0" y="37">2</text>
+  <rect class="piece-table-cell" x="202" y="40" width="24" height="28"/><text class="piece-table-k" x="214.0" y="59">␣</text><text class="piece-table-ix" x="214.0" y="37">3</text>
+  <rect class="piece-table-cell" x="226" y="40" width="24" height="28"/><text class="piece-table-k" x="238.0" y="59">f</text><text class="piece-table-ix" x="238.0" y="37">4</text>
+  <rect class="piece-table-cell" x="250" y="40" width="24" height="28"/><text class="piece-table-k" x="262.0" y="59">o</text><text class="piece-table-ix" x="262.0" y="37">5</text>
+  <rect class="piece-table-cell" x="274" y="40" width="24" height="28"/><text class="piece-table-k" x="286.0" y="59">x</text><text class="piece-table-ix" x="286.0" y="37">6</text>
+  <rect class="piece-table-cell" x="298" y="40" width="24" height="28"/><text class="piece-table-k" x="310.0" y="59">␣</text><text class="piece-table-ix" x="310.0" y="37">7</text>
+  <rect class="piece-table-cell" x="322" y="40" width="24" height="28"/><text class="piece-table-k" x="334.0" y="59">j</text><text class="piece-table-ix" x="334.0" y="37">8</text>
+  <rect class="piece-table-cell" x="346" y="40" width="24" height="28"/><text class="piece-table-k" x="358.0" y="59">u</text><text class="piece-table-ix" x="358.0" y="37">9</text>
+  <rect class="piece-table-cell" x="370" y="40" width="24" height="28"/><text class="piece-table-k" x="382.0" y="59">m</text><text class="piece-table-ix" x="382.0" y="37">10</text>
+  <rect class="piece-table-cell" x="394" y="40" width="24" height="28"/><text class="piece-table-k" x="406.0" y="59">p</text><text class="piece-table-ix" x="406.0" y="37">11</text>
+  <rect class="piece-table-cell" x="418" y="40" width="24" height="28"/><text class="piece-table-k" x="430.0" y="59">e</text><text class="piece-table-ix" x="430.0" y="37">12</text>
+  <rect class="piece-table-cell" x="442" y="40" width="24" height="28"/><text class="piece-table-k" x="454.0" y="59">d</text><text class="piece-table-ix" x="454.0" y="37">13</text>
+  <rect class="piece-table-o" x="130" y="40" width="96" height="28"/>
+  <rect class="piece-table-o" x="226" y="40" width="192" height="28"/>
+  <rect class="piece-table-dead" x="418" y="40" width="48" height="28"/>
+  <text class="piece-table-note" x="476" y="52" fill="#ef4444">"ed" was deleted, but the</text>
+  <text class="piece-table-note" x="476" y="66">bytes stay: no piece points here</text>
+  <text class="piece-table-cap" x="16" y="206">Pieces, in text order:</text>
+  <text class="piece-table-note" x="16" y="222">(buffer, start, length)</text>
+  <rect class="piece-table-o" x="64" y="150" width="128" height="34" rx="4"/><text class="piece-table-pc" x="128.0" y="172">(orig, 0, 4)</text>
+  <rect class="piece-table-a" x="210" y="150" width="128" height="34" rx="4"/><text class="piece-table-pc" x="274.0" y="172">(add, 0, 12)</text>
+  <rect class="piece-table-o" x="356" y="150" width="128" height="34" rx="4"/><text class="piece-table-pc" x="420.0" y="172">(orig, 4, 8)</text>
+  <rect class="piece-table-a" x="502" y="150" width="128" height="34" rx="4"/><text class="piece-table-pc" x="566.0" y="172">(add, 12, 1)</text>
+  <text class="piece-table-cap" x="16" y="314">Add buffer (append-only: everything ever typed)</text>
+  <rect class="piece-table-cell" x="130" y="262" width="24" height="28"/><text class="piece-table-k" x="142.0" y="281">q</text><text class="piece-table-ix" x="142.0" y="302">0</text>
+  <rect class="piece-table-cell" x="154" y="262" width="24" height="28"/><text class="piece-table-k" x="166.0" y="281">u</text><text class="piece-table-ix" x="166.0" y="302">1</text>
+  <rect class="piece-table-cell" x="178" y="262" width="24" height="28"/><text class="piece-table-k" x="190.0" y="281">i</text><text class="piece-table-ix" x="190.0" y="302">2</text>
+  <rect class="piece-table-cell" x="202" y="262" width="24" height="28"/><text class="piece-table-k" x="214.0" y="281">c</text><text class="piece-table-ix" x="214.0" y="302">3</text>
+  <rect class="piece-table-cell" x="226" y="262" width="24" height="28"/><text class="piece-table-k" x="238.0" y="281">k</text><text class="piece-table-ix" x="238.0" y="302">4</text>
+  <rect class="piece-table-cell" x="250" y="262" width="24" height="28"/><text class="piece-table-k" x="262.0" y="281">␣</text><text class="piece-table-ix" x="262.0" y="302">5</text>
+  <rect class="piece-table-cell" x="274" y="262" width="24" height="28"/><text class="piece-table-k" x="286.0" y="281">b</text><text class="piece-table-ix" x="286.0" y="302">6</text>
+  <rect class="piece-table-cell" x="298" y="262" width="24" height="28"/><text class="piece-table-k" x="310.0" y="281">r</text><text class="piece-table-ix" x="310.0" y="302">7</text>
+  <rect class="piece-table-cell" x="322" y="262" width="24" height="28"/><text class="piece-table-k" x="334.0" y="281">o</text><text class="piece-table-ix" x="334.0" y="302">8</text>
+  <rect class="piece-table-cell" x="346" y="262" width="24" height="28"/><text class="piece-table-k" x="358.0" y="281">w</text><text class="piece-table-ix" x="358.0" y="302">9</text>
+  <rect class="piece-table-cell" x="370" y="262" width="24" height="28"/><text class="piece-table-k" x="382.0" y="281">n</text><text class="piece-table-ix" x="382.0" y="302">10</text>
+  <rect class="piece-table-cell" x="394" y="262" width="24" height="28"/><text class="piece-table-k" x="406.0" y="281">␣</text><text class="piece-table-ix" x="406.0" y="302">11</text>
+  <rect class="piece-table-cell" x="418" y="262" width="24" height="28"/><text class="piece-table-k" x="430.0" y="281">s</text><text class="piece-table-ix" x="430.0" y="302">12</text>
+  <rect class="piece-table-a" x="130" y="262" width="288" height="28"/>
+  <rect class="piece-table-a" x="418" y="262" width="24" height="28"/>
+  <path class="piece-table-ao" d="M128.0,150 L178,70"/>
+  <path class="piece-table-ao" d="M177.7,79.0 L178,70 L170.1,74.2"/>
+  <path class="piece-table-ao" d="M420.0,150 L322,70"/>
+  <path class="piece-table-ao" d="M330.9,71.4 L322,70 L325.2,78.4"/>
+  <path class="piece-table-aa" d="M274.0,184 L274,248"/>
+  <path class="piece-table-aa" d="M269.5,240.2 L274,248 L278.5,240.2"/>
+  <path class="piece-table-aa" d="M566.0,184 L430.0,248"/>
+  <path class="piece-table-aa" d="M435.1,240.6 L430.0,248 L439.0,248.8"/>
+  <text class="piece-table-cap" x="16" y="368">Text:</text>
+  <rect class="piece-table-o" x="70" y="348" width="68" height="30" rx="3"/>
+  <text class="piece-table-k" x="78.5" y="368">t</text>
+  <text class="piece-table-k" x="95.5" y="368">h</text>
+  <text class="piece-table-k" x="112.5" y="368">e</text>
+  <text class="piece-table-k" x="129.5" y="368">␣</text>
+  <rect class="piece-table-a" x="142" y="348" width="204" height="30" rx="3"/>
+  <text class="piece-table-k" x="150.5" y="368">q</text>
+  <text class="piece-table-k" x="167.5" y="368">u</text>
+  <text class="piece-table-k" x="184.5" y="368">i</text>
+  <text class="piece-table-k" x="201.5" y="368">c</text>
+  <text class="piece-table-k" x="218.5" y="368">k</text>
+  <text class="piece-table-k" x="235.5" y="368">␣</text>
+  <text class="piece-table-k" x="252.5" y="368">b</text>
+  <text class="piece-table-k" x="269.5" y="368">r</text>
+  <text class="piece-table-k" x="286.5" y="368">o</text>
+  <text class="piece-table-k" x="303.5" y="368">w</text>
+  <text class="piece-table-k" x="320.5" y="368">n</text>
+  <text class="piece-table-k" x="337.5" y="368">␣</text>
+  <rect class="piece-table-o" x="350" y="348" width="136" height="30" rx="3"/>
+  <text class="piece-table-k" x="358.5" y="368">f</text>
+  <text class="piece-table-k" x="375.5" y="368">o</text>
+  <text class="piece-table-k" x="392.5" y="368">x</text>
+  <text class="piece-table-k" x="409.5" y="368">␣</text>
+  <text class="piece-table-k" x="426.5" y="368">j</text>
+  <text class="piece-table-k" x="443.5" y="368">u</text>
+  <text class="piece-table-k" x="460.5" y="368">m</text>
+  <text class="piece-table-k" x="477.5" y="368">p</text>
+  <rect class="piece-table-a" x="490" y="348" width="17" height="30" rx="3"/>
+  <text class="piece-table-k" x="498.5" y="368">s</text>
 </svg>
