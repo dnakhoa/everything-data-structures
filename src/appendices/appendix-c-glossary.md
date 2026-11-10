@@ -22,6 +22,8 @@
 
 ## Structural Terms
 
+**2-3-4 Tree**: A balanced search tree whose nodes hold one, two or three keys. A red-black tree is a binary encoding of one: each black node together with its red children is one 2-3-4 node.
+
 **Augmented Tree**: A tree whose nodes store extra summary data about their subtrees (sizes, sums, maximums) that is kept correct through inserts, deletes and rotations. Order-statistic trees and interval trees are examples.
 
 **Balanced Tree**: A tree whose subtree heights differ by at most a constant factor, guaranteeing O(log n) height.
@@ -34,6 +36,8 @@
 
 **Degenerate Tree**: A tree that has degraded to essentially a linked list, the worst case for an unbalanced BST.
 
+**Double Black**: The bookkeeping state in red-black tree deletion when removing a black node leaves one path short of a black node. The four repair cases correspond to borrowing from or merging with a sibling in the 2-3-4 view.
+
 **Fan-out**: The number of children a node can have. High fan-out is what makes B-trees shallow.
 
 **Fill Factor**: How full a B-tree's nodes are allowed or chosen to be. Sorted inserts leave nodes about half full; bulk loading can pack them completely.
@@ -43,6 +47,8 @@
 **Invariant**: A property that must hold before and after every operation. Writing invariants as runnable assertions is the most effective way to catch structural bugs near their cause.
 
 **Leaf**: A node with no children.
+
+**Left-Leaning Red-Black Tree**: A red-black variant (Sedgewick, 2008) in which red links may only lean left, corresponding to 2-3 trees and shortening insertion code considerably.
 
 **Minimum Degree (t)**: The B-tree parameter that bounds node size: every node except the root holds between t − 1 and 2t − 1 keys.
 
@@ -86,13 +92,21 @@
 
 ## Memory and Storage
 
+**Arena (Bump Allocator)**: An allocator that hands out memory by advancing a pointer through a large block and frees everything at once. O(1) allocation, no per-object free; used by compilers and per-request memory pools.
+
 **Bit-Packing**: Storing a block of small integers in exactly as many bits each as the largest needs. With delta encoding, the basis of posting-list compression in search engines.
+
+**Boundary Tag**: A size-and-status field stored at both ends of a heap block, so the allocator can find and merge a free neighbour in O(1) when a block is freed.
+
+**Buddy Allocator**: An allocator that splits memory into power-of-two blocks and merges a freed block with its "buddy", found by flipping one address bit. The Linux page allocator uses it.
 
 **Cache Line**: The unit of transfer between memory and cache, typically 64 bytes. Reading one byte costs the same as reading its whole line.
 
 **Cache-Oblivious**: Achieving optimal I/O performance without knowing the block size. By being well-organized at every scale simultaneously.
 
 **External Memory Model**: A cost model counting block transfers rather than operations. Predicts real disk performance where the RAM model does not.
+
+**Fragmentation**: Memory that is free but unusable. *Internal* fragmentation is wasted space inside allocated blocks (rounding up); *external* fragmentation is free space split into pieces too small to satisfy a request.
 
 **Gap Buffer**: A text buffer that keeps one contiguous gap at the cursor, so typing is O(1) but moving the cursor far away costs a large copy. Used by Emacs.
 
@@ -106,6 +120,10 @@
 
 **Segment (search index)**: An immutable chunk of an inverted index. New documents create new segments, deletions are marked in a bitset, and background merges combine segments, much like LSM-tree compaction.
 
+**Size Class**: One of a fixed set of block sizes an allocator rounds requests up to, each with its own free list. The basis of jemalloc, tcmalloc and glibc's bins.
+
+**Slab Allocator**: An allocator that keeps caches of same-sized, pre-initialized objects carved from pages. Introduced by Bonwick in 1994; Linux's SLUB is a descendant.
+
 **Varint (Variable-Byte Encoding)**: Encoding an integer in 7-bit groups, one per byte, with the high bit marking that more bytes follow. Small numbers take one byte.
 
 **Write Amplification**: The ratio of bytes actually written to storage versus bytes logically written by the application.
@@ -114,9 +132,15 @@
 
 **ABA Problem**: A compare-and-swap succeeds because a pointer's value is unchanged, even though the state it refers to has changed and changed back. Defended against with tagged pointers or hazard pointers.
 
+**Banker's Queue**: Okasaki's persistent queue, which keeps amortized O(1) operations even when old versions are reused by scheduling the expensive list reversal lazily and memoizing it.
+
 **CAS (Compare-and-Swap)**: An atomic hardware instruction that sets a memory location to a new value only if it currently holds an expected one. The universal primitive for lock-free programming.
 
 **Copy-on-Write**: Sharing data until a write occurs, at which point the written portion is duplicated.
+
+**Fat Node**: A persistence technique that stores every historical value of a field, stamped with its version, inside the node itself. Updates cost O(1) space; reads pay a search over the stamps.
+
+**Finger Tree**: A persistent sequence with amortized O(1) access at both ends and O(log n) split and concatenation. Annotating it with a monoid yields indexed sequences, priority queues and interval trees from one structure.
 
 **Linearizability**: Every operation appears to take effect instantaneously at some moment between its call and return, consistent with real time. The standard correctness condition for concurrent objects, and notable for composing.
 
@@ -127,6 +151,8 @@
 **Path Copying**: Achieving persistence by duplicating only the nodes on the path from root to the modification point, O(log n) per update in a balanced tree.
 
 **Persistent**: Preserving previous versions after modification. *Partial* persistence allows querying old versions; *full* allows updating them; *confluent* allows merging them. Unrelated to durable storage.
+
+**Persistent Vector**: A persistent array stored as a wide trie (typically 32-way) indexed by groups of bits of the position. Updates copy one root-to-leaf path, O(log₃₂ n). Used by Clojure and Scala.
 
 **Structural Sharing**: Reusing unchanged subtrees between versions of an immutable structure. What makes persistence affordable.
 
@@ -142,7 +168,17 @@
 
 **DHT (Distributed Hash Table)**: A hash table partitioned across many machines, with a routing protocol for locating the responsible node.
 
+**ECMP (Equal-Cost Multipath)**: Spreading traffic across several equally good next hops by hashing each flow's header fields, so that packets of one flow stay on one path and are not reordered.
+
 **Eventual Consistency**: A guarantee that replicas converge given no further updates, with no bound on when.
+
+**Happens-Before**: The causal order of events in a distributed system: a precedes b if they are on the same process in that order, or a message chain connects them. Events not ordered either way are concurrent.
+
+**Hybrid Logical Clock (HLC)**: A timestamp that stays close to physical time but, like a Lamport clock, never violates causality. Used by CockroachDB.
+
+**Lamport Clock**: A per-process counter incremented on each event and advanced past any timestamp received in a message. If a happens before b then L(a) < L(b), but not conversely.
+
+**Maglev Hashing**: Google's consistent hashing scheme for load balancers: each backend fills a prime-sized lookup table in its own permutation order, giving near-perfect balance and little remapping when a backend changes.
 
 **Merkle Tree**: A tree of hashes where each node hashes its children, allowing two large datasets to be compared (and their differences located) in logarithmic work.
 
@@ -151,6 +187,8 @@
 **Quorum**: A subset of replicas that must acknowledge an operation. Overlapping read and write quorums (R + W > N) give strong consistency.
 
 **Scan Resistance**: A cache policy's ability to survive a one-off sequential scan without evicting its genuinely popular items. LRU has none; LFU, ARC and W-TinyLFU do.
+
+**Sequence CRDT**: A replicated list or text that gives every element a unique, ordered identifier so concurrent inserts and deletes converge. RGA, used in Automerge, is one example.
 
 **Vector Clock**: A per-replica counter vector that distinguishes causally-ordered updates from genuinely concurrent ones.
 
@@ -172,9 +210,13 @@
 
 **Border**: A string that is both a proper prefix and a suffix of another. The prefix function (KMP's failure function) records the longest border of each prefix of a pattern.
 
+**Controlled Prefix Expansion**: Rewriting routing prefixes whose length is not a multiple of a trie's stride into several longer prefixes that are, so a multibit trie can consume several address bits per memory access.
+
 **Inverted Index**: A map from each term to its posting list, the sorted list of documents containing it. The core structure of full-text search.
 
 **LCP Array**: Longest Common Prefix between each pair of adjacent suffixes in a suffix array. Together they encode a suffix tree implicitly.
+
+**Longest-Prefix Match**: The IP routing lookup: among all table prefixes matching an address, choose the longest, because it is the most specific route.
 
 **MBR (Minimum Bounding Rectangle)**: The smallest axis-aligned rectangle enclosing a set of objects. The key type in an R-tree, and overlap between sibling MBRs is what degrades R-tree queries.
 

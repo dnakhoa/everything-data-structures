@@ -1,52 +1,52 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 700 420" role="img" aria-label="Floyd cycle detection on a list of 8 nodes whose last node links back to node 4: tail length 3, cycle length 5, the pointers meet at node 6, and 3 more steps from there reach node 4" style="max-width:100%;height:auto;color:inherit">
   <style>
-    .n    { fill: none; stroke: currentColor; stroke-width: 2; }
-    .st   { fill: none; stroke: #3b82f6; stroke-width: 2.5; }
-    .mt   { fill: none; stroke: #f59e0b; stroke-width: 2.5; }
-    .e    { stroke: currentColor; stroke-width: 1.8; opacity: .75; }
-    .t    { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
-    .lab  { fill: currentColor; font: 12px system-ui, sans-serif; text-anchor: middle; opacity: .8; }
-    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
-    .note { fill: currentColor; font: 11.5px system-ui, sans-serif; opacity: .75; text-anchor: middle; }
-    .a1   { stroke: #f59e0b; stroke-width: 2.2; fill: none; }
-    .a2   { stroke: #10b981; stroke-width: 2.2; fill: none; }
-    .a1t  { fill: #f59e0b; font: 600 12px system-ui, sans-serif; text-anchor: middle; }
-    .a2t  { fill: #10b981; font: 600 12px system-ui, sans-serif; text-anchor: middle; }
-    .br   { stroke: currentColor; stroke-width: 1.2; fill: none; opacity: .6; }
+    .floyd-cycle-n    { fill: none; stroke: currentColor; stroke-width: 2; }
+    .floyd-cycle-st   { fill: none; stroke: #3b82f6; stroke-width: 2.5; }
+    .floyd-cycle-mt   { fill: none; stroke: #f59e0b; stroke-width: 2.5; }
+    .floyd-cycle-e    { stroke: currentColor; stroke-width: 1.8; opacity: .75; }
+    .floyd-cycle-t    { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: middle; }
+    .floyd-cycle-lab  { fill: currentColor; font: 12px system-ui, sans-serif; text-anchor: middle; opacity: .8; }
+    .floyd-cycle-cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: middle; }
+    .floyd-cycle-note { fill: currentColor; font: 11.5px system-ui, sans-serif; opacity: .75; text-anchor: middle; }
+    .floyd-cycle-a1   { stroke: #f59e0b; stroke-width: 2.2; fill: none; }
+    .floyd-cycle-a2   { stroke: #10b981; stroke-width: 2.2; fill: none; }
+    .floyd-cycle-a1t  { fill: #f59e0b; font: 600 12px system-ui, sans-serif; text-anchor: middle; }
+    .floyd-cycle-a2t  { fill: #10b981; font: 600 12px system-ui, sans-serif; text-anchor: middle; }
+    .floyd-cycle-br   { stroke: currentColor; stroke-width: 1.2; fill: none; opacity: .6; }
   </style>
   <defs>
     <marker id="fc-arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="currentColor"/></marker>
     <marker id="fc-a1" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#f59e0b"/></marker>
     <marker id="fc-a2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 Z" fill="#10b981"/></marker>
   </defs>
-  <text class="cap" x="350" y="24">Floyd cycle detection: tail μ = 3, cycle λ = 5</text>
-  <text class="lab" x="40" y="201">head</text>
-  <line class="e" x1="109.0" y1="196.0" x2="169.0" y2="196.0" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="209.0" y1="196.0" x2="269.0" y2="196.0" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="309.0" y1="196.0" x2="364.0" y2="196.0" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="396.2" y1="180.6" x2="438.3" y2="122.6" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="468.7" y1="111.5" x2="536.9" y2="133.7" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="556.9" y1="159.2" x2="556.9" y2="230.8" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="538.8" y1="257.7" x2="470.6" y2="279.9" marker-end="url(#fc-arr)"/>
-  <line class="e" x1="439.5" y1="271.0" x2="397.3" y2="213.0" marker-end="url(#fc-arr)"/>
-  <circle class="n" cx="90.0" cy="196.0" r="19"/><text class="t" x="90.0" y="201.0">1</text>
-  <circle class="n" cx="190.0" cy="196.0" r="19"/><text class="t" x="190.0" y="201.0">2</text>
-  <circle class="n" cx="290.0" cy="196.0" r="19"/><text class="t" x="290.0" y="201.0">3</text>
-  <circle class="st" cx="385.0" cy="196.0" r="19"/><text class="t" x="385.0" y="201.0">4</text>
-  <circle class="n" cx="450.6" cy="105.6" r="19"/><text class="t" x="450.6" y="110.6">5</text>
-  <circle class="mt" cx="556.9" cy="140.2" r="19"/><text class="t" x="556.9" y="145.2">6</text>
-  <circle class="n" cx="556.9" cy="251.8" r="19"/><text class="t" x="556.9" y="256.8">7</text>
-  <circle class="n" cx="450.6" cy="286.4" r="19"/><text class="t" x="450.6" y="291.4">8</text>
-  <path class="br" d="M90,230 L90,238 L290,238 L290,230"/>
-  <text class="lab" x="190" y="256">tail: μ = 3 steps from head to the cycle</text>
-  <text class="lab" x="399.0" y="234.0" fill="#3b82f6" style="fill:#3b82f6">cycle start</text>
-  <text class="lab" x="586.9" y="116.2" style="text-anchor:start;fill:#f59e0b">meeting point</text>
-  <text class="lab" x="480" y="192">cycle</text>
-  <text class="lab" x="480" y="209">λ = 5</text>
-  <path class="a1" d="M350.9,168.6 A132,132 0 0 1 568.3,97.9" marker-end="url(#fc-a1)"/>
-  <text class="a1t" x="434.9" y="57.1">k − μ = 2 steps into the cycle</text>
-  <path class="a2" d="M600.6,142.3 A132,132 0 1 1 365.7,262.0" marker-end="url(#fc-a2)"/>
-  <text class="a2t" x="508.1" y="359.5">μ = 3 more steps reach the start</text>
-  <text class="note" x="350" y="386">Phase 1: slow moves 1, fast moves 2. They meet at node 6 after k = 5 steps; k is a multiple of λ.</text>
-  <text class="note" x="350" y="406">Phase 2: restart one pointer at the head. Both move 1 step; after μ = 3 steps both are at node 4.</text>
+  <text class="floyd-cycle-cap" x="350" y="24">Floyd cycle detection: tail μ = 3, cycle λ = 5</text>
+  <text class="floyd-cycle-lab" x="40" y="201">head</text>
+  <line class="floyd-cycle-e" x1="109.0" y1="196.0" x2="169.0" y2="196.0" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="209.0" y1="196.0" x2="269.0" y2="196.0" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="309.0" y1="196.0" x2="364.0" y2="196.0" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="396.2" y1="180.6" x2="438.3" y2="122.6" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="468.7" y1="111.5" x2="536.9" y2="133.7" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="556.9" y1="159.2" x2="556.9" y2="230.8" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="538.8" y1="257.7" x2="470.6" y2="279.9" marker-end="url(#fc-arr)"/>
+  <line class="floyd-cycle-e" x1="439.5" y1="271.0" x2="397.3" y2="213.0" marker-end="url(#fc-arr)"/>
+  <circle class="floyd-cycle-n" cx="90.0" cy="196.0" r="19"/><text class="floyd-cycle-t" x="90.0" y="201.0">1</text>
+  <circle class="floyd-cycle-n" cx="190.0" cy="196.0" r="19"/><text class="floyd-cycle-t" x="190.0" y="201.0">2</text>
+  <circle class="floyd-cycle-n" cx="290.0" cy="196.0" r="19"/><text class="floyd-cycle-t" x="290.0" y="201.0">3</text>
+  <circle class="floyd-cycle-st" cx="385.0" cy="196.0" r="19"/><text class="floyd-cycle-t" x="385.0" y="201.0">4</text>
+  <circle class="floyd-cycle-n" cx="450.6" cy="105.6" r="19"/><text class="floyd-cycle-t" x="450.6" y="110.6">5</text>
+  <circle class="floyd-cycle-mt" cx="556.9" cy="140.2" r="19"/><text class="floyd-cycle-t" x="556.9" y="145.2">6</text>
+  <circle class="floyd-cycle-n" cx="556.9" cy="251.8" r="19"/><text class="floyd-cycle-t" x="556.9" y="256.8">7</text>
+  <circle class="floyd-cycle-n" cx="450.6" cy="286.4" r="19"/><text class="floyd-cycle-t" x="450.6" y="291.4">8</text>
+  <path class="floyd-cycle-br" d="M90,230 L90,238 L290,238 L290,230"/>
+  <text class="floyd-cycle-lab" x="190" y="256">tail: μ = 3 steps from head to the cycle</text>
+  <text class="floyd-cycle-lab" x="399.0" y="234.0" fill="#3b82f6" style="fill:#3b82f6">cycle start</text>
+  <text class="floyd-cycle-lab" x="586.9" y="116.2" style="text-anchor:start;fill:#f59e0b">meeting point</text>
+  <text class="floyd-cycle-lab" x="480" y="192">cycle</text>
+  <text class="floyd-cycle-lab" x="480" y="209">λ = 5</text>
+  <path class="floyd-cycle-a1" d="M350.9,168.6 A132,132 0 0 1 568.3,97.9" marker-end="url(#fc-a1)"/>
+  <text class="floyd-cycle-a1t" x="434.9" y="57.1">k − μ = 2 steps into the cycle</text>
+  <path class="floyd-cycle-a2" d="M600.6,142.3 A132,132 0 1 1 365.7,262.0" marker-end="url(#fc-a2)"/>
+  <text class="floyd-cycle-a2t" x="508.1" y="359.5">μ = 3 more steps reach the start</text>
+  <text class="floyd-cycle-note" x="350" y="386">Phase 1: slow moves 1, fast moves 2. They meet at node 6 after k = 5 steps; k is a multiple of λ.</text>
+  <text class="floyd-cycle-note" x="350" y="406">Phase 2: restart one pointer at the head. Both move 1 step; after μ = 3 steps both are at node 4.</text>
 </svg>

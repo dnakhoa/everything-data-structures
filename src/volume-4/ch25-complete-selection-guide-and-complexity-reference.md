@@ -1,20 +1,33 @@
 # Chapter 25: Complete Selection Guide and Complexity Reference
 
+This chapter is for the moment you have a problem and need a structure. Section 25.1 maps common needs to choices, split by whether the data is static or changing. Sections 25.2 and 25.3 are the reference tables. Section 25.4 gives a short decision procedure for when no row of the matrix fits exactly, Section 25.5 works through six realistic selection problems end to end, and Section 25.6 lists the mistakes that come up again and again in code review.
+
 ## 25.1 Data Structure Selection Matrix
 
-| Need | Primary Choice | CP Alternative | Research Alternative |
-|------|---------------|-----------------|----------------------|
-| Range sum/query | Fenwick Tree | Segment Tree | Succinct Range Sum |
-| Range min/max | Segment Tree | Sparse Table | Range Min Query |
-| K-th order stat | Wavelet Tree | Merge Sort Tree | Wavelet Matrix |
-| Path queries (tree) | HLD + SegTree | Link-Cut Tree | Euler Tour Tree |
-| String search | Trie | Suffix Automaton | FM-Index |
-| Palindromes | Palindromic Tree | Hash + binary | LCS-based |
-| Dynamic connectivity | DSU (offline) | HDT (Holm–de Lichtenberg–Thorup) | Euler Tour Trees |
-| Priority queue | Binary Heap | Fibonacci Heap | Buffered Heap |
-| Ordered statistics | Order Statistic Tree | Treap | van Emde Boas |
-| Approx membership | Bloom Filter | Cuckoo Filter | Quotient Filter |
-| Approx counting | HyperLogLog | Count-Min Sketch | Count Sketch |
+Most selection questions turn on one distinction first: is the data **static** (built once, queried many times) or does it **change** between queries? Static data admits simpler, faster, smaller structures, and that column is often the right answer even when it looks too simple.
+
+| Need | Static data | With updates | Notes |
+|------|-------------|--------------|-------|
+| Lookup by exact key | Sorted array + binary search; perfect hashing for a fixed key set | Hash table (Robin Hood or Swiss table, [Chapter 12](../volume-2/ch12-hash-tables.md)) | A hash table gives up ordering; if you will ever need "next key" or a range, see the next row |
+| Ordered map: successor, range scans | Sorted array | Red-black tree or skip list in memory; B+ tree on disk | Sorted arrays win for read-heavy data even with occasional bulk rebuilds |
+| Integer keys below u: predecessor | Sorted array | B-tree or radix tree in practice; vEB or y-fast trie in theory ([Chapter 24](ch24-research-grade-data-structures.md)) | The O(log log u) structures rarely beat a cache-friendly B-tree below about 10⁷ keys |
+| Repeated minimum or maximum | Sorted array | Binary heap (4-ary is often faster); indexed heap if you need decrease-key; radix heap for monotone integer keys | A balanced BST also works and supports deletion of arbitrary keys |
+| Range sum | Prefix sums, O(1) query | Fenwick tree (point updates); segment tree with lazy propagation (range updates) | |
+| Range minimum or maximum | Sparse table, O(1) query; Fischer-Heun RMQ in 2n + o(n) bits | Segment tree | Idempotence (min(x, x) = x) is what lets a sparse table use overlapping windows |
+| k-th smallest overall, rank of a key | Sorted array | Order-statistic tree; Fenwick tree over compressed values | Redis sorted sets use a skip list with span counts |
+| k-th smallest in a subarray a[l..r] | Wavelet tree or wavelet matrix | Offline techniques, or a Fenwick tree of order-statistic trees in O(log² n) | |
+| Path or subtree queries on a tree | Heavy-light decomposition + segment tree | Link-cut tree when edges are linked and cut | Euler tour + segment tree handles subtree aggregates |
+| Connectivity | Union-find, when edges are only added | Offline with deletions: rollback DSU over a segment tree of time; online: HDT (research) | |
+| Find one pattern in a text | KMP, Z-algorithm, or the language's built-in search | | Rabin-Karp when many windows must be compared |
+| Find many patterns in one pass | Aho-Corasick | | |
+| Many queries against one fixed text | Suffix array + LCP; FM-index when it must be compressed | Suffix automaton supports appending | |
+| Palindromes | Manacher's algorithm (all maximal palindromes in O(n)) | Palindromic tree (distinct palindromes, append-only) | |
+| Approximate membership | Bloom filter; xor filter for a fixed set | Cuckoo filter (supports deletion); quotient filter | |
+| Count of distinct items | HyperLogLog | HyperLogLog | Mergeable across machines |
+| Item frequencies, heavy hitters | Count-Min sketch; Space-Saving for top-k | Same | |
+| Quantiles over a stream | t-digest, KLL | Same | |
+| Cache | | LRU (hash map + doubly linked list); W-TinyLFU for skewed workloads | [Chapter 29](../volume-5/ch29-system-design-as-data-structure-composition.md) |
+| Text being edited | | Piece table or rope; gap buffer for a single cursor | [Chapter 13](../volume-2/ch13-string-data-structures.md) |
 
 ## 25.2 Complete Complexity Reference
 
@@ -64,6 +77,132 @@ Each paradigm is defined by a bookkeeping question it must answer repeatedly, an
 | Randomized | (Defeat the adversary) | Depends, randomness *is* the technique | Quicksort, skip lists, treaps, Bloom filters |
 
 The recurring trap: greedy is only correct when the problem has the matroid property or an equivalent exchange argument. Without it, greedy produces plausible wrong answers, which is worse than obviously wrong ones, because they pass casual testing.
+
+## 25.4 A Decision Procedure
+
+When no row of the matrix fits exactly, five questions, asked in order, usually narrow the choice to one or two candidates.
+
+1. **What are the operations, and in what proportion?** Write them down with rough frequencies: "10⁶ lookups per second, 10³ inserts per second, a range scan per minute". Most bad choices come from optimising an operation that is rare. A structure that makes the common operation O(1) and the rare one O(n) is often right.
+2. **Is the data static, append-only, or fully dynamic?** Static data allows sorted arrays, sparse tables, perfect hashing and succinct structures, all of which are smaller and faster than their dynamic counterparts. Append-only data allows logs, LSM trees and suffix automata.
+3. **Does order matter?** If any query mentions "next", "range", "smallest", "top" or "before", you need an ordered structure (sorted array, balanced tree, B-tree, skip list, heap). If every query is "is this key present, and what is its value", a hash table is almost always the answer.
+4. **Does it fit in memory, and on one machine?** If not, the cost model changes from operations to block transfers ([Chapter 16](../volume-3/ch16-external-memory-and-cache-oblivious-structures.md)): B+ trees and LSM trees on one machine, partitioned structures across several ([Chapter 27](../volume-5/ch27-distributed-data-structures.md)).
+5. **Can the answer be approximate?** If a small, bounded error is acceptable, a probabilistic structure ([Chapter 14](../volume-3/ch14-probabilistic-data-structures.md)) can be thousands of times smaller. If it must be exact and the exact structure fits in memory, use the exact one.
+
+<figure>
+{{#include ../images/selection-flowchart.svg}}
+<figcaption>Questions 2 to 5 as a flowchart, for the common case of storing keys and looking them up. It is a starting point, not a verdict; Section 25.5 shows how workload details change the answer.</figcaption>
+</figure>
+
+After choosing, check the answer against three practical constraints the asymptotics ignore: memory per element (a Python dict entry costs around 100 bytes once you include the key and value objects, so 50 million entries need about 5 GB), worst-case latency (amortized and expected bounds allow occasional slow operations), and whether a well-tested library already provides it ([Chapter 22](../volume-3/ch22-practical-considerations.md)).
+
+## 25.5 Worked Selection Problems
+
+Each problem states the workload, the choice, the cost, and why the obvious alternatives lose.
+
+### Autocomplete over a fixed vocabulary
+
+**Workload.** Ten million product names, each with a popularity score, rebuilt nightly. Each keystroke asks for the 10 most popular names starting with the typed prefix, at thousands of queries per second.
+
+**Choice.** The data is static, so sort the names. All names with a given prefix form one contiguous block of the sorted array, found with two binary searches. Inside the block, the top 10 by popularity come from a sparse table of "index of the maximum score" (Section 23.11) and a heap: take the maximum of the block, split the block around it, push the maximum of each half, and repeat 10 times.
+
+```python
+import heapq
+from bisect import bisect_left
+
+
+class Autocomplete:
+    """Top-k most popular completions of a prefix, over a fixed vocabulary."""
+
+    def __init__(self, words_with_scores):
+        pairs = sorted(words_with_scores)               # sort by word
+        self.words = [w for w, _ in pairs]
+        self.score = [s for _, s in pairs]
+        n = len(pairs)
+        # Sparse table of argmax over the scores (Chapter 23.11).
+        self.table = [list(range(n))]
+        j = 1
+        while (1 << j) <= n:
+            prev, half = self.table[-1], 1 << (j - 1)
+            row = []
+            for i in range(n - (1 << j) + 1):
+                a, b = prev[i], prev[i + half]
+                row.append(a if self.score[a] >= self.score[b] else b)
+            self.table.append(row)
+            j += 1
+
+    def _argmax(self, lo, hi):                          # best index in [lo, hi)
+        j = (hi - lo).bit_length() - 1
+        a, b = self.table[j][lo], self.table[j][hi - (1 << j)]
+        return a if self.score[a] >= self.score[b] else b
+
+    def complete(self, prefix, k):
+        lo = bisect_left(self.words, prefix)
+        hi = bisect_left(self.words, prefix + '￿')  # end of the prefix block
+        heap, out = [], []
+        if lo < hi:
+            i = self._argmax(lo, hi)
+            heap.append((-self.score[i], i, lo, hi))
+        while heap and len(out) < k:
+            _, i, a, b = heapq.heappop(heap)
+            out.append(self.words[i])
+            for x, y in ((a, i), (i + 1, b)):           # split around the winner
+                if x < y:
+                    m = self._argmax(x, y)
+                    heapq.heappush(heap, (-self.score[m], m, x, y))
+        return out
+```
+
+**Cost.** O(n log n) to build, once a night. Each query is O(log n) for the binary searches plus O(k log k) for the heap, independent of how many names match the prefix. With "car" typed, the block might hold 50,000 names; the query still touches only about 2k of them.
+
+**Why not the alternatives?** A trie answers the prefix part in O(prefix length) but then must explore every completion to find the most popular, unless each trie node stores its own top 10, which multiplies memory by the average depth. Scanning the block and sorting by popularity costs O(block size) per keystroke, which is fine for long prefixes and fatal for "a".
+
+### A live leaderboard
+
+**Workload.** 50 million players, each with an integer score between 0 and 10⁶. Scores change constantly. Queries: a player's rank, and the top 100.
+
+**Choice.** Two options are both good, and the score range decides. A general **order-statistic structure** (a skip list with span counts, as in Redis sorted sets, or a size-augmented balanced tree, [Chapter 7](../volume-1/ch07-binary-search-trees.md)) gives O(log n) update and rank for any score type. Because scores here are bounded integers, a **Fenwick tree indexed by score** that counts players per score value is smaller and faster: an update is two point updates (remove the old score, add the new one), and a rank is one prefix sum, each O(log 10⁶), about 20 steps, in a 4 MB array. Ties are broken separately (for example by time reached).
+
+**Why not the alternatives?** Sorting on every query is O(n log n), seconds per query at 50 million. A hash map from player to score answers "what is my score" but not "what is my rank".
+
+### Has the crawler seen this URL?
+
+**Workload.** A web crawler has seen 5 billion URLs and checks each newly discovered link before fetching it. The full URL set lives in an on-disk key-value store.
+
+**Choice.** A **Bloom filter** in memory in front of the on-disk store. At a 1% false-positive rate it needs about 9.6 bits per URL, which is about 6 GB for 5 billion URLs, with 7 hash functions. A "not present" answer is always correct, so new URLs (the common case for a crawler at the frontier) never touch the disk. A "present" answer is checked against the store, which catches the 1% of false positives.
+
+**Why not the alternatives?** An exact in-memory hash set of 5 billion URLs at an average of 70 bytes each needs well over 350 GB. Checking the disk store for every link costs a random read per link. The Bloom filter is the classic case of question 5 in Section 25.4: approximate is acceptable because an exact check backs it up.
+
+### A rate limiter for an API
+
+**Workload.** A million API keys, each allowed 100 requests per minute, checked on every request.
+
+**Choice.** A **hash map from API key to a token bucket** (two numbers: tokens remaining and last refill time, [Chapter 29](../volume-5/ch29-system-design-as-data-structure-composition.md)). Each check is O(1) expected and the whole table is tens of megabytes.
+
+**When it changes.** If the keys are unbounded (rate limiting by client IP during an attack, say), the map can be made to grow without limit. Then a **Count-Min sketch** per time window bounds memory regardless of the number of distinct clients. It never undercounts, so it never lets an abuser through; at worst it rate-limits a few legitimate clients early.
+
+### Meeting rooms and overlapping intervals
+
+**Workload.** A calendar service stores bookings as [start, end) intervals per room and must reject any new booking that overlaps an existing one.
+
+**Choice.** Bookings in one room never overlap one another, so a **balanced ordered map keyed by start time** is enough: a new interval [s, e) conflicts only with the booking whose start is the floor of s (does it end after s?) or the ceiling of s (does it start before e?). Two O(log n) lookups ([Chapter 7](../volume-1/ch07-binary-search-trees.md), floor and ceiling). An **interval tree** is needed only when stored intervals may overlap one another, for example when the query is "which of all these events are happening at 3 pm?"
+
+### Latency percentiles across a fleet
+
+**Workload.** A thousand servers each record request latencies; a dashboard shows the fleet-wide p50, p99 and p99.9 every minute.
+
+**Choice.** A **t-digest** (or a KLL sketch) per server per minute, a few kilobytes each, merged centrally ([Chapter 14](../volume-3/ch14-probabilistic-data-structures.md)). Mergeability is the deciding property: you cannot average per-server p99s to get the fleet p99, but you can merge the sketches and query the merged one.
+
+**Why not the alternatives?** Shipping every raw latency costs gigabytes per minute. Fixed histogram buckets work if you know the range in advance, and HdrHistogram is a good choice when you do; t-digest needs no such tuning and is most accurate at the extreme percentiles you care about.
+
+## 25.6 Common Selection Mistakes
+
+- **A hash map when the queries need order.** The code then sorts the keys on every request. If any query mentions a range or "the next one", choose an ordered structure up front.
+- **A linked list for "fast insertion".** Insertion is O(1) only once you hold the node, and finding it is O(n) with a cache miss per step. A dynamic array usually wins even for insertions in the middle ([Chapter 22](../volume-3/ch22-practical-considerations.md) has the measurements).
+- **Linear operations hidden in a library call.** `x in some_list`, `list.pop(0)` and `list.insert(0, x)` in Python are all O(n). Inside a loop they quietly make an algorithm quadratic.
+- **Choosing by asymptotic bounds alone.** Fibonacci heaps, van Emde Boas trees and many other theoretical winners lose to simpler structures at realistic sizes because of constant factors and cache behaviour.
+- **Approximate structures where exact ones fit.** A Bloom filter for 10,000 keys saves a few hundred kilobytes and adds false positives to debug. Use probabilistic structures when the exact one does not fit, or when mergeability or a fixed memory budget matters.
+- **Ignoring worst-case latency.** Amortized O(1) includes the occasional O(n) resize, and expected O(1) includes the occasional long probe sequence. For a latency-sensitive path, preallocate, or choose structures with worst-case bounds.
+- **Distributing too early.** A structure that fits on one machine is far simpler and faster than any distributed one. Check the memory arithmetic before reaching for a cluster.
 
 ## Exercises
 
@@ -153,7 +292,7 @@ x starts in a set of size 1, and no set exceeds n, so x's set can double at most
 
 </details>
 
-**25.6 ★★★ Offline dynamic connectivity.** The matrix lists "DSU (offline)" for dynamic connectivity. You are given the whole sequence of operations in advance: `('add', u, v)`, `('remove', u, v)` and `('query', u, v)` ("are u and v connected right now?"). A plain DSU cannot delete edges. Using the rollback `DSU` of Section 23.14 and a segment tree over time, write `offline_connectivity(n, ops)` that returns the query answers in order, and state its running time.
+**25.6 ★★★ Offline dynamic connectivity.** Section 25.1 lists an offline approach for connectivity when edges can also be removed. You are given the whole sequence of operations in advance: `('add', u, v)`, `('remove', u, v)` and `('query', u, v)` ("are u and v connected right now?"). A plain DSU cannot delete edges. Using the rollback `DSU` of Section 23.14 and a segment tree over time, write `offline_connectivity(n, ops)` that returns the query answers in order, and state its running time.
 
 <details>
 <summary>Hint</summary>
@@ -222,6 +361,121 @@ assert offline_connectivity(3, ops) == [True, False, True]
 Why it is correct: when the DFS reaches leaf t, the DSU contains exactly the edges stored on the root-to-leaf path, and an edge is stored on that path iff its alive interval contains t. So the DSU is the graph at time t. Rollback on exit restores the state of the parent, which is why path compression is not allowed here (Exercise 25.4).
 
 Cost: each edge lands in O(log T) segment tree nodes, and each of those causes one `union` and one undo at O(log n). Total **O(T log T log n)**, plus O(T) for the tree. This is the offline alternative to Holm–de Lichtenberg–Thorup: much simpler, no amortization, but it needs every operation up front. If queries must be answered as they arrive, you are back to HDT's O(log² n) amortized updates.
+
+</details>
+
+**25.7 ★★ The leaderboard, by hand and in code.** Section 25.5 suggests a Fenwick tree indexed by score for a leaderboard with bounded integer scores. (a) Five players have scores 3, 5, 5, 1 and 7, with scores between 0 and 7. A player's rank is 1 plus the number of players with a strictly higher score. Give the rank of a player with each score 7, 5, 3 and 1, and say which prefix sum computes each. (b) The player with score 1 improves to 6. What changes in the tree, and what are the new ranks? (c) Implement it.
+
+<details>
+<summary>Hint</summary>
+
+The number of players with a strictly higher score than s is the total minus the number with score at most s, and "at most s" is a prefix sum over the count array.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) Counts per score: 1 player at 1, 1 at 3, 2 at 5, 1 at 7, total 5. Rank(s) = 1 + 5 − (players with score ≤ s):
+
+| Score | Players ≤ score (prefix sum) | Rank |
+|-------|------------------------------|------|
+| 7 | 5 | 1 |
+| 5 | 4 | 2 |
+| 3 | 2 | 4 |
+| 1 | 1 | 5 |
+
+Both players with score 5 share rank 2, and the next rank is 4: standard competition ranking.
+
+(b) Two point updates: subtract 1 at score 1, add 1 at score 6, each O(log 8). Scores are now 3, 5, 5, 6, 7, and the ranks of 7, 6, 5, 3 are 1, 2, 3, 5.
+
+(c)
+
+```python
+class ScoreLeaderboard:
+    """Rank queries for integer scores in [0, max_score], via a Fenwick tree."""
+
+    def __init__(self, max_score):
+        self.n = max_score + 1
+        self.tree = [0] * (self.n + 1)            # 1-indexed Fenwick tree
+        self.total = 0
+
+    def _add(self, score, delta):
+        i = score + 1
+        while i <= self.n:
+            self.tree[i] += delta
+            i += i & -i
+
+    def _count_at_most(self, score):              # players with score <= s
+        i, s = score + 1, 0
+        while i > 0:
+            s += self.tree[i]
+            i -= i & -i
+        return s
+
+    def add_player(self, score):
+        self._add(score, 1)
+        self.total += 1
+
+    def change(self, old, new):
+        self._add(old, -1)
+        self._add(new, 1)
+
+    def rank(self, score):
+        """1 + number of players with a strictly higher score."""
+        return 1 + self.total - self._count_at_most(score)
+```
+
+Every operation is O(log S) for S possible scores, regardless of the number of players, and the memory is S + 1 integers. For scores up to 10⁶ that is about 20 steps per operation in a 4 MB array.
+
+</details>
+
+**25.8 ★★ Room bookings without an interval tree.** Section 25.5 claims that for one room, where stored bookings never overlap, an ordered map keyed by start time is enough to reject overlapping bookings. (a) Explain why a new booking [s, e) can only conflict with the stored booking that starts at or just after s, or the one just before it. (b) Implement `can_book` with two sorted lists and `bisect`, and trace the bookings [9, 10), [13, 15), [10, 13), [9, 11), [14, 16), [8, 9) in that order. (c) When does this stop being enough?
+
+<details>
+<summary>Solution</summary>
+
+(a) Stored bookings are disjoint, so sorted by start they are also sorted by end. Every booking after the first one starting at or after s starts even later, so if that first one starts at or after e, all later ones do too. Every booking before the one just before s ends no later than that one does, so if it ends at or before s, all earlier ones do too. Checking those two neighbours is enough.
+
+(b)
+
+```python
+from bisect import bisect_left
+
+
+def can_book(starts, ends, s, e):
+    """starts is sorted; bookings [starts[i], ends[i]) never overlap."""
+    i = bisect_left(starts, s)                    # first booking starting at or after s
+    if i < len(starts) and starts[i] < e:         # it starts before we end
+        return False
+    if i > 0 and ends[i - 1] > s:                 # the one before ends after we start
+        return False
+    return True
+
+
+def book(starts, ends, s, e):
+    if not can_book(starts, ends, s, e):
+        return False
+    i = bisect_left(starts, s)
+    starts.insert(i, s)
+    ends.insert(i, e)
+    return True
+```
+
+Trace, with half-open intervals so that touching is allowed:
+
+| Request | Result | Why |
+|---------|--------|-----|
+| [9, 10) | booked | empty |
+| [13, 15) | booked | no neighbour overlaps |
+| [10, 13) | booked | touches [9, 10) and [13, 15) but overlaps neither |
+| [9, 11) | rejected | the booking starting at 9 starts before 11 |
+| [14, 16) | rejected | [13, 15) ends after 14 |
+| [8, 9) | booked | touches [9, 10) |
+
+`can_book` is O(log n). With Python lists, `book` is O(n) because of `insert`; a balanced tree or `sortedcontainers.SortedList` makes it O(log n).
+
+(c) It relies on stored intervals never overlapping. If they can overlap (several rooms in one structure, or "show every event at 3 pm" over arbitrary events), sorting by start no longer sorts by end, and an interval tree or a segment tree over time is needed.
 
 </details>
 

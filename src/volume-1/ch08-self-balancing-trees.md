@@ -169,6 +169,171 @@ Node* insert_avl(Node *node, int key) {
 }
 ```
 
+Why is one rotation (single or double) enough for an insertion? Let z be the lowest unbalanced ancestor of the new node. Before the insertion z's subtree had some height H. The insertion pushed it to H + 1, and that extra level is what unbalanced z. The rotation at z removes exactly that level, so z's subtree is back to height H, the height it had before the insertion. Every ancestor above z sees the same subtree height as before, so nothing above z can be unbalanced.
+
+### AVL Deletion
+
+Deletion starts as BST deletion (Section 7.2): a node with two children takes its successor's key, and the successor, which has at most one child, is unlinked instead. Then, as with insertion, walk back up the search path, updating heights and rotating wherever a balance factor reaches ±2. Two things are different.
+
+**The case is chosen from the child's balance factor, not the key.** The insertion code compares the new key with the child's key to tell Left-Left from Left-Right. A deletion removes a key from the *shorter* side, so the key says nothing about the shape of the taller side. Look at the taller child y instead. If y leans the same way as z, or not at all (balance factor 0), do a single rotation; if y leans the other way, do a double rotation. The balance-0 case never arises after an insertion (the child that just grew always leans one way), but it does after a deletion, and there a double rotation would leave a node unbalanced (Exercise 8.8).
+
+**One rotation may not finish the job.** Say z is left-heavy and lost a level on the right. Before the deletion z had height H, with a left subtree of height H − 1 and a right subtree of height H − 2. After it the right subtree has height H − 3. A single rotation when y leans left, or a double rotation when y leans right, leaves the subtree with height H − 1: one *less* than before the deletion. So z's parent now sees a shorter child and may itself be unbalanced, and so may every ancestor above it. Only when y has balance 0 does the single rotation keep height H, and then the walk can stop.
+
+Here is the AVL code in Python, with the four cases folded into one `rebalance` that insertion and deletion share. Heights follow the C code: an empty tree has height 0 and a leaf has height 1.
+
+```python
+class Node:
+    def __init__(self, key):
+        self.key = key
+        self.left = self.right = None
+        self.height = 1
+
+
+def height(node):
+    return node.height if node else 0
+
+
+def get_balance(node):
+    return height(node.left) - height(node.right)
+
+
+def update(node):
+    node.height = 1 + max(height(node.left), height(node.right))
+
+
+def rotate_right(z):
+    y = z.left
+    z.left, y.right = y.right, z
+    update(z)
+    update(y)
+    return y
+
+
+def rotate_left(z):
+    y = z.right
+    z.right, y.left = y.left, z
+    update(z)
+    update(y)
+    return y
+
+
+def rebalance(node):
+    update(node)
+    balance = get_balance(node)
+    if balance > 1:                          # left-heavy
+        if get_balance(node.left) < 0:       # Left-Right: straighten first
+            node.left = rotate_left(node.left)
+        return rotate_right(node)            # Left-Left, or child balance 0
+    if balance < -1:                         # right-heavy, the mirror image
+        if get_balance(node.right) > 0:      # Right-Left
+            node.right = rotate_right(node.right)
+        return rotate_left(node)             # Right-Right, or child balance 0
+    return node
+
+
+def insert_avl(node, key):
+    if node is None:
+        return Node(key)
+    if key < node.key:
+        node.left = insert_avl(node.left, key)
+    elif key > node.key:
+        node.right = insert_avl(node.right, key)
+    else:
+        return node                          # duplicate
+    return rebalance(node)
+
+
+def delete_avl(node, key):
+    if node is None:
+        return None                          # key not present
+    if key < node.key:
+        node.left = delete_avl(node.left, key)
+    elif key > node.key:
+        node.right = delete_avl(node.right, key)
+    else:
+        if node.left is None:
+            return node.right
+        if node.right is None:
+            return node.left
+        successor = min_value(node.right)    # Section 7.2
+        node.key = successor.key
+        node.right = delete_avl(node.right, successor.key)
+    return rebalance(node)
+```
+
+`delete_avl` calls `rebalance` at every node on the way back up, so it handles the cascade without any special code. For simplicity it keeps rebalancing after the height stops changing; those extra calls find nothing to do.
+
+**Worked example: a deletion that rotates twice.** The tree below is a *Fibonacci tree*, the thinnest AVL tree of its height (Exercise 8.4; heights here count nodes, as in the code, so they are one more than in that exercise). Every internal node is left-heavy, with balance factor +1. Delete 12.
+
+```
+Before (height 5):                    After deleting 12 (height 4):
+
+              8                                   5
+           /     \                             /     \
+          5       11                          3       8
+        /   \    /  \                        / \     /  \
+       3     7  10   12                     2   4   7    10
+      / \   /   /                          /       /    /  \
+     2   4 6   9                          1       6    9    11
+    /
+   1
+```
+
+```
+delete_avl(12)       12 is a leaf: return None, so 11.right = None
+rebalance(11)        heights: left (10) = 2, right = 0, balance +2
+                     child 10 has balance +1: Left-Left, rotate_right(11)
+                     the subtree is now 10 with children 9 and 11, height 2 (was 3)
+rebalance(8)         heights: left (5) = 4, right (10) = 2, balance +2
+                     child 5 has balance +1: Left-Left, rotate_right(8)
+                     5 is the new root; tree height 4 (was 5)
+```
+
+Both ancestors of the deleted leaf needed a rotation, because each rotation made its subtree one shorter, which unbalanced the next node up. In bigger Fibonacci trees the cascade keeps going: deleting the right leaf of the 232-node Fibonacci tree of height 11 causes 5 rotations, about one for every two levels. An insertion into any AVL tree never needs more than 2.
+
+**Cost.** Each level of the path does O(1) work: update a height and do at most one single or double rotation. Deletion is therefore O(log n) worst case, with O(log n) rotations in the worst case, against O(1) rotations for insertion.
+
+**Testing it.** A balanced tree can return the right answers while silently breaking its invariant, so check the invariant, not just the answers. After every operation, compare the tree's in-order keys with a sorted Python list that receives the same operations, and verify every node's stored height and balance factor:
+
+```python
+import bisect
+import random
+
+
+def min_value(node):                         # Section 7.2
+    while node.left:
+        node = node.left
+    return node
+
+
+def check_avl(node, lo=None, hi=None):
+    """Return the keys in order; fail if order, a height or a balance is wrong."""
+    if node is None:
+        return []
+    assert (lo is None or lo < node.key) and (hi is None or node.key < hi)
+    keys = check_avl(node.left, lo, node.key) + [node.key] \
+        + check_avl(node.right, node.key, hi)
+    assert node.height == 1 + max(height(node.left), height(node.right))
+    assert abs(get_balance(node)) <= 1
+    return keys
+
+
+root, reference = None, []
+for _ in range(5000):
+    key = random.randrange(300)
+    if random.random() < 0.5:
+        root = insert_avl(root, key)
+        if key not in reference:
+            bisect.insort(reference, key)
+    else:
+        root = delete_avl(root, key)
+        if key in reference:
+            reference.remove(key)
+    assert check_avl(root) == reference
+```
+
+The children are checked before the parent, so each stored height is compared against children whose heights have already been verified.
+
 ### AVL Properties
 
 - Height ≤ 1.44 log₂(n+1) (tight bound)
@@ -267,6 +432,53 @@ void fix_violation(Node **root, Node *z) {
 }
 ```
 
+### Deletion and the Double Black
+
+Deletion is where red-black trees earn their reputation. Start with BST deletion (Section 7.2): if the node has two children, copy in its successor's key and remove the successor instead. Either way, the node y that is physically unlinked has at most one child, x (possibly a NIL leaf), which takes y's place.
+
+- **y was red.** No path lost a black node, and y's neighbours were black, so no red-red appears. Done.
+- **y was black and x is red.** Color x black. The paths through x get their black node back. Done.
+- **y was black and x is black** (usually x is NIL). Every path through x now has one black node too few, breaking property 5. Pretend x carries an *extra black*: it is **double black** and counts twice. The counts are now correct, and the rest of the algorithm moves the extra black around until it can be dropped.
+
+Let x be a left child, p its parent and w its sibling (the cases for a right child are mirror images). w cannot be NIL: before the deletion, every path down x's side passed through the removed black node y, so every path down w's side contains a black node too, besides its final NIL.
+
+| Case | Situation | Action | Then |
+|------|-----------|--------|------|
+| 1 | w is red | Rotate left at p; swap the colors of p and w | x has a black sibling: go to case 2, 3 or 4 |
+| 2 | w is black, both its children black | Color w red; move the extra black up to p | p red: color it black, done. p black: p is double black, repeat one level up |
+| 3 | w is black, near child (w.left) red, far child black | Rotate right at w; swap the colors of w and its old near child | Now the far child is red: case 4 |
+| 4 | w is black, far child (w.right) red | Rotate left at p; w takes p's color; p and the far child become black | Done |
+
+In case 2, coloring w red removes one black from every path on w's side, matching the shortage on x's side; the whole subtree at p is now one short, which is what moving the extra black up to p records. In case 4 the rotation puts p, now black, above x, giving x's paths the black node they were missing, while w (in p's old position and color) and the far child (now black) keep the counts on the other side. If the extra black reaches the root, drop it: every path loses one black node at once, which property 5 allows.
+
+**Cost.** Case 2 can repeat up the tree, but it only recolors. A case 1 rotation is followed by case 2 with a red parent (which stops) or by case 3 or 4 (which stop), so a deletion makes **at most 3 rotations** (cases 1, 3, 4) and O(log n) recolorings: O(log n) worst case. AVL deletion may need a rotation on many levels; this bounded number of structural changes is one reason libraries prefer red-black trees for update-heavy maps.
+
+**Worked example.** Insert 10, 20, ..., 100 in order, then delete 10:
+
+```
+Before:                                  After deleting 10:
+              B40                                      B60
+           /       \                                /       \
+       B20           B60                        B40           B80
+      /   \         /    \                     /   \         /   \
+    B10   B30     B50     R80                B20   B50     B70   B90
+                         /   \                  \                   \
+                       B70   B90                R30                 R100
+                                \
+                                R100
+```
+
+```
+remove 10          10 is a black leaf: its NIL is double black (x), p = 20, w = 30
+case 2 at 20       w = 30 is black with black (NIL) children: color 30 red,
+                   the extra black moves to 20, which is black, so continue
+case 4 at 40       x = 20, p = 40, w = 60 is black, far child 80 is red:
+                   rotate left at 40; 60 takes 40's color (black);
+                   40 and 80 become black. Done
+```
+
+Every root-to-NIL path still has 3 black nodes before the NIL, and no red node has a red child. The recoloring and rotation look arbitrary here; Section 8.4 shows that they are a B-tree merge followed by a B-tree borrow.
+
 ### AVL vs Red-Black Comparison
 
 | Aspect | AVL | Red-Black |
@@ -279,7 +491,267 @@ void fix_violation(Node **root, Node *z) {
 | Memory overhead | Height field | Color bit |
 | Use case | Read-heavy | Write-heavy |
 
-## 8.4 Splay Trees
+## 8.4 Red-Black Trees Are 2-3-4 Trees
+
+The five red-black properties and the case analyses above look like a list of tricks. They are a B-tree in disguise. A **2-3-4 tree** is a B-tree of order 4 ([Chapter 10](ch10-multiway-search-trees-and-b-trees.md)): every node holds 1, 2 or 3 keys and has 2, 3 or 4 children, and all leaves are at the same depth. Take any red-black tree and merge every red node into its parent. Each black node, together with its red children, becomes one 2-3-4 node:
+
+| 2-3-4 node | Red-black encoding |
+|------------|--------------------|
+| 2-node `[b]` | a black node with no red children |
+| 3-node `[a b]` | a black node with one red child (b black with red left child a, or a black with red right child b) |
+| 4-node `[a b c]` | the middle key b, black, with red children a and c |
+
+Run the merge backwards and any 2-3-4 tree becomes a red-black tree. The correspondence is not one-to-one, because a 3-node can lean either way.
+
+<figure>
+{{#include ../images/rb-234.svg}}
+<figcaption>Each shaded group is one 2-3-4 node: a black node plus its red children. Inserting 80 recolors three nodes, and in the 2-3-4 tree that is a 4-node split that pushes 60 up into its parent.</figcaption>
+</figure>
+
+### What the Rules Mean
+
+With the 2-3-4 tree in view, each red-black property states a B-tree fact:
+
+- **No red node has a red child** keeps every group to one black node and at most two red children, so a node never holds more than 3 keys.
+- **Every path has the same number of black nodes**: each 2-3-4 node contains exactly one black node, so a path's black count is the number of 2-3-4 levels it crosses. Equal black counts means all 2-3-4 leaves are at the same depth, which is the B-tree invariant and the whole source of the balance.
+- **The root is black** because the top of every group is black.
+- **The height bound** follows in one line. A 2-3-4 tree of n keys has at most log₂(n + 1) levels, since every node has at least 2 children, and each level becomes at most two red-black levels (a black node and a red child). So the red-black height is at most 2 log₂(n + 1), the bound of Section 8.3.
+
+### Insertion Is Splitting
+
+A new red-black node is red, which means a new key joins an existing 2-3-4 leaf. That matches B-tree insertion, which always adds to a leaf.
+
+- **Parent is black.** The leaf was a 2-node or a 3-node, and the key fits: a 2-node becomes a 3-node, and a 3-node becomes a 4-node already in the standard shape (black middle, two red children). Done.
+- **Case 1, red uncle.** The parent and the uncle are both red children of the grandparent, so the grandparent's group is a 4-node, and the new key would be its fourth. The B-tree answer is to split: the middle key moves up into the parent node and the two halves become separate nodes. Recoloring does exactly that. The grandparent turns red, which moves it up into its own parent's group; the parent and uncle turn black, so they become the tops of two separate nodes. If the grandparent's parent is also red, the node above has overflowed in turn: continue from there, as a B-tree split propagates upward. When the split reaches the root, recoloring the root black creates a new top level, the only way either tree grows taller.
+- **Cases 2 and 3, black uncle.** The grandparent's group is a 3-node (the black uncle belongs to a different node), so there is room for the new key, and the result is a 4-node. But its three keys form a chain of two red links instead of a black middle key with two red children. The rotations reshape the chain into that standard form. The 2-3-4 tree does not change; only its encoding does.
+
+The figure shows Case 1. Inserting 80 under red 70 meets the 4-node `[50 60 70]`. Coloring 50 and 70 black and 60 red splits it: 60 joins the root, which becomes the 4-node `[20 40 60]`, and 80 joins 70 to form the 3-node `[70 80]`. The parent of 60 is black, so the process stops there with no rotation at all.
+
+### Deletion Is Borrowing and Merging
+
+Deletion maps onto Chapter 10's B-tree deletion in the same way. Removing a red node, or a black node with a red child, takes a key out of a 3-node or 4-node, which still has a key left. A double black is an **underflow**: a 2-node has lost its only key. The four cases are the B-tree repairs:
+
+- **Case 2 (black sibling, both children black)**: the sibling is a 2-node, so there is nothing to borrow. **Merge**: the parent key comes down and joins the sibling, and coloring w red puts the two in one group. If p was red, the parent node had keys to spare; coloring p black finishes the merge. If p was black, the parent was itself a 2-node and is now empty: the underflow moves up a level, just as a B-tree merge can propagate to the root. When it reaches the root, the tree loses a level.
+- **Cases 3 and 4 (black sibling with a red child)**: the sibling is a 3-node or 4-node. **Borrow** through the parent: the parent key comes down into the empty node and a sibling key goes up to replace it (from a 4-node sibling, the key nearest x comes across as well). Case 4's rotation does this in one step; case 3 only reshapes the sibling so that case 4's rotation applies.
+- **Case 1 (red sibling)**: w is red, so it is in the same group as p. The parent's 2-3-4 node is a 3-node encoded with the wrong lean, and x's red-black sibling is not its 2-3-4 sibling. The rotation flips the lean, and nothing in the 2-3-4 tree changes. After it, x's sibling is a real 2-3-4 sibling, and case 2, 3 or 4 applies.
+
+Here is the worked deletion of Section 8.3 again, as a 2-3-4 tree:
+
+```
+Before:                    [40]
+                     /             \
+                 [20]               [60 80]
+                /    \            /    |    \
+             [10]   [30]       [50]  [70]  [90 100]
+
+Delete 10: [10] is empty. Its sibling [30] is a 2-node, so merge:
+20 comes down and joins 30, giving [20 30]. Now [20]'s old node is empty
+(case 2 with a black parent). Its sibling [60 80] is a 3-node, so borrow:
+40 comes down, 60 goes up (case 4).
+
+After:                     [60]
+                     /             \
+                 [40]               [80]
+                /    \             /    \
+           [20 30]  [50]        [70]  [90 100]
+```
+
+Read the "after" tree of Section 8.3 back through the table above and you get exactly this.
+
+This view explains why the classic algorithm has so many cases. A 2-3-4 tree has one operation for each situation (add a key, split, merge, borrow), but the binary encoding has several shapes for each 3-node and 4-node in transit, and each shape has its own case and its own mirror image. Rudolf Bayer introduced the structure in 1972 as the *symmetric binary B-tree*, a binary representation of B-trees with "horizontal" links where red links are now; the red and black colors came later. The next section shows what happens when the encoding is restricted to one shape per node.
+
+## 8.5 Left-Leaning Red-Black Trees
+
+Robert Sedgewick's **left-leaning red-black tree** (LLRB, 2008) removes the choice. It adds one rule: a red node must be a left child. Thinking of a red node as a red *link* from its parent, the invariant is:
+
+1. Red links lean left.
+2. No node has two red links touching it.
+3. Every path from the root to a NIL link has the same number of black links.
+
+Rule 2 forbids a red node with a red child and also a black node with two red children, so there are no 4-nodes. An LLRB tree is a 2-3 tree in which each 3-node is drawn one way, black on top with a red left child. Each 2-3 tree has exactly one LLRB encoding, so the mirror-image cases disappear.
+
+### Insertion
+
+A new key is attached with a red link, as before. Then, on the way back up the recursion, three local fixes repair whatever the insertion broke, in this order:
+
+```python
+RED, BLACK = True, False
+
+
+class LLRBNode:
+    def __init__(self, key):
+        self.key = key
+        self.left = self.right = None
+        self.color = RED                     # a new key joins an existing node
+
+
+def is_red(h):
+    return h is not None and h.color == RED
+
+
+def rotate_left(h):                          # a red right link now leans left
+    x = h.right
+    h.right, x.left = x.left, h
+    x.color, h.color = h.color, RED
+    return x
+
+
+def rotate_right(h):                         # a red left link now leans right
+    x = h.left
+    h.left, x.right = x.right, h
+    x.color, h.color = h.color, RED
+    return x
+
+
+def flip_colors(h):                          # split a temporary 4-node
+    h.color = not h.color
+    h.left.color = not h.left.color
+    h.right.color = not h.right.color
+
+
+def fix_up(h):
+    if is_red(h.right) and not is_red(h.left):
+        h = rotate_left(h)                   # right-leaning 3-node
+    if is_red(h.left) and is_red(h.left.left):
+        h = rotate_right(h)                  # 4-node as a chain of two reds
+    if is_red(h.left) and is_red(h.right):
+        flip_colors(h)                       # balanced 4-node: split it
+    return h
+
+
+def llrb_insert(root, key):
+    root = _insert(root, key)
+    root.color = BLACK
+    return root
+
+
+def _insert(h, key):
+    if h is None:
+        return LLRBNode(key)
+    if key < h.key:
+        h.left = _insert(h.left, key)
+    elif key > h.key:
+        h.right = _insert(h.right, key)
+    return fix_up(h)
+```
+
+(These `rotate_left` and `rotate_right` belong with `LLRBNode`, not with the AVL code of Section 8.2: they move colors, not heights.)
+
+Each line of `fix_up` is one 2-3 tree situation. A red right link with a black left link is a 3-node leaning the wrong way: rotate it left. Two red links in a row on the left are a 4-node drawn as a chain: rotate right to balance it. Two red children are a balanced 4-node: flip the colors, which splits it and passes the middle key up as a red link to the parent, where the next `fix_up` call deals with it. The three classic insertion cases and their mirror images all reduce to these three lines, applied at every node on the search path.
+
+Insertion is O(log n) worst case. Sedgewick's paper also gives a variant that calls `flip_colors` on the way *down*, before the recursive calls; it splits 4-nodes top-down and keeps them, so it is the 2-3-4 version. The code above, with the flip last, is the 2-3 version used in Sedgewick and Wayne's *Algorithms* (4th edition).
+
+### Deletion
+
+Deletion uses the same plan as Chapter 10's single-pass B-tree deletion: never step down into a node that has only one key, so that the key to be removed is never the only key in its leaf. `move_red_left` makes sure the left child is not a 2-node before the descent goes left. It first flips colors, merging the parent key and both children into a temporary 4-node; if the right sibling was a 3-node, it then borrows from it instead, with two rotations and a flip back. On the way back up, `fix_up` cleans up the temporary 4-nodes and right-leaning links left behind.
+
+```python
+def move_red_left(h):
+    # h is red and h.left is a 2-node: give h.left a red link
+    flip_colors(h)                           # merge h.left, h, h.right
+    if is_red(h.right.left):                 # sibling is a 3-node: borrow
+        h.right = rotate_right(h.right)
+        h = rotate_left(h)
+        flip_colors(h)
+    return h
+
+
+def move_red_right(h):
+    flip_colors(h)
+    if is_red(h.left.left):
+        h = rotate_right(h)
+        flip_colors(h)
+    return h
+
+
+def delete_min(h):
+    if h.left is None:
+        return None
+    if not is_red(h.left) and not is_red(h.left.left):
+        h = move_red_left(h)
+    h.left = delete_min(h.left)
+    return fix_up(h)
+
+
+def llrb_delete(root, key):                  # key must be in the tree
+    if not is_red(root.left) and not is_red(root.right):
+        root.color = RED
+    root = _delete(root, key)
+    if root is not None:
+        root.color = BLACK
+    return root
+
+
+def _delete(h, key):
+    if key < h.key:
+        if not is_red(h.left) and not is_red(h.left.left):
+            h = move_red_left(h)
+        h.left = _delete(h.left, key)
+    else:
+        if is_red(h.left):
+            h = rotate_right(h)              # lean right so a red link goes down
+        if key == h.key and h.right is None:
+            return None                      # h is a red leaf: drop it
+        if not is_red(h.right) and not is_red(h.right.left):
+            h = move_red_right(h)
+        if key == h.key:
+            successor = h.right
+            while successor.left:
+                successor = successor.left
+            h.key = successor.key
+            h.right = delete_min(h.right)
+        else:
+            h.right = _delete(h.right, key)
+    return fix_up(h)
+```
+
+The precondition matters: with an absent key, the descent can reach `h.left.left` on a missing child. Check membership first (an O(log n) search) when the caller cannot guarantee it. Both operations are O(log n) worst case.
+
+The same kind of test as for the AVL tree checks every LLRB rule after every operation:
+
+```python
+import bisect
+import random
+
+
+def check_llrb(h, lo=None, hi=None):
+    """Return (black height, keys in order); fail if any LLRB rule is broken."""
+    if h is None:
+        return 0, []
+    assert (lo is None or lo < h.key) and (hi is None or h.key < hi)
+    assert not is_red(h.right)                     # red links lean left
+    assert not (is_red(h) and is_red(h.left))      # never two reds in a row
+    black_left, left = check_llrb(h.left, lo, h.key)
+    black_right, right = check_llrb(h.right, h.key, hi)
+    assert black_left == black_right               # perfect black balance
+    return black_left + (not is_red(h)), left + [h.key] + right
+
+
+root, reference = None, []
+for _ in range(5000):
+    key = random.randrange(300)
+    if random.random() < 0.5:
+        root = llrb_insert(root, key)
+        if key not in reference:
+            bisect.insort(reference, key)
+    elif key in reference:
+        root = llrb_delete(root, key)
+        reference.remove(key)
+    assert not is_red(root)
+    assert check_llrb(root)[1] == reference
+```
+
+### Trade-offs
+
+The LLRB insertion is short enough to write from memory, and that is its real contribution: it makes the 2-3 correspondence visible in code. But it is not a better red-black tree in every respect.
+
+- **Deletion is still fiddly.** The deletion code is more than twice the length of the insertion code, and it is harder to check by eye, because it deliberately creates temporary right-leaning links and 4-nodes and relies on `fix_up` to remove them later.
+- **More rotations.** A classic insertion makes at most 2 rotations. The LLRB insertion keeps rotating on the way up to restore the left lean, sometimes at many levels. Inserting 100,000 random keys with the code above averaged about 1.19 rotations per insertion, with up to 13 in a single insertion; the classic algorithm averaged about 0.58 on the same keys.
+- **Recursion without parent pointers.** That makes the code short, but production trees usually keep parent pointers anyway, for iterators and for deleting a node the caller already holds, and then the classic bottom-up fix-up is just as natural. Java's `TreeMap` (adapted from Cormen, Leiserson and Rivest), libstdc++'s `std::map` and the Linux kernel's `rbtree` all use the classic algorithm.
+
+Arne Andersson's AA tree (1993, Chapter 7) made the mirror-image choice earlier, requiring red links to lean right; its two fix-up steps, *skew* and *split*, play the role of `fix_up`'s three lines.
+
+## 8.6 Splay Trees
 
 Splay trees (Sleator and Tarjan, 1985) use a different strategy: instead of maintaining invariants, they "splay" accessed nodes to the root.
 
@@ -325,7 +797,7 @@ Key property: Recently accessed elements are near the root (temporal locality). 
 - No guaranteed worst-case (unlike AVL, Red-Black)
 - Can be made partially persistent
 
-## 8.5 Scapegoat Trees
+## 8.7 Scapegoat Trees
 
 Scapegoat trees maintain balance by rebuilding subtrees when they become too unbalanced.
 
@@ -352,7 +824,7 @@ The scapegoat is not necessarily the deepest unbalanced node; any node on the pa
 - Simple to implement
 - Good for systems where rotations are expensive
 
-## 8.6 Treaps
+## 8.8 Treaps
 
 Treaps combine BST with random heap priorities.
 
@@ -389,7 +861,7 @@ def treap_insert(root, node):
     return root
 ```
 
-## 8.7 Performance Comparison
+## 8.9 Performance Comparison
 
 <figure>
 {{#include ../images/skip-list.svg}}
@@ -407,7 +879,7 @@ def treap_insert(root, node):
 
 *Amortized or expected
 
-## 8.8 Real-World Usage
+## 8.10 Real-World Usage
 
 | Tree Type | Real-World Uses |
 |-----------|----------------|
@@ -415,6 +887,14 @@ def treap_insert(root, node):
 | AVL | Databases with frequent lookups, file systems |
 | Splay | Network routing (LRU caches), memory allocators |
 | Treap | Skip list alternative in some databases |
+
+## 8.11 Historical Context
+
+Georgy Adelson-Velsky and Evgenii Landis described the AVL tree in 1962 ("An algorithm for the organization of information", *Doklady Akademii Nauk SSSR*), the first binary search tree with a worst-case O(log n) height guarantee.
+
+Rudolf Bayer, co-inventor of the B-tree (Chapter 10), introduced *symmetric binary B-trees* in 1972 (*Acta Informatica*): B-trees of order 4 stored as binary nodes, the structure of Section 8.4. Leonidas Guibas and Robert Sedgewick recast them in 1978 with the red and black coloring ("A dichromatic framework for balanced trees", FOCS), and used the coloring as a common framework for many balanced-tree schemes. The double-black formulation of deletion in Section 8.3 follows Cormen, Leiserson and Rivest's *Introduction to Algorithms* (1990). Sedgewick returned to the structure thirty years later with the left-leaning variant of Section 8.5 (2008).
+
+Daniel Sleator and Robert Tarjan introduced splay trees in "Self-adjusting binary search trees" (*Journal of the ACM*, 1985). Scapegoat trees are named in Igal Galperin and Ronald Rivest's 1993 paper (SODA); Arne Andersson had described essentially the same partial-rebuilding scheme in 1989. Treaps come from Cecilia Aragon and Raimund Seidel's "Randomized search trees" (FOCS 1989; journal version by Seidel and Aragon in *Algorithmica*, 1996). The shape they rely on, a tree that is a BST on keys and a heap on a second value, is Jean Vuillemin's *Cartesian tree* (1980).
 
 ## Exercises
 
@@ -542,7 +1022,7 @@ so h + 1 ≤ log_φ(n + 1) = log₂(n + 1) / log₂ φ ≈ 1.44 log₂(n + 1), a
 
 </details>
 
-**8.5 ★★ Splay a chain.** Insert 5, 4, 3, 2, 1 into a plain BST, giving a left-leaning chain with 5 at the root. (a) Splay node 1 to the root using the zig, zig-zig and zig-zag steps of Section 8.4, working from the bottom up. Draw the tree after each step and give the final height. (b) Then splay node 3 and draw the result.
+**8.5 ★★ Splay a chain.** Insert 5, 4, 3, 2, 1 into a plain BST, giving a left-leaning chain with 5 at the root. (a) Splay node 1 to the root using the zig, zig-zig and zig-zag steps of Section 8.6, working from the bottom up. Draw the tree after each step and give the final height. (b) Then splay node 3 and draw the result.
 
 <details>
 <summary>Hint</summary>
@@ -673,9 +1153,135 @@ Check: every root-to-NIL path has 2 black nodes before the NIL (10 and 5, 10 and
 
 </details>
 
+**8.8 ★★ Why deletion looks at the child's balance factor.** The AVL tree below is what `insert_avl` builds from 20, 10, 60, 5, 40, 80, 30, 70. (a) Delete 5 with `delete_avl`. Which node becomes unbalanced, which rotation is done, and does the walk up need to continue? (b) The C `insert_avl` picks the case by comparing the key with the child's key. Since 5 < 60, that test would choose Right-Left. Do that double rotation instead and show that the result is not an AVL tree.
+
+```
+        20
+       /  \
+     10    60
+     /    /  \
+    5    40   80
+        /    /
+       30   70
+```
+
+<details>
+<summary>Hint</summary>
+
+Compute the balance factor of 60 before deciding anything. It is the case that never happens after an insertion.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) Removing the leaf 5 leaves 10 as a leaf (height 1). At 20 the left height is 1 and the right height (60) is 3, so the balance factor is −2. The taller child 60 has balance 0: its subtrees 40 and 80 both have height 2. `rebalance` sees `get_balance(node.right) > 0` is false and does a single `rotate_left(20)`:
+
+```
+          60
+        /    \
+      20      80
+     /  \     /
+   10    40  70
+        /
+      30
+```
+
+20 has balance 1 − 2 = −1 and 60 has balance 3 − 2 = +1, so the tree is valid. Its height is 4, the same as before the deletion, so no ancestor could be affected and the walk could stop here. (This is the one case where a deletion's rotation does not shorten the subtree.)
+
+(b) The double rotation first does `rotate_right(60)`, lifting 40, then `rotate_left(20)`:
+
+```
+          40
+        /    \
+      20      60
+     /  \       \
+   10    30      80
+                /
+              70
+```
+
+Node 60 has an empty left subtree and a right subtree of height 2: balance −2. The double rotation is right only when the inner grandchild (40) is the taller part of 60's subtree. When 60 is balanced, moving 40 up leaves 80's whole subtree hanging under 60 with nothing on the other side. Insertion never meets this case because the child that just grew always leans one way, which is why the C code can get away with comparing keys.
+
+</details>
+
+**8.9 ★★ Red-black deletion, two views.** Start again from the red-black tree that inserting 10, 20, ..., 100 produces (the "before" tree of the worked deletion in Section 8.3) and delete 40, the root. (a) Trace the deletion: which node is physically removed, and which cases of the double-black table fire? Draw the result. (b) Redo it on the corresponding 2-3-4 tree (Section 8.4) and check that the two results correspond.
+
+<details>
+<summary>Hint</summary>
+
+40 has two children, so its successor is removed instead. Look at the color of the double black's sibling first.
+
+</details>
+
+<details>
+<summary>Solution</summary>
+
+(a) The successor of 40 is 50, the minimum of the right subtree. 50's key is copied into the root, and the node that held 50, a black leaf, is unlinked. Its NIL is double black, with parent p = 60 and sibling w = 80.
+
+- **Case 1**: w = 80 is red. Rotate left at 60 and swap the colors of 60 and 80: 80 is now black, with red left child 60. x's new sibling is 70, black.
+- **Case 2**: 70 is black with two black (NIL) children. Color 70 red and move the extra black to p = 60. 60 is red, so color it black. Done.
+
+```
+              B50
+           /       \
+       B20           B80
+      /   \         /    \
+    B10   B30     B60     B90
+                     \       \
+                     R70     R100
+```
+
+Every root-to-NIL path still has 3 black nodes, and no red node has a red child. The repair took one rotation and four color changes.
+
+(b) The 2-3-4 tree is `[40]` at the root, with children `[20]` (over `[10]` and `[30]`) and `[60 80]` (over `[50]`, `[70]` and `[90 100]`). Deleting 40 from an internal node replaces it with its successor 50 from a leaf, which leaves the leaf `[50]` empty. Its 2-3-4 sibling is `[70]`, a 2-node, so **merge**: the separating key 60 comes down and joins 70, giving `[60 70]`, and the parent `[60 80]` shrinks to `[80]`. The parent still has a key, so the repair stops.
+
+```
+                 [50]
+           /             \
+       [20]               [80]
+      /    \             /     \
+   [10]   [30]      [60 70]   [90 100]
+```
+
+Reading the red-black result as groups gives exactly this. Case 1 did not change the 2-3-4 tree: the 3-node `[60 80]` was encoded with 60 on top, which made 80 the red-black sibling of the empty node even though its real 2-3-4 sibling was `[70]`. The rotation re-encoded the same 3-node with 80 on top. Case 2 with a red parent is a merge that the parent can absorb.
+
+</details>
+
+**8.10 ★★ LLRB insertion by hand.** Insert 1, 2, 3, 4, 5, 6, 7 in that order into an empty LLRB tree with `llrb_insert` (Section 8.5). After each insertion, say which of the three lines of `fix_up` fire (and at which node), draw the tree, and give the 2-3 tree it encodes.
+
+<details>
+<summary>Solution</summary>
+
+Red nodes are marked R; everything else is black.
+
+| Insert | `fix_up` actions | LLRB tree | 2-3 tree |
+|--------|------------------|-----------|----------|
+| 1 | none | 1 | `[1]` |
+| 2 | rotate left at 1 (red right link) | 2 with left child R1 | `[1 2]` |
+| 3 | flip at 2 (two red children); the root is then reset to black | 2 with children 1 and 3 | `[2]` over `[1]`, `[3]` |
+| 4 | rotate left at 3 | 2 with children 1 and 4; 4 has left child R3 | `[2]` over `[1]`, `[3 4]` |
+| 5 | flip at 4, which makes 4 red, a red right link of 2; then rotate left at 2 | 4 with children R2 and 5; 2 has children 1 and 3 | `[2 4]` over `[1]`, `[3]`, `[5]` |
+| 6 | rotate left at 5 | as before, but 6 replaces 5, with left child R5 | `[2 4]` over `[1]`, `[3]`, `[5 6]` |
+| 7 | flip at 6, then flip at 4 (2 and 6 are both red); the root is reset to black | perfect tree: 4; 2, 6; 1, 3, 5, 7; all black | `[4]` over `[2]`, `[6]`, over `[1]`, `[3]`, `[5]`, `[7]` |
+
+```
+After 5:            After 7:
+      B4                  B4
+     /  \               /    \
+   R2    B5           B2      B6
+  /  \               /  \    /  \
+B1    B3           B1   B3  B5   B7
+```
+
+Insertion 5 shows a split propagating: the flip at 4 splits the temporary 4-node `[3 4 5]` and sends 4 up as a red right link, and the rotation at 2 makes `[2 4]` a left-leaning 3-node. Insertion 7 splits two 4-nodes in a row, `[5 6 7]` and then `[2 4 6]`, and the second split happens at the root, so the tree gains a level. Sorted input, the worst case for a plain BST, gives a perfectly balanced tree here, and that continues: inserting 1 to 2^k − 1 in order gives a perfect all-black tree (checked with the code above for every k up to 12).
+
+</details>
+
 ---
 
 ## Where this connects
 
 - [Chapter 7: Binary Search Trees](ch07-binary-search-trees.md). The unbalanced baseline these structures fix
+- [Chapter 10: Multiway Search Trees and B-Trees](ch10-multiway-search-trees-and-b-trees.md). The 2-3-4 trees and B-tree splits, borrows and merges that red-black trees encode (Section 8.4)
 - [Chapter 21: Algorithm Design Using Data Structures](../volume-3/ch21-algorithm-design-using-data-structures.md). Why skip lists trade rotations for randomness

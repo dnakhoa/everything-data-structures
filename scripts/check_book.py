@@ -6,6 +6,8 @@
 3. Every chapter page starts with a single H1.
 4. Code fences are balanced.
 5. SVG files contain no blank lines (a blank line ends the raw-HTML block in Markdown).
+   Figures included on the same page must not define the same CSS class or element id,
+   because inline <style> rules apply to the whole page.
 6. Every chapter has an Exercises section, numbered for that chapter, and every
    <details> hint/solution block is balanced and padded with the blank lines
    mdBook needs to render the Markdown inside it.
@@ -100,6 +102,22 @@ def check_svgs():
             fail("%s: contains a blank line — this breaks inline embedding in Markdown" % path)
         if "currentColor" not in content:
             fail("%s: no currentColor — the diagram will not adapt to the dark theme" % path)
+    # Inline SVG styles and ids are page-global: two figures on one page must not
+    # share a class name or an id, or one restyles (or re-targets) the other.
+    for page in iter_md():
+        figs = re.findall(r"\{\{#include \.\./images/([\w-]+\.svg)\}\}", open(page, encoding="utf-8").read())
+        seen_cls, seen_id = {}, {}
+        for f in figs:
+            content = open(os.path.join(SRC, "images", f), encoding="utf-8").read()
+            style = re.search(r"<style>(.*?)</style>", content, re.S)
+            for cls in set(re.findall(r"\.([A-Za-z_][\w-]*)", style.group(1) if style else "")):
+                if cls in seen_cls and seen_cls[cls] != f:
+                    fail("%s: figures %s and %s both define CSS class .%s (prefix classes with the file name)" % (page, seen_cls[cls], f, cls))
+                seen_cls.setdefault(cls, f)
+            for i in set(re.findall(r'\bid="([^"]+)"', content)):
+                if i in seen_id and seen_id[i] != f:
+                    fail("%s: figures %s and %s both use id=%s" % (page, seen_id[i], f, i))
+                seen_id.setdefault(i, f)
     print("  svgs checked")
 
 

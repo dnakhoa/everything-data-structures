@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 400" role="img" aria-label="Space-time diagram of three processes A, B and C exchanging three messages, with the Lamport time and vector clock of every event" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .vector-clocks-vk-proc { stroke: currentColor; stroke-width: 1.6; opacity: .55; }
+    .vector-clocks-vk-pn   { fill: currentColor; font: 600 14px system-ui, sans-serif; text-anchor: end; }
+    .vector-clocks-vk-ev   { fill: currentColor; }
+    .vector-clocks-vk-hot  { fill: #f59e0b; stroke: #f59e0b; }
+    .vector-clocks-vk-msg  { stroke: #3b82f6; stroke-width: 1.8; fill: none; }
+    .vector-clocks-vk-head { fill: #3b82f6; }
+    .vector-clocks-vk-ml   { fill: #3b82f6; font: italic 12px system-ui, sans-serif; }
+    .vector-clocks-vk-nm   { fill: currentColor; font: 600 12px system-ui, sans-serif; text-anchor: middle; }
+    .vector-clocks-vk-vc   { fill: currentColor; font: 11px ui-monospace, monospace; text-anchor: middle; opacity: .85; }
+    .vector-clocks-vk-hv   { fill: #f59e0b; font: 600 11px ui-monospace, monospace; text-anchor: middle; }
+    .vector-clocks-vk-note { fill: currentColor; font: 12px system-ui, sans-serif; opacity: .8; text-anchor: start; }
+    .vector-clocks-vk-cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; text-anchor: start; }
+  </style>
+  <text class="vector-clocks-vk-cap" x="16" y="24">Each event labelled name, Lamport time L, and vector clock [A,B,C]</text>
+  <line class="vector-clocks-vk-proc" x1="70" y1="70" x2="690" y2="70"/>
+  <text class="vector-clocks-vk-pn" x="58" y="75">A</text>
+  <line class="vector-clocks-vk-proc" x1="70" y1="180" x2="690" y2="180"/>
+  <text class="vector-clocks-vk-pn" x="58" y="185">B</text>
+  <line class="vector-clocks-vk-proc" x1="70" y1="290" x2="690" y2="290"/>
+  <text class="vector-clocks-vk-pn" x="58" y="295">C</text>
+  <text class="vector-clocks-vk-note" x="630" y="342">time →</text>
+  <line class="vector-clocks-vk-msg" x1="194.0" y1="74.4" x2="279.2" y2="168.2"/>
+  <polygon class="vector-clocks-vk-head" points="284.6,174.1 274.2,170.0 281.6,163.3"/>
+  <text class="vector-clocks-vk-ml" x="248.0" y="121.0">m1</text>
+  <line class="vector-clocks-vk-msg" x1="383.8" y1="184.6" x2="459.9" y2="277.6"/>
+  <polygon class="vector-clocks-vk-head" points="464.9,283.8 454.7,279.2 462.5,272.9"/>
+  <text class="vector-clocks-vk-ml" x="433.0" y="231.0">m2</text>
+  <line class="vector-clocks-vk-msg" x1="552.3" y1="284.4" x2="633.9" y2="84.8"/>
+  <polygon class="vector-clocks-vk-head" points="637.0,77.4 637.8,88.6 628.6,84.8"/>
+  <text class="vector-clocks-vk-ml" x="603.0" y="192.0">m3</text>
+  <circle class="vector-clocks-vk-ev" cx="110" cy="70" r="6"/>
+  <text class="vector-clocks-vk-nm" x="110" y="40">a1 · L=1</text>
+  <text class="vector-clocks-vk-vc" x="110" y="56">[1,0,0]</text>
+  <circle class="vector-clocks-vk-ev" cx="190" cy="70" r="6"/>
+  <text class="vector-clocks-vk-nm" x="190" y="40">a2 · L=2</text>
+  <text class="vector-clocks-vk-vc" x="190" y="56">[2,0,0]</text>
+  <circle class="vector-clocks-vk-ev" cx="640" cy="70" r="6"/>
+  <text class="vector-clocks-vk-nm" x="640" y="40">a3 · L=7</text>
+  <text class="vector-clocks-vk-vc" x="640" y="56">[3,3,3]</text>
+  <circle class="vector-clocks-vk-ev" cx="130" cy="180" r="6"/>
+  <text class="vector-clocks-vk-nm" x="130" y="150">b1 · L=1</text>
+  <text class="vector-clocks-vk-vc" x="130" y="166">[0,1,0]</text>
+  <circle class="vector-clocks-vk-ev" cx="290" cy="180" r="6"/>
+  <text class="vector-clocks-vk-nm" x="290" y="204">b2 · L=3</text>
+  <text class="vector-clocks-vk-vc" x="290" y="220">[2,2,0]</text>
+  <circle class="vector-clocks-vk-hot" cx="380" cy="180" r="6"/>
+  <text class="vector-clocks-vk-nm" x="380" y="150">b3 · L=4</text>
+  <text class="vector-clocks-vk-hv" x="380" y="166">[2,3,0]</text>
+  <circle class="vector-clocks-vk-hot" cx="170" cy="290" r="6"/>
+  <text class="vector-clocks-vk-nm" x="170" y="314">c1 · L=1</text>
+  <text class="vector-clocks-vk-hv" x="170" y="330">[0,0,1]</text>
+  <circle class="vector-clocks-vk-ev" cx="470" cy="290" r="6"/>
+  <text class="vector-clocks-vk-nm" x="470" y="314">c2 · L=5</text>
+  <text class="vector-clocks-vk-vc" x="470" y="330">[2,3,2]</text>
+  <circle class="vector-clocks-vk-ev" cx="550" cy="290" r="6"/>
+  <text class="vector-clocks-vk-nm" x="550" y="314">c3 · L=6</text>
+  <text class="vector-clocks-vk-vc" x="550" y="330">[2,3,3]</text>
+  <text class="vector-clocks-vk-note" x="16" y="370"><tspan fill="#f59e0b" font-weight="600">c1 and b3 are concurrent</tspan> although L(c1) = 1 &lt; L(b3) = 4: their vectors [0,0,1] and [2,3,0] are incomparable.</text>
+  <text class="vector-clocks-vk-note" x="16" y="388">a1 → c2 holds (a1 → a2 → b2 → b3 → c2), and [1,0,0] ≤ [2,3,2] entry by entry.</text>
+</svg>

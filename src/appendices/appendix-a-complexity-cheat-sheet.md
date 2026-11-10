@@ -19,6 +19,8 @@ Two conventions for reading these tables:
 | Deque | O(1) | O(n) | O(1)★ at either end | O(1)★ at either end | O(n) |
 | Circular buffer (fixed capacity) | O(1) | O(n) | O(1) at the rear | O(1) at the front | O(capacity) |
 | Bit array | O(1) | O(n/w) | O(1) set a bit | O(1) clear a bit | n bits |
+| Persistent vector (32-way trie) | O(log₃₂ n) | O(n) | O(log₃₂ n) append, path copied | O(log₃₂ n) update | O(n), shared between versions |
+| Finger tree | O(log n) by index; O(1)★ at the ends | O(n) | O(1)★ at either end | O(1)★ at either end | O(n) |
 | Gap buffer (text) | O(1) | O(n) | O(1) at the cursor, O(distance) to move it | O(1) at the cursor | O(n) |
 | Rope (text) | O(log n) | O(n) | O(log n) anywhere | O(log n) anywhere | O(n) |
 | Piece table (text, list of k pieces) | O(k) | O(n) | O(k), text itself never moves | O(k) | O(n + k) |
@@ -35,6 +37,7 @@ The linked-list rows come with the caveat that makes them much less useful than 
 | AVL tree | O(log n) | O(log n) | O(log n) | O(log n) | O(n) |
 | Red-black tree | O(log n) | O(log n) | O(log n) | O(log n) | O(n) |
 | Splay tree | O(log n)★ | O(n) single op | O(log n)★ | O(log n)★ | O(n) |
+| Left-leaning red-black tree | O(log n) | O(log n) | O(log n) | O(log n) | O(n) |
 | Treap | O(log n) expected | O(n) | O(log n) expected | O(log n) expected | O(n) |
 | Skip list | O(log n) expected | O(n) | O(log n) expected | O(log n) expected | **O(n) expected** |
 | B-tree / B+ tree | O(log_B n) I/Os | O(log_B n) I/Os | O(log_B n) | O(log_B n) | O(n) |
@@ -47,6 +50,8 @@ The linked-list rows come with the caveat that makes them much less useful than 
 Where **L** = key length, **N** = total characters stored across all keys, **A** = alphabet size.
 
 On a BST of height h, successor, predecessor, floor and ceiling are O(h), and reporting every key in a range is O(h + k) for k results. A B-tree with minimum degree t has height at most log_t((n+1)/2); with t = 500, a billion keys fit in 4 levels. ([Chapter 7](../volume-1/ch07-binary-search-trees.md), [Chapter 10](../volume-1/ch10-multiway-search-trees-and-b-trees.md))
+
+AVL insertion needs at most one single or double rotation, but AVL deletion may rotate at every level on the way up, O(log n) rotations. Red-black trees need at most 2 rotations per insert and 3 per delete, plus O(log n) recolourings ([Chapter 8](../volume-1/ch08-self-balancing-trees.md)).
 
 Two rows worth reading carefully. **Skip list space is O(n) expected**, not O(n log n): with promotion probability p = ½, the expected total number of nodes across all levels is 2n. The O(log n) is the expected *height*, which is a different quantity. And **splay trees** have no per-operation guarantee at all: a single access can cost O(n), and only a sequence of m operations is bounded, at O(m log n). That makes them unsuitable for latency-sensitive work regardless of their excellent amortized behavior.
 
@@ -209,7 +214,32 @@ Where **μ** = distance to the cycle and **λ** = cycle length.
 
 See [Chapter 29](../volume-5/ch29-system-design-as-data-structure-composition.md) for the simulations behind both tables.
 
-## A.10 Complexity Growth Reference
+## A.10 Allocators, Clocks and Routing
+
+| Memory allocator | malloc | free | Fragmentation |
+|------------------|--------|------|---------------|
+| Implicit free list, first fit | O(blocks) | O(1) with boundary tags | External; depends on placement policy |
+| Segregated free lists (size classes) | O(1) typical | O(1) | Internal, bounded by class spacing (about 20% in jemalloc) |
+| Buddy system | O(log M) splits | O(log M) merges | Internal, up to about 50% from rounding to a power of two |
+| Slab (fixed-size objects) | O(1) | O(1) | Little, for objects of one size |
+| Arena / bump | O(1) | Only all at once | None until reset |
+
+Where **M** = the size of the managed region in units of the smallest block ([Chapter 2](../volume-1/ch02-primitive-types-and-memory-organization.md)).
+
+| Logical clock | Timestamp size | Detects concurrency? | Close to wall-clock time? |
+|---------------|----------------|----------------------|---------------------------|
+| Lamport clock | O(1) | No | No |
+| Vector clock | O(n) for n processes | Yes | No |
+| Hybrid logical clock | O(1) | No | Yes, within the clock skew |
+
+| Routing lookup (W-bit addresses, N prefixes) | Memory reads per lookup | Memory |
+|---------------------------------------------|------------------------|--------|
+| Binary trie | Up to W | Up to 1 + N·W nodes |
+| Multibit trie, stride k | ⌈W/k⌉ | Grows with 2^k per node (controlled prefix expansion) |
+| DIR-24-8 (IPv4) | 1 for prefixes up to /24, else 2 | 32 MB first-level table plus second-level blocks |
+| Maglev table (ECMP / load balancing) | 1 hash and 1 table read | O(M) for a prime table size M |
+
+## A.11 Complexity Growth Reference
 
 How the classes actually behave, for intuition about when each becomes infeasible:
 

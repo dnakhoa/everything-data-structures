@@ -1,74 +1,74 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 420" role="img" aria-label="A posting list compressed in two steps: sorted doc IDs become small d-gaps, and the gaps become variable-length bytes" style="max-width:100%;height:auto;color:inherit">
   <style>
-    .cell { fill: none; stroke: currentColor; stroke-width: 1.6; }
-    .term { fill: #3b82f6; fill-opacity: .14; stroke: #3b82f6; stroke-width: 1.8; }
-    .more { fill: #f59e0b; fill-opacity: .22; stroke: #f59e0b; stroke-width: 1.8; }
-    .k    { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
-    .flag { fill: #f59e0b; font-weight: 700; }
-    .lab  { fill: currentColor; font: 600 12px system-ui, sans-serif; }
-    .cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
-    .note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
-    .e    { stroke: currentColor; stroke-width: 1.5; opacity: .6; fill: none; }
+    .posting-list-compression-cell { fill: none; stroke: currentColor; stroke-width: 1.6; }
+    .posting-list-compression-term { fill: #3b82f6; fill-opacity: .14; stroke: #3b82f6; stroke-width: 1.8; }
+    .posting-list-compression-more { fill: #f59e0b; fill-opacity: .22; stroke: #f59e0b; stroke-width: 1.8; }
+    .posting-list-compression-k    { fill: currentColor; font: 600 13px ui-monospace, monospace; text-anchor: middle; }
+    .posting-list-compression-flag { fill: #f59e0b; font-weight: 700; }
+    .posting-list-compression-lab  { fill: currentColor; font: 600 12px system-ui, sans-serif; }
+    .posting-list-compression-cap  { fill: currentColor; font: 600 13px system-ui, sans-serif; }
+    .posting-list-compression-note { fill: currentColor; font: 11px system-ui, sans-serif; opacity: .72; }
+    .posting-list-compression-e    { stroke: currentColor; stroke-width: 1.5; opacity: .6; fill: none; }
   </style>
-  <text class="cap" x="16" y="24">One posting list, from doc IDs to bytes</text>
+  <text class="posting-list-compression-cap" x="16" y="24">One posting list, from doc IDs to bytes</text>
   <!-- term -->
-  <text class="lab" x="16" y="59">term</text>
-  <rect class="term" x="150" y="40" width="96" height="28"/><text class="k" x="198" y="59">"data"</text>
-  <text class="note" x="262" y="58">the term dictionary points to the term's posting list</text>
-  <path class="e" d="M198,68 L198,90"/><path class="e" d="M193,82 L198,90 L203,82"/>
+  <text class="posting-list-compression-lab" x="16" y="59">term</text>
+  <rect class="posting-list-compression-term" x="150" y="40" width="96" height="28"/><text class="posting-list-compression-k" x="198" y="59">"data"</text>
+  <text class="posting-list-compression-note" x="262" y="58">the term dictionary points to the term's posting list</text>
+  <path class="posting-list-compression-e" d="M198,68 L198,90"/><path class="posting-list-compression-e" d="M193,82 L198,90 L203,82"/>
   <!-- doc IDs -->
-  <text class="lab" x="16" y="111">doc IDs</text>
-  <rect class="cell" x="150" y="92" width="144" height="30"/><text class="k" x="222" y="112">70000</text>
-  <rect class="cell" x="294" y="92" width="48" height="30"/><text class="k" x="318" y="112">70003</text>
-  <rect class="cell" x="342" y="92" width="48" height="30"/><text class="k" x="366" y="112">70010</text>
-  <rect class="cell" x="390" y="92" width="48" height="30"/><text class="k" x="414" y="112">70130</text>
-  <rect class="cell" x="438" y="92" width="144" height="30"/><text class="k" x="510" y="112">90000</text>
-  <text class="note" x="596" y="104">as int32:</text>
-  <text class="note" x="596" y="118">20 bytes</text>
+  <text class="posting-list-compression-lab" x="16" y="111">doc IDs</text>
+  <rect class="posting-list-compression-cell" x="150" y="92" width="144" height="30"/><text class="posting-list-compression-k" x="222" y="112">70000</text>
+  <rect class="posting-list-compression-cell" x="294" y="92" width="48" height="30"/><text class="posting-list-compression-k" x="318" y="112">70003</text>
+  <rect class="posting-list-compression-cell" x="342" y="92" width="48" height="30"/><text class="posting-list-compression-k" x="366" y="112">70010</text>
+  <rect class="posting-list-compression-cell" x="390" y="92" width="48" height="30"/><text class="posting-list-compression-k" x="414" y="112">70130</text>
+  <rect class="posting-list-compression-cell" x="438" y="92" width="144" height="30"/><text class="posting-list-compression-k" x="510" y="112">90000</text>
+  <text class="posting-list-compression-note" x="596" y="104">as int32:</text>
+  <text class="posting-list-compression-note" x="596" y="118">20 bytes</text>
   <!-- step 1 -->
-  <path class="e" d="M366,122 L366,148"/><path class="e" d="M361,140 L366,148 L371,140"/>
-  <text class="note" x="380" y="140">subtract the previous ID</text>
+  <path class="posting-list-compression-e" d="M366,122 L366,148"/><path class="posting-list-compression-e" d="M361,140 L366,148 L371,140"/>
+  <text class="posting-list-compression-note" x="380" y="140">subtract the previous ID</text>
   <!-- d-gaps -->
-  <text class="lab" x="16" y="169">d-gaps</text>
-  <rect class="cell" x="150" y="150" width="144" height="30"/><text class="k" x="222" y="170">70000</text>
-  <rect class="cell" x="294" y="150" width="48" height="30"/><text class="k" x="318" y="170">3</text>
-  <rect class="cell" x="342" y="150" width="48" height="30"/><text class="k" x="366" y="170">7</text>
-  <rect class="cell" x="390" y="150" width="48" height="30"/><text class="k" x="414" y="170">120</text>
-  <rect class="cell" x="438" y="150" width="144" height="30"/><text class="k" x="510" y="170">19870</text>
-  <text class="note" x="596" y="162">mostly</text>
-  <text class="note" x="596" y="176">small</text>
+  <text class="posting-list-compression-lab" x="16" y="169">d-gaps</text>
+  <rect class="posting-list-compression-cell" x="150" y="150" width="144" height="30"/><text class="posting-list-compression-k" x="222" y="170">70000</text>
+  <rect class="posting-list-compression-cell" x="294" y="150" width="48" height="30"/><text class="posting-list-compression-k" x="318" y="170">3</text>
+  <rect class="posting-list-compression-cell" x="342" y="150" width="48" height="30"/><text class="posting-list-compression-k" x="366" y="170">7</text>
+  <rect class="posting-list-compression-cell" x="390" y="150" width="48" height="30"/><text class="posting-list-compression-k" x="414" y="170">120</text>
+  <rect class="posting-list-compression-cell" x="438" y="150" width="144" height="30"/><text class="posting-list-compression-k" x="510" y="170">19870</text>
+  <text class="posting-list-compression-note" x="596" y="162">mostly</text>
+  <text class="posting-list-compression-note" x="596" y="176">small</text>
   <!-- step 2 -->
-  <path class="e" d="M366,180 L366,206"/><path class="e" d="M361,198 L366,206 L371,198"/>
-  <text class="note" x="380" y="198">7 data bits per byte, low-order group first</text>
+  <path class="posting-list-compression-e" d="M366,180 L366,206"/><path class="posting-list-compression-e" d="M361,198 L366,206 L371,198"/>
+  <text class="posting-list-compression-note" x="380" y="198">7 data bits per byte, low-order group first</text>
   <!-- varint bytes -->
-  <text class="lab" x="16" y="227">varint bytes</text>
-  <rect class="more" x="150" y="208" width="48" height="30"/><text class="k" x="174" y="228">F0</text>
-  <rect class="more" x="198" y="208" width="48" height="30"/><text class="k" x="222" y="228">A2</text>
-  <rect class="cell" x="246" y="208" width="48" height="30"/><text class="k" x="270" y="228">04</text>
-  <rect class="cell" x="294" y="208" width="48" height="30"/><text class="k" x="318" y="228">03</text>
-  <rect class="cell" x="342" y="208" width="48" height="30"/><text class="k" x="366" y="228">07</text>
-  <rect class="cell" x="390" y="208" width="48" height="30"/><text class="k" x="414" y="228">78</text>
-  <rect class="more" x="438" y="208" width="48" height="30"/><text class="k" x="462" y="228">9E</text>
-  <rect class="more" x="486" y="208" width="48" height="30"/><text class="k" x="510" y="228">9B</text>
-  <rect class="cell" x="534" y="208" width="48" height="30"/><text class="k" x="558" y="228">01</text>
-  <text class="note" x="596" y="220">9 bytes</text>
-  <rect class="more" x="150" y="250" width="14" height="14"/><text class="note" x="170" y="261">high bit 1: more bytes follow</text>
-  <rect class="cell" x="350" y="250" width="14" height="14"/><text class="note" x="370" y="261">high bit 0: last byte of this number</text>
+  <text class="posting-list-compression-lab" x="16" y="227">varint bytes</text>
+  <rect class="posting-list-compression-more" x="150" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="174" y="228">F0</text>
+  <rect class="posting-list-compression-more" x="198" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="222" y="228">A2</text>
+  <rect class="posting-list-compression-cell" x="246" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="270" y="228">04</text>
+  <rect class="posting-list-compression-cell" x="294" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="318" y="228">03</text>
+  <rect class="posting-list-compression-cell" x="342" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="366" y="228">07</text>
+  <rect class="posting-list-compression-cell" x="390" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="414" y="228">78</text>
+  <rect class="posting-list-compression-more" x="438" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="462" y="228">9E</text>
+  <rect class="posting-list-compression-more" x="486" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="510" y="228">9B</text>
+  <rect class="posting-list-compression-cell" x="534" y="208" width="48" height="30"/><text class="posting-list-compression-k" x="558" y="228">01</text>
+  <text class="posting-list-compression-note" x="596" y="220">9 bytes</text>
+  <rect class="posting-list-compression-more" x="150" y="250" width="14" height="14"/><text class="posting-list-compression-note" x="170" y="261">high bit 1: more bytes follow</text>
+  <rect class="posting-list-compression-cell" x="350" y="250" width="14" height="14"/><text class="posting-list-compression-note" x="370" y="261">high bit 0: last byte of this number</text>
   <!-- zoom on 70000 -->
-  <text class="cap" x="16" y="300">Zoom: the gap 70000 is 100 0100010 1110000 in binary</text>
-  <text class="lab" x="16" y="333">7-bit groups</text>
-  <rect class="cell" x="150" y="314" width="120" height="30"/><text class="k" x="210" y="334">0000100</text>
-  <rect class="cell" x="280" y="314" width="120" height="30"/><text class="k" x="340" y="334">0100010</text>
-  <rect class="cell" x="410" y="314" width="120" height="30"/><text class="k" x="470" y="334">1110000</text>
-  <path class="e" d="M470,344 L218,380"/><path class="e" d="M226,370 L218,380 L229,380"/>
-  <path class="e" d="M340,344 L340,380"/><path class="e" d="M335,372 L340,380 L345,372"/>
-  <path class="e" d="M210,344 L462,380"/><path class="e" d="M451,380 L462,380 L454,370"/>
-  <text class="lab" x="16" y="401">bytes out</text>
-  <rect class="more" x="150" y="382" width="120" height="30"/><text class="k" x="210" y="402"><tspan class="flag">1</tspan>1110000 F0</text>
-  <rect class="more" x="280" y="382" width="120" height="30"/><text class="k" x="340" y="402"><tspan class="flag">1</tspan>0100010 A2</text>
-  <rect class="cell" x="410" y="382" width="120" height="30"/><text class="k" x="470" y="402"><tspan class="flag">0</tspan>0000100 04</text>
-  <text class="note" x="544" y="330">The lowest group</text>
-  <text class="note" x="544" y="344">goes out first.</text>
-  <text class="note" x="544" y="388">Each byte gets a</text>
-  <text class="note" x="544" y="402">continuation flag.</text>
+  <text class="posting-list-compression-cap" x="16" y="300">Zoom: the gap 70000 is 100 0100010 1110000 in binary</text>
+  <text class="posting-list-compression-lab" x="16" y="333">7-bit groups</text>
+  <rect class="posting-list-compression-cell" x="150" y="314" width="120" height="30"/><text class="posting-list-compression-k" x="210" y="334">0000100</text>
+  <rect class="posting-list-compression-cell" x="280" y="314" width="120" height="30"/><text class="posting-list-compression-k" x="340" y="334">0100010</text>
+  <rect class="posting-list-compression-cell" x="410" y="314" width="120" height="30"/><text class="posting-list-compression-k" x="470" y="334">1110000</text>
+  <path class="posting-list-compression-e" d="M470,344 L218,380"/><path class="posting-list-compression-e" d="M226,370 L218,380 L229,380"/>
+  <path class="posting-list-compression-e" d="M340,344 L340,380"/><path class="posting-list-compression-e" d="M335,372 L340,380 L345,372"/>
+  <path class="posting-list-compression-e" d="M210,344 L462,380"/><path class="posting-list-compression-e" d="M451,380 L462,380 L454,370"/>
+  <text class="posting-list-compression-lab" x="16" y="401">bytes out</text>
+  <rect class="posting-list-compression-more" x="150" y="382" width="120" height="30"/><text class="posting-list-compression-k" x="210" y="402"><tspan class="posting-list-compression-flag">1</tspan>1110000 F0</text>
+  <rect class="posting-list-compression-more" x="280" y="382" width="120" height="30"/><text class="posting-list-compression-k" x="340" y="402"><tspan class="posting-list-compression-flag">1</tspan>0100010 A2</text>
+  <rect class="posting-list-compression-cell" x="410" y="382" width="120" height="30"/><text class="posting-list-compression-k" x="470" y="402"><tspan class="posting-list-compression-flag">0</tspan>0000100 04</text>
+  <text class="posting-list-compression-note" x="544" y="330">The lowest group</text>
+  <text class="posting-list-compression-note" x="544" y="344">goes out first.</text>
+  <text class="posting-list-compression-note" x="544" y="388">Each byte gets a</text>
+  <text class="posting-list-compression-note" x="544" y="402">continuation flag.</text>
 </svg>

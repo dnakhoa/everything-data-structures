@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 340" role="img" aria-label="Buddy allocator split tree over a 64-unit space after allocating A (5 units), B (12) and C (3), drawn so each block sits above the addresses it covers" style="max-width:100%;height:auto;color:inherit">
+  <style>
+    .buddy-allocator-split { fill: none; stroke: currentColor; stroke-width: 1.4; stroke-dasharray: 5 4; opacity: .7; }
+    .buddy-allocator-free  { fill: #10b981; fill-opacity: .14; stroke: #10b981; stroke-width: 1.8; }
+    .buddy-allocator-used  { fill: #f59e0b; fill-opacity: .12; stroke: #f59e0b; stroke-width: 2; }
+    .buddy-allocator-req   { fill: #f59e0b; fill-opacity: .45; stroke: none; }
+    .buddy-allocator-k     { fill: currentColor; font: 600 12px ui-monospace, monospace; text-anchor: middle; }
+    .buddy-allocator-ks    { fill: currentColor; font: 600 10px ui-monospace, monospace; text-anchor: middle; }
+    .buddy-allocator-lvl   { fill: currentColor; font: 12px system-ui, sans-serif; opacity: .75; }
+    .buddy-allocator-note  { fill: currentColor; font: 12px system-ui, sans-serif; opacity: .8; }
+    .buddy-allocator-ax    { stroke: currentColor; stroke-width: 1.4; fill: none; }
+    .buddy-allocator-tick  { fill: currentColor; font: 11px ui-monospace, monospace; text-anchor: middle; opacity: .8; }
+  </style>
+  <text class="buddy-allocator-lvl" x="6" y="49">order 6</text>
+  <text class="buddy-allocator-lvl" x="6" y="89">order 5</text>
+  <text class="buddy-allocator-lvl" x="6" y="129">order 4</text>
+  <text class="buddy-allocator-lvl" x="6" y="169">order 3</text>
+  <text class="buddy-allocator-lvl" x="6" y="209">order 2</text>
+  <rect class="buddy-allocator-split" x="66" y="30" width="636" height="30"/>
+  <text class="buddy-allocator-k" x="384.0" y="49">[0, 64) split</text>
+  <rect class="buddy-allocator-split" x="66" y="70" width="316" height="30"/>
+  <text class="buddy-allocator-k" x="224.0" y="89">[0, 32) split</text>
+  <rect class="buddy-allocator-free" x="386" y="70" width="316" height="30"/>
+  <text class="buddy-allocator-k" x="544.0" y="89">free [32, 64)</text>
+  <rect class="buddy-allocator-split" x="66" y="110" width="156" height="30"/>
+  <text class="buddy-allocator-k" x="144.0" y="129">[0, 16) split</text>
+  <rect class="buddy-allocator-req" x="226" y="110" width="118" height="30"/>
+  <rect class="buddy-allocator-used" x="226" y="110" width="156" height="30"/>
+  <text class="buddy-allocator-k" x="304.0" y="129">B 12/16</text>
+  <rect class="buddy-allocator-req" x="66" y="150" width="48" height="30"/>
+  <rect class="buddy-allocator-used" x="66" y="150" width="76" height="30"/>
+  <text class="buddy-allocator-k" x="104.0" y="169">A 5/8</text>
+  <rect class="buddy-allocator-split" x="146" y="150" width="76" height="30"/>
+  <text class="buddy-allocator-k" x="184.0" y="169">[8, 16)</text>
+  <rect class="buddy-allocator-req" x="146" y="190" width="28" height="30"/>
+  <rect class="buddy-allocator-used" x="146" y="190" width="36" height="30"/>
+  <text class="buddy-allocator-ks" x="164.0" y="209">C 3/4</text>
+  <rect class="buddy-allocator-free" x="186" y="190" width="36" height="30"/>
+  <text class="buddy-allocator-ks" x="204.0" y="209">free</text>
+  <path class="buddy-allocator-ax" d="M64,236 L704,236"/>
+  <path class="buddy-allocator-ax" d="M64,232 L64,240"/>
+  <text class="buddy-allocator-tick" x="64" y="254">0</text>
+  <path class="buddy-allocator-ax" d="M144,232 L144,240"/>
+  <text class="buddy-allocator-tick" x="144" y="254">8</text>
+  <path class="buddy-allocator-ax" d="M184,232 L184,240"/>
+  <text class="buddy-allocator-tick" x="184" y="254">12</text>
+  <path class="buddy-allocator-ax" d="M224,232 L224,240"/>
+  <text class="buddy-allocator-tick" x="224" y="254">16</text>
+  <path class="buddy-allocator-ax" d="M384,232 L384,240"/>
+  <text class="buddy-allocator-tick" x="384" y="254">32</text>
+  <path class="buddy-allocator-ax" d="M704,232 L704,240"/>
+  <text class="buddy-allocator-tick" x="704" y="254">64</text>
+  <text class="buddy-allocator-note" x="64" y="284">Buddy of a block = its address XOR its size.  C: 8 XOR 4 = 12.  [8, 16): 8 XOR 8 = 0.  [0, 16): 0 XOR 16 = 16.</text>
+  <text class="buddy-allocator-note" x="64" y="304">Free A, then C: C merges with 12 into [8, 16), that merges with A into [0, 16), and B at 16 stops it.</text>
+  <rect class="buddy-allocator-req" x="64" y="318" width="14" height="12"/><rect class="buddy-allocator-used" x="64" y="318" width="14" height="12"/><text class="buddy-allocator-note" x="84" y="328">requested</text>
+  <rect class="buddy-allocator-used" x="160" y="318" width="14" height="12"/><text class="buddy-allocator-note" x="180" y="328">rounding waste (internal fragmentation)</text>
+  <rect class="buddy-allocator-free" x="422" y="318" width="14" height="12"/><text class="buddy-allocator-note" x="442" y="328">free</text>
+  <rect class="buddy-allocator-split" x="482" y="318" width="14" height="12"/><text class="buddy-allocator-note" x="502" y="328">split</text>
+</svg>
